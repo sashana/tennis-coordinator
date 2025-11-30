@@ -734,7 +734,13 @@
 <body>
     <div class="container">
         <h1>
-            <span>🎾 Tue/Thu+ Midday Doubles<br><small style="font-size: 12px; font-weight: 400; opacity: 0.8;">Tennis Coordinator</small></span>
+            <span>
+                <span id="groupNameDisplay">🎾 Tennis Coordinator</span>
+                <br><small style="font-size: 12px; font-weight: 400; opacity: 0.8;">
+                    <span id="groupSubtitle">Select a group</span>
+                    <button onclick="openGroupSelector()" style="margin-left: 8px; font-size: 11px; padding: 2px 6px; cursor: pointer; border-radius: 4px;">Switch Group</button>
+                </small>
+            </span>
             <div style="display: flex; gap: 8px;">
                 <button class="settings-icon" onclick="window.open('tennis-coordinator-help.md', '_blank')" title="Help">❓</button>
                 <button class="settings-icon" onclick="openSettingsModal()" title="Settings">⚙️</button>
@@ -864,6 +870,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Admin Settings</h2>
+                <p style="font-size: 12px; color: #666; margin: 4px 0 0 0;">Managing: <strong id="adminGroupName">Current Group</strong></p>
                 <button class="close-btn" onclick="closeSettingsModal()">×</button>
             </div>
             
@@ -906,6 +913,30 @@
         </div>
     </div>
 
+    <!-- Group Selector Modal -->
+    <div id="groupSelectorModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <h2 style="margin-top: 0;">Select Tennis Group</h2>
+            <div id="groupsList" style="margin-bottom: 20px;">
+                <!-- Groups will be loaded here -->
+            </div>
+            <div id="groupPinSection" style="display: none;">
+                <p style="font-size: 14px; color: #666; margin-bottom: 8px;">Enter PIN for <strong id="selectedGroupName"></strong>:</p>
+                <input
+                    type="password"
+                    id="groupPinEntry"
+                    placeholder="Enter group PIN"
+                    style="width: 100%; margin-bottom: 12px;"
+                    onkeypress="if(event.key === 'Enter') confirmGroupSelection()"
+                >
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="confirmGroupSelection()" style="flex: 1;">Access Group</button>
+                    <button onclick="cancelGroupSelection()" style="flex: 1; background-color: #999;">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -934,11 +965,18 @@
             alert('Firebase not configured. Please add your Firebase configuration.');
         }
 
-        // Firebase helper functions
+        // Current selected group
+        let currentGroupId = sessionStorage.getItem('currentGroupId') || null;
+        let currentGroupName = '';
+        let availableGroups = {};
+
+        // Firebase helper functions (group-scoped)
         const firebaseRef = {
-            checkins: () => db.ref('checkins'),
-            userPreferences: () => db.ref('userPreferences'),
-            settings: () => db.ref('settings')
+            groups: () => db.ref('groups'),
+            group: (groupId) => db.ref(`groups/${groupId}`),
+            checkins: (groupId) => db.ref(`groups/${groupId}/checkins`),
+            settings: (groupId) => db.ref(`groups/${groupId}/settings`),
+            userPreferences: () => db.ref('userPreferences')
         };
 
         let allCheckins = {};
@@ -965,25 +1003,50 @@
         let weatherCache = {};
 
         // Firebase Data Loading and Sync
-        async function loadFirebaseData() {
+        async function loadAvailableGroups() {
             try {
-                // Load settings (core members, PINs)
-                const settingsSnapshot = await firebaseRef.settings().once('value');
+                const groupsSnapshot = await firebaseRef.groups().once('value');
+                availableGroups = groupsSnapshot.val() || {};
+
+                // If no groups exist, create default groups
+                if (Object.keys(availableGroups).length === 0) {
+                    await initializeDefaultGroups();
+                    const groupsSnapshot2 = await firebaseRef.groups().once('value');
+                    availableGroups = groupsSnapshot2.val() || {};
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Error loading groups:', error);
+                return false;
+            }
+        }
+
+        async function loadFirebaseData(groupId) {
+            try {
+                if (!groupId) {
+                    console.log('No group ID provided');
+                    return false;
+                }
+
+                // Load settings for the group
+                const settingsSnapshot = await firebaseRef.settings(groupId).once('value');
                 const settings = settingsSnapshot.val() || {};
 
-                coreMembers = settings.coreMembers || [];
+                currentGroupName = settings.groupName || 'Unknown Group';
+                coreMembers = settings.members || [];
                 groupPin = settings.groupPin || '14675';
                 adminPin = settings.adminPin || '3250';
 
-                // Load check-ins
-                const checkinsSnapshot = await firebaseRef.checkins().once('value');
+                // Load check-ins for the group
+                const checkinsSnapshot = await firebaseRef.checkins(groupId).once('value');
                 allCheckins = checkinsSnapshot.val() || {};
 
-                // Load user preferences
+                // Load user preferences (shared across all groups)
                 const prefsSnapshot = await firebaseRef.userPreferences().once('value');
                 userPreferences = prefsSnapshot.val() || {};
 
-                console.log('Firebase data loaded successfully');
+                console.log(`Firebase data loaded for group: ${currentGroupName}`);
                 return true;
             } catch (error) {
                 console.error('Error loading Firebase data:', error);
@@ -991,41 +1054,94 @@
             }
         }
 
-        function setupFirebaseListeners() {
-            // Listen for changes to settings
-            firebaseRef.settings().on('value', (snapshot) => {
+        async function initializeDefaultGroups() {
+            const defaultGroups = {
+                'tue-thu-midday-doubles': {
+                    settings: {
+                        groupName: 'Tue/Thu+ Midday Doubles',
+                        groupPin: '14675',
+                        adminPin: '3250',
+                        members: []
+                    },
+                    checkins: {}
+                },
+                'singles-tuneup-tourny': {
+                    settings: {
+                        groupName: '18+ Singles Tune-up Tourny',
+                        groupPin: '8888',
+                        adminPin: '9999',
+                        members: []
+                    },
+                    checkins: {}
+                }
+            };
+
+            await firebaseRef.groups().set(defaultGroups);
+            console.log('Default groups initialized');
+        }
+
+        let activeListeners = {
+            settings: null,
+            checkins: null,
+            preferences: null
+        };
+
+        function setupFirebaseListeners(groupId) {
+            if (!groupId) return;
+
+            // Clean up old listeners if they exist
+            if (activeListeners.settings) {
+                activeListeners.settings.off();
+            }
+            if (activeListeners.checkins) {
+                activeListeners.checkins.off();
+            }
+            if (activeListeners.preferences) {
+                activeListeners.preferences.off();
+            }
+
+            // Listen for changes to settings for current group
+            activeListeners.settings = firebaseRef.settings(groupId);
+            activeListeners.settings.on('value', (snapshot) => {
                 const settings = snapshot.val() || {};
-                coreMembers = settings.coreMembers || [];
+                currentGroupName = settings.groupName || 'Unknown Group';
+                coreMembers = settings.members || [];
                 groupPin = settings.groupPin || '14675';
                 adminPin = settings.adminPin || '3250';
                 populateNameDropdown();
+                updateGroupDisplay();
             });
 
-            // Listen for changes to check-ins
-            firebaseRef.checkins().on('value', (snapshot) => {
+            // Listen for changes to check-ins for current group
+            activeListeners.checkins = firebaseRef.checkins(groupId);
+            activeListeners.checkins.on('value', (snapshot) => {
                 allCheckins = snapshot.val() || {};
                 initDates();
                 render();
             });
 
-            // Listen for changes to user preferences
-            firebaseRef.userPreferences().on('value', (snapshot) => {
+            // Listen for changes to user preferences (shared)
+            activeListeners.preferences = firebaseRef.userPreferences();
+            activeListeners.preferences.on('value', (snapshot) => {
                 userPreferences = snapshot.val() || {};
             });
         }
 
         async function saveFirebaseCheckins() {
+            if (!currentGroupId) return;
             try {
-                await firebaseRef.checkins().set(allCheckins);
+                await firebaseRef.checkins(currentGroupId).set(allCheckins);
             } catch (error) {
                 console.error('Error saving check-ins:', error);
             }
         }
 
         async function saveFirebaseSettings() {
+            if (!currentGroupId) return;
             try {
-                await firebaseRef.settings().set({
-                    coreMembers: coreMembers,
+                await firebaseRef.settings(currentGroupId).set({
+                    groupName: currentGroupName,
+                    members: coreMembers,
                     groupPin: groupPin,
                     adminPin: adminPin
                 });
@@ -1109,17 +1225,111 @@
                 alert('Invalid admin PIN - Only admin can access admin settings');
                 return;
             }
-            
+
             renderMemberList();
             document.getElementById('adminPinInput').value = adminPin;
             document.getElementById('groupPinInput').value = groupPin;
+            document.getElementById('adminGroupName').textContent = currentGroupName;
             document.getElementById('settingsModal').classList.add('active');
         }
         
         function closeSettingsModal() {
             document.getElementById('settingsModal').classList.remove('active');
         }
-        
+
+        // Group Selection Functions
+        let selectedGroupIdTemp = null;
+
+        async function openGroupSelector() {
+            // Load available groups
+            const groupsSnapshot = await firebaseRef.groups().once('value');
+            availableGroups = groupsSnapshot.val() || {};
+
+            const groupsList = document.getElementById('groupsList');
+            groupsList.innerHTML = '';
+
+            Object.keys(availableGroups).forEach(groupId => {
+                const groupSettings = availableGroups[groupId].settings || {};
+                const groupName = groupSettings.groupName || groupId;
+
+                const groupButton = document.createElement('button');
+                groupButton.textContent = groupName;
+                groupButton.style.cssText = 'width: 100%; margin-bottom: 8px; padding: 12px; font-size: 16px;';
+                groupButton.onclick = () => promptForGroupPin(groupId, groupName);
+                groupsList.appendChild(groupButton);
+            });
+
+            document.getElementById('groupPinSection').style.display = 'none';
+            document.getElementById('groupSelectorModal').classList.add('active');
+        }
+
+        function promptForGroupPin(groupId, groupName) {
+            selectedGroupIdTemp = groupId;
+            document.getElementById('selectedGroupName').textContent = groupName;
+            document.getElementById('groupsList').style.display = 'none';
+            document.getElementById('groupPinSection').style.display = 'block';
+            document.getElementById('groupPinEntry').value = '';
+            document.getElementById('groupPinEntry').focus();
+        }
+
+        async function confirmGroupSelection() {
+            const enteredPin = document.getElementById('groupPinEntry').value.trim();
+
+            if (!selectedGroupIdTemp || !availableGroups[selectedGroupIdTemp]) {
+                alert('Invalid group selection');
+                return;
+            }
+
+            const groupSettings = availableGroups[selectedGroupIdTemp].settings || {};
+            const correctPin = groupSettings.groupPin || '';
+
+            if (enteredPin !== correctPin) {
+                alert('Invalid PIN for this group');
+                return;
+            }
+
+            // Successfully authenticated to group
+            await selectGroup(selectedGroupIdTemp);
+            closeGroupSelector();
+        }
+
+        function cancelGroupSelection() {
+            selectedGroupIdTemp = null;
+            document.getElementById('groupsList').style.display = 'block';
+            document.getElementById('groupPinSection').style.display = 'none';
+        }
+
+        function closeGroupSelector() {
+            document.getElementById('groupSelectorModal').classList.remove('active');
+            selectedGroupIdTemp = null;
+        }
+
+        async function selectGroup(groupId) {
+            currentGroupId = groupId;
+            sessionStorage.setItem('currentGroupId', groupId);
+
+            // Load group settings
+            const groupSettings = availableGroups[groupId]?.settings || {};
+            currentGroupName = groupSettings.groupName || groupId;
+
+            // Update global settings for this group
+            coreMembers = groupSettings.members || [];
+            groupPin = groupSettings.groupPin || '';
+            adminPin = groupSettings.adminPin || '';
+
+            updateGroupDisplay();
+            await loadFirebaseData(currentGroupId);
+            setupFirebaseListeners(currentGroupId);
+            updateCheckinList();
+            organizeMatches();
+        }
+
+        function updateGroupDisplay() {
+            document.getElementById('groupNameDisplay').textContent = currentGroupName;
+            document.getElementById('groupSubtitle').innerHTML =
+                `Tennis Coordinator <button onclick="openGroupSelector()" style="margin-left: 8px; font-size: 11px; padding: 2px 6px; cursor: pointer; border-radius: 4px;">Switch Group</button>`;
+        }
+
         function renderMemberList() {
             const list = document.getElementById('memberList');
             const sortedMembers = [...coreMembers].sort((a, b) => a.localeCompare(b));
@@ -1978,19 +2188,21 @@
         
         // Initial setup
         async function init() {
-            if (checkAuth()) {
-                // Load data from Firebase
-                await loadFirebaseData();
+            // Load available groups from Firebase
+            await loadAvailableGroups();
 
-                // Set up real-time listeners
-                setupFirebaseListeners();
-
-                // Initialize UI
-                populateNameDropdown();
-                initDates();
-                displayWeather();
-                render();
+            // Check if user has a group selected in session
+            if (currentGroupId && availableGroups[currentGroupId]) {
+                // User has previously selected a group - load it
+                await selectGroup(currentGroupId);
+            } else {
+                // No group selected - show group selector
+                await openGroupSelector();
             }
+
+            // Initialize UI
+            initDates();
+            displayWeather();
         }
 
         // Start the app
