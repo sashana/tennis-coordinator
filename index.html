@@ -1656,7 +1656,10 @@
                 console.log('Verification read from path:', savePath);
                 console.log('Verification data:', savedData);
 
-                if (!savedData || savedData.length !== checkinsForDate.length) {
+                // Firebase returns null for empty arrays, so convert to array for comparison
+                const savedDataArray = savedData || [];
+                if (savedDataArray.length !== checkinsForDate.length) {
+                    console.error('Verification mismatch:', { saved: savedDataArray.length, expected: checkinsForDate.length });
                     throw new Error('Data verification failed - saved data does not match');
                 }
 
