@@ -247,26 +247,6 @@ When 3 compatible players remain, they can choose rotation format:
 
 ---
 
-## Technical Details
-
-**Data Storage:**
-- All data stored locally in your browser
-- No central server
-- Clearing browser data = lose check-ins
-- Each device independent
-
-**Calendar:**
-- Shows next 14 days
-- Past dates hidden automatically
-- Today selected by default
-
-**Weather:**
-- Los Gatos, CA forecast
-- Only works when app is hosted online
-- Updates when selecting dates
-
----
-
 ## Troubleshooting
 
 **Can't access app:**
@@ -296,5 +276,223 @@ Questions or issues? Contact group admin via WhatsApp.
 
 ---
 
-**Version:** 1.0  
-**Last Updated:** November 2024
+# Technical Details & Admin Information
+
+*This section contains technical details and is intended for administrators and curious users.*
+
+---
+
+## Real-Time Data Synchronization
+
+**How It Works:**
+- All data stored in Firebase Realtime Database (cloud-based)
+- Changes sync automatically across all devices
+- Multiple users can view and interact simultaneously
+- No page refresh needed - updates appear instantly
+
+**What's Shared:**
+- ✅ Core members list
+- ✅ Check-ins for all dates
+- ✅ User preferences (exclusions)
+- ✅ Admin settings (PINs)
+
+**Benefits:**
+- Everyone sees the same data
+- Real-time match organization
+- Admin manages members once → everyone sees them
+- No need to manually sync devices
+
+---
+
+## Data Storage & Privacy
+
+**Storage Location:**
+- Firebase Realtime Database (Google Cloud)
+- Data persists across devices and browsers
+- Not stored locally (except authentication flag)
+
+**Privacy:**
+- Data visible to anyone with the group PIN
+- Exclusion preferences are private (not displayed publicly)
+- Admin PIN required for settings changes
+- No personal data collected beyond names and check-ins
+
+**Data Retention:**
+- Data persists indefinitely unless manually deleted
+- Admin can remove members or clear check-ins
+- Past dates accumulate - can be cleaned up if needed
+
+---
+
+## System Requirements
+
+**Browsers:**
+- Chrome, Safari, Firefox, Edge (latest versions)
+- Mobile browsers supported
+- JavaScript must be enabled
+
+**Internet Connection:**
+- Required for real-time sync
+- Offline mode not supported
+- WiFi or cellular data needed
+
+**Devices:**
+- Desktop computers
+- Tablets
+- Smartphones (iOS/Android)
+
+---
+
+## Calendar System
+
+**Date Range:**
+- Shows next 14 days from today
+- Past dates hidden automatically
+- Updates daily at midnight
+- Today selected by default
+
+**Check-in Data:**
+- Organized by date (YYYY-MM-DD format)
+- Each date has independent check-in list
+- Old check-ins remain until manually removed
+
+---
+
+## Weather Integration
+
+**Features:**
+- Los Gatos, CA weather forecast
+- 14-day forecast available
+- Updates when selecting dates
+- Shows temperature, conditions, and icon
+
+**Data Source:**
+- Open-Meteo API (free weather service)
+- Updates automatically
+- Cached for 15 minutes to improve performance
+
+**Note:**
+- Requires internet connection
+- May not load if API is down (non-critical feature)
+
+---
+
+## Authentication & Security
+
+**Group PIN (Default: 14675):**
+- Required for app access
+- Shared among all group members
+- Can be changed by admin
+- Prevents random access
+
+**Admin PIN (Default: 3250):**
+- Required for admin settings
+- Only admin should know this
+- Can change member list and PINs
+- Keep this private
+
+**Security Considerations:**
+- PINs are basic security (not encryption)
+- Suitable for private tennis groups
+- Not intended for sensitive data
+- Anyone with PIN can access/modify data
+
+---
+
+## Firebase Configuration
+
+**Setup:**
+- Firebase Realtime Database required
+- Configuration included in app
+- Project: tennis-coordinator-43f53
+- Region: us-central1
+
+**Database Rules:**
+- Open read/write for simplicity
+- Protected by app-level PIN authentication
+- Suitable for small trusted groups
+
+**Maintenance:**
+- Firebase free tier: Generous limits
+- Should not exceed limits for tennis group
+- Data can be exported if needed
+
+---
+
+## Performance & Limitations
+
+**Performance:**
+- Real-time updates: < 1 second
+- Initial load: 1-3 seconds (depending on data size)
+- Weather updates: 1-2 seconds
+- Optimized for mobile devices
+
+**Limitations:**
+- Maximum 50 core members recommended
+- 14-day date window
+- No offline mode
+- No data export feature (admin can view in Firebase)
+
+**Known Issues:**
+- Weather may not load if API down
+- Real-time updates require browser to stay open
+- Timezone: All times in local device timezone
+
+---
+
+## Architecture
+
+**Technology Stack:**
+- Frontend: HTML, CSS, JavaScript (vanilla)
+- Backend: Firebase Realtime Database
+- Hosting: GitHub Pages
+- APIs: Open-Meteo (weather)
+
+**Data Structure:**
+```
+/checkins/
+  /2025-11-29/
+    - [checkin objects]
+/settings/
+  - coreMembers: []
+  - groupPin: "14675"
+  - adminPin: "3250"
+/userPreferences/
+  /PlayerName/
+    - include: []
+    - exclude: []
+```
+
+---
+
+## Troubleshooting for Admins
+
+**Firebase Connection Issues:**
+- Check browser console for errors (F12)
+- Verify Firebase config is correct
+- Check internet connection
+- Firebase status: https://status.firebase.google.com/
+
+**Data Not Syncing:**
+- Verify Firebase Realtime Database is enabled
+- Check database rules allow read/write
+- Ensure multiple users using same URL
+- Clear browser cache and reload
+
+**Members Not Appearing:**
+- Verify members added through admin settings
+- Check Firebase Console → Database → Data
+- Ensure settings were saved
+- Try refreshing all devices
+
+**Reset Everything:**
+1. Go to Firebase Console
+2. Navigate to Realtime Database → Data
+3. Delete specific nodes or all data
+4. Refresh app on all devices
+
+---
+
+**Version:** 2.0 (Firebase)
+**Last Updated:** December 2024
+**Repository:** https://github.com/sashana/tennis-coordinator
