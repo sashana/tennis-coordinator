@@ -1085,11 +1085,7 @@
         </div>
 
         <div class="checkins" style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #f0f0f0;">
-            <div id="dateSummary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px; border-radius: 12px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
-                <div style="font-size: 20px; font-weight: 600; margin-bottom: 4px;" id="summaryDate">Select a date</div>
-                <div style="font-size: 14px; opacity: 0.9;" id="summaryCount">0 players checked in</div>
-            </div>
-            <h2>Check-ins</h2>
+            <h2>Check-ins (<span id="count">0</span>)</h2>
             <div id="checkinList"></div>
         </div>
 
@@ -3049,22 +3045,6 @@
         function render() {
             const checkins = getCurrentCheckins();
             console.log('render() called. selectedDate:', selectedDate, 'checkins:', checkins, 'allCheckins:', allCheckins);
-
-            // Update date summary
-            if (selectedDate) {
-                const dateObj = new Date(selectedDate + 'T00:00:00');
-                const dateStr = dateObj.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    month: 'short',
-                    day: 'numeric'
-                });
-                document.getElementById('summaryDate').textContent = dateStr;
-                const playerCount = checkins.length;
-                document.getElementById('summaryCount').textContent =
-                    playerCount === 0 ? 'No players yet' :
-                    playerCount === 1 ? '1 player checked in' :
-                    `${playerCount} players checked in`;
-            }
 
             document.getElementById('count').textContent = checkins.length;
             
