@@ -1022,6 +1022,71 @@
         </div>
     </div>
 
+    <!-- Site Admin Modal -->
+    <div id="siteAdminModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2>Site Admin - Manage Groups</h2>
+                <button class="close-btn" onclick="closeSiteAdmin()">×</button>
+            </div>
+
+            <button onclick="showCreateGroupForm()" style="margin-bottom: 20px; background: #4CAF50;">➕ Create New Group</button>
+
+            <div id="groupsTable" style="margin-bottom: 20px;">
+                <!-- Groups table will be rendered here -->
+            </div>
+
+            <!-- Create/Edit Group Form -->
+            <div id="groupForm" style="display: none; border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                <h3 id="groupFormTitle">Create New Group</h3>
+                <input type="hidden" id="editingGroupId">
+
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; margin-bottom: 4px; font-weight: 500;">Group Name:</label>
+                    <input type="text" id="formGroupName" placeholder="e.g., Tue/Thu+ Midday Doubles" style="width: 100%;">
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; margin-bottom: 4px; font-weight: 500;">URL Short Code:</label>
+                    <input type="text" id="formShortCode" placeholder="e.g., ttmd" style="width: 100%;">
+                    <small style="color: #666;">Short code for URL (e.g., /ttmd)</small>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Group PIN:</label>
+                        <input type="text" id="formGroupPin" placeholder="e.g., 14675" style="width: 100%;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Admin PIN:</label>
+                        <input type="text" id="formAdminPin" placeholder="e.g., 3250" style="width: 100%;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; margin-bottom: 4px; font-weight: 500;">Weather Location Name:</label>
+                    <input type="text" id="formLocationName" placeholder="e.g., Los Gatos, CA" style="width: 100%;">
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Latitude:</label>
+                        <input type="number" step="0.0001" id="formLocationLat" placeholder="e.g., 37.2358" style="width: 100%;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Longitude:</label>
+                        <input type="number" step="0.0001" id="formLocationLon" placeholder="e.g., -121.9623" style="width: 100%;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="saveGroup()" style="flex: 1; background: #4CAF50;">💾 Save Group</button>
+                    <button onclick="cancelGroupForm()" style="flex: 1; background: #999;">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Group Selector Modal -->
     <div id="groupSelectorModal" class="modal">
         <div class="modal-content" style="max-width: 400px;">
@@ -1079,17 +1144,34 @@
         let currentGroupName = '';
         let availableGroups = {};
 
+        // Short code to group ID mapping
+        async function resolveShortCode(code) {
+            // Load all groups and find matching short code
+            const groupsSnapshot = await firebaseRef.groups().once('value');
+            const groups = groupsSnapshot.val() || {};
+
+            for (const [groupId, groupData] of Object.entries(groups)) {
+                if (groupData.settings && groupData.settings.shortCode === code) {
+                    return groupId;
+                }
+            }
+            return null;
+        }
+
         // Parse group from URL path
-        function getGroupIdFromUrl() {
+        async function getGroupIdFromUrl() {
             // Check if we were redirected from 404.html
             const redirect = sessionStorage.getItem('redirect');
             if (redirect) {
                 sessionStorage.removeItem('redirect');
                 const groupPath = redirect.replace(/^\/+|\/+$/g, '');
-                if (groupPath && groupPath !== 'index.html') {
+                if (groupPath && groupPath !== 'index.html' && groupPath !== 'admin') {
                     // Update browser URL without page reload
                     history.replaceState(null, '', redirect);
-                    return groupPath;
+
+                    // Check if it's a short code
+                    const resolvedGroupId = await resolveShortCode(groupPath);
+                    return resolvedGroupId || groupPath;
                 }
             }
 
@@ -1097,12 +1179,19 @@
             // Remove leading/trailing slashes and get the group ID
             const groupPath = path.replace(/^\/+|\/+$/g, '');
 
+            // Special routes
+            if (groupPath === 'admin') {
+                return 'admin'; // Special case for site admin
+            }
+
             // If empty or index.html, return null (will show group selector)
             if (!groupPath || groupPath === 'index.html') {
                 return null;
             }
 
-            return groupPath;
+            // Check if it's a short code first
+            const resolvedGroupId = await resolveShortCode(groupPath);
+            return resolvedGroupId || groupPath;
         }
 
         // Firebase helper functions (group-scoped)
@@ -1111,7 +1200,8 @@
             group: (groupId) => db.ref(`groups/${groupId}`),
             checkins: (groupId) => db.ref(`groups/${groupId}/checkins`),
             settings: (groupId) => db.ref(`groups/${groupId}/settings`),
-            userPreferences: () => db.ref('userPreferences')
+            userPreferences: () => db.ref('userPreferences'),
+            siteSettings: () => db.ref('siteSettings')
         };
 
         let allCheckins = {};
@@ -1248,9 +1338,15 @@
                 await firebaseRef.group('tue-thu-midday-doubles').set({
                     settings: {
                         groupName: 'Tue/Thu+ Midday Doubles',
+                        shortCode: 'ttmd',
                         groupPin: '14675',
                         adminPin: '3250',
-                        members: []
+                        members: [],
+                        location: {
+                            name: 'Los Gatos, CA',
+                            lat: 37.2358,
+                            lon: -121.9623
+                        }
                     },
                     checkins: {}
                 });
@@ -1261,9 +1357,15 @@
                 await firebaseRef.group('singles-tuneup-tourny').set({
                     settings: {
                         groupName: '18+ Singles Tune-up Tourny',
+                        shortCode: 'stt',
                         groupPin: '8888',
                         adminPin: '9999',
-                        members: []
+                        members: [],
+                        location: {
+                            name: 'Los Gatos, CA',
+                            lat: 37.2358,
+                            lon: -121.9623
+                        }
                     },
                     checkins: {}
                 });
@@ -1462,6 +1564,185 @@
         
         function closeSettingsModal() {
             document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        // Site Admin Functions
+        async function openSiteAdmin() {
+            // Check site admin PIN
+            const siteSettingsSnapshot = await firebaseRef.siteSettings().once('value');
+            const siteSettings = siteSettingsSnapshot.val() || {};
+            const siteAdminPin = siteSettings.siteAdminPin || 'Ilovetennis';
+
+            // Initialize site admin PIN if doesn't exist
+            if (!siteSettings.siteAdminPin) {
+                await firebaseRef.siteSettings().set({ siteAdminPin: 'Ilovetennis' });
+            }
+
+            const pin = prompt('Enter Site Admin PIN:');
+            if (pin === null) {
+                window.location.href = '/';
+                return;
+            }
+
+            if (pin !== siteAdminPin) {
+                alert('Invalid Site Admin PIN');
+                window.location.href = '/';
+                return;
+            }
+
+            // Show site admin modal
+            document.getElementById('siteAdminModal').classList.add('active');
+            await renderGroupsTable();
+        }
+
+        function closeSiteAdmin() {
+            document.getElementById('siteAdminModal').classList.remove('active');
+            window.location.href = '/';
+        }
+
+        async function renderGroupsTable() {
+            const groupsSnapshot = await firebaseRef.groups().once('value');
+            const groups = groupsSnapshot.val() || {};
+
+            const table = document.getElementById('groupsTable');
+
+            if (Object.keys(groups).length === 0) {
+                table.innerHTML = '<p style="color: #666;">No groups yet. Create one!</p>';
+                return;
+            }
+
+            let html = '<table style="width: 100%; border-collapse: collapse;">';
+            html += '<thead><tr style="background: #f5f5f5;"><th style="padding: 12px; text-align: left;">Group Name</th><th>Short Code</th><th>Group PIN</th><th>Admin PIN</th><th>Actions</th></tr></thead><tbody>';
+
+            for (const [groupId, groupData] of Object.entries(groups)) {
+                const settings = groupData.settings || {};
+                html += `
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 12px;"><strong>${settings.groupName || groupId}</strong></td>
+                        <td style="padding: 12px; text-align: center;"><code>${settings.shortCode || '-'}</code></td>
+                        <td style="padding: 12px; text-align: center;">${settings.groupPin || '-'}</td>
+                        <td style="padding: 12px; text-align: center;">${settings.adminPin || '-'}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <button onclick="editGroup('${groupId}')" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;">✏️ Edit</button>
+                            <button onclick="cloneGroup('${groupId}')" style="padding: 4px 8px; font-size: 12px; margin-right: 4px; background: #2196F3;">📋 Clone</button>
+                            <button onclick="deleteGroup('${groupId}')" style="padding: 4px 8px; font-size: 12px; background: #f44336;">🗑️ Delete</button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            html += '</tbody></table>';
+            table.innerHTML = html;
+        }
+
+        function showCreateGroupForm() {
+            document.getElementById('groupFormTitle').textContent = 'Create New Group';
+            document.getElementById('editingGroupId').value = '';
+            document.getElementById('formGroupName').value = '';
+            document.getElementById('formShortCode').value = '';
+            document.getElementById('formGroupPin').value = '';
+            document.getElementById('formAdminPin').value = '';
+            document.getElementById('formLocationName').value = 'Los Gatos, CA';
+            document.getElementById('formLocationLat').value = '37.2358';
+            document.getElementById('formLocationLon').value = '-121.9623';
+            document.getElementById('groupForm').style.display = 'block';
+        }
+
+        async function editGroup(groupId) {
+            const groupSnapshot = await firebaseRef.group(groupId).once('value');
+            const groupData = groupSnapshot.val();
+            const settings = groupData.settings || {};
+
+            document.getElementById('groupFormTitle').textContent = 'Edit Group';
+            document.getElementById('editingGroupId').value = groupId;
+            document.getElementById('formGroupName').value = settings.groupName || '';
+            document.getElementById('formShortCode').value = settings.shortCode || '';
+            document.getElementById('formGroupPin').value = settings.groupPin || '';
+            document.getElementById('formAdminPin').value = settings.adminPin || '';
+            document.getElementById('formLocationName').value = settings.location?.name || 'Los Gatos, CA';
+            document.getElementById('formLocationLat').value = settings.location?.lat || 37.2358;
+            document.getElementById('formLocationLon').value = settings.location?.lon || -121.9623;
+            document.getElementById('groupForm').style.display = 'block';
+        }
+
+        async function cloneGroup(sourceGroupId) {
+            const groupSnapshot = await firebaseRef.group(sourceGroupId).once('value');
+            const groupData = groupSnapshot.val();
+            const settings = groupData.settings || {};
+
+            document.getElementById('groupFormTitle').textContent = 'Clone Group';
+            document.getElementById('editingGroupId').value = '';
+            document.getElementById('formGroupName').value = (settings.groupName || '') + ' (Copy)';
+            document.getElementById('formShortCode').value = '';
+            document.getElementById('formGroupPin').value = settings.groupPin || '';
+            document.getElementById('formAdminPin').value = settings.adminPin || '';
+            document.getElementById('formLocationName').value = settings.location?.name || 'Los Gatos, CA';
+            document.getElementById('formLocationLat').value = settings.location?.lat || 37.2358;
+            document.getElementById('formLocationLon').value = settings.location?.lon || -121.9623;
+            document.getElementById('groupForm').style.display = 'block';
+        }
+
+        async function saveGroup() {
+            const editingGroupId = document.getElementById('editingGroupId').value;
+            const groupName = document.getElementById('formGroupName').value.trim();
+            const shortCode = document.getElementById('formShortCode').value.trim();
+            const groupPin = document.getElementById('formGroupPin').value.trim();
+            const adminPin = document.getElementById('formAdminPin').value.trim();
+            const locationName = document.getElementById('formLocationName').value.trim();
+            const locationLat = parseFloat(document.getElementById('formLocationLat').value);
+            const locationLon = parseFloat(document.getElementById('formLocationLon').value);
+
+            if (!groupName || !shortCode || !groupPin || !adminPin) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            // Create slug from group name if editing, or use shortcode
+            const groupId = editingGroupId || shortCode.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+            const groupData = {
+                settings: {
+                    groupName,
+                    shortCode,
+                    groupPin,
+                    adminPin,
+                    members: [],
+                    location: {
+                        name: locationName,
+                        lat: locationLat,
+                        lon: locationLon
+                    }
+                },
+                checkins: {}
+            };
+
+            await firebaseRef.group(groupId).set(groupData);
+
+            showToast(`Group "${groupName}" saved successfully!`, 'success');
+            cancelGroupForm();
+            await renderGroupsTable();
+
+            // Reload available groups
+            await loadAvailableGroups();
+        }
+
+        async function deleteGroup(groupId) {
+            const groupSnapshot = await firebaseRef.group(groupId).once('value');
+            const groupData = groupSnapshot.val();
+            const groupName = groupData?.settings?.groupName || groupId;
+
+            if (!confirm(`Are you sure you want to delete "${groupName}"? This cannot be undone.`)) {
+                return;
+            }
+
+            await firebaseRef.group(groupId).remove();
+            showToast(`Group "${groupName}" deleted`, 'success');
+            await renderGroupsTable();
+            await loadAvailableGroups();
+        }
+
+        function cancelGroupForm() {
+            document.getElementById('groupForm').style.display = 'none';
         }
 
         // Group Selection Functions
@@ -2457,7 +2738,13 @@
             await loadAvailableGroups();
 
             // Get group ID from URL path
-            const urlGroupId = getGroupIdFromUrl();
+            const urlGroupId = await getGroupIdFromUrl();
+
+            if (urlGroupId === 'admin') {
+                // Site admin route
+                await openSiteAdmin();
+                return;
+            }
 
             if (urlGroupId && availableGroups[urlGroupId]) {
                 // URL has a valid group - authenticate and load it
