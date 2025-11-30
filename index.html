@@ -737,8 +737,7 @@
             <span>
                 <span id="groupNameDisplay">🎾 Tennis Coordinator</span>
                 <br><small style="font-size: 12px; font-weight: 400; opacity: 0.8;">
-                    <span id="groupSubtitle">Select a group</span>
-                    <button onclick="openGroupSelector()" style="margin-left: 8px; font-size: 11px; padding: 2px 6px; cursor: pointer; border-radius: 4px;">Switch Group</button>
+                    <span id="groupSubtitle">Tennis Coordinator</span>
                 </small>
             </span>
             <div style="display: flex; gap: 8px;">
@@ -1354,8 +1353,7 @@
 
         function updateGroupDisplay() {
             document.getElementById('groupNameDisplay').textContent = currentGroupName;
-            document.getElementById('groupSubtitle').innerHTML =
-                `Tennis Coordinator <button onclick="openGroupSelector()" style="margin-left: 8px; font-size: 11px; padding: 2px 6px; cursor: pointer; border-radius: 4px;">Switch Group</button>`;
+            document.getElementById('groupSubtitle').textContent = 'Tennis Coordinator';
         }
 
         function renderMemberList() {
