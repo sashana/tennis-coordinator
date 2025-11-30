@@ -1511,10 +1511,17 @@
             // Listen for changes to check-ins for current group
             activeListeners.checkins = firebaseRef.checkins(groupId);
             activeListeners.checkins.on('value', (snapshot) => {
-                console.log('Firebase check-ins updated:', snapshot.val());
-                allCheckins = snapshot.val() || {};
-                initDates();
-                render();
+                try {
+                    console.log('Firebase check-ins updated:', snapshot.val());
+                    allCheckins = snapshot.val() || {};
+                    console.log('Listener calling initDates()');
+                    initDates();
+                    console.log('Listener calling render()');
+                    render();
+                    console.log('Listener render() completed');
+                } catch (error) {
+                    console.error('Error in Firebase listener:', error);
+                }
             });
 
             // Listen for changes to user preferences (shared)
@@ -2620,13 +2627,18 @@
         }
 
         async function saveAndRender() {
-            console.log('saveAndRender called');
-            await saveFirebaseCheckins();
-            console.log('About to call initDates()');
-            initDates();
-            console.log('About to call render()');
-            render();
-            console.log('render() completed');
+            try {
+                console.log('saveAndRender called');
+                await saveFirebaseCheckins();
+                console.log('About to call initDates()');
+                initDates();
+                console.log('About to call render()');
+                render();
+                console.log('render() completed');
+            } catch (error) {
+                console.error('Error in saveAndRender:', error);
+                showToast('Error updating display', 'error');
+            }
         }
         
         function formatTime(timestamp) {
