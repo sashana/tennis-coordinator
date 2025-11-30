@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tennis Coordinator</title>
+    <title>Tennis Coordinator (Tue/Thu+ Midday Doubles)</title>
     <style>
         * {
             margin: 0;
@@ -734,7 +734,7 @@
 <body>
     <div class="container">
         <h1>
-            <span>🎾 Tennis Coordinator</span>
+            <span>🎾 Tennis Coordinator<br><small style="font-size: 12px; font-weight: 400; opacity: 0.8;">Tue/Thu+ Midday Doubles</small></span>
             <div style="display: flex; gap: 8px;">
                 <button class="settings-icon" onclick="window.open('tennis-coordinator-help.md', '_blank')" title="Help">❓</button>
                 <button class="settings-icon" onclick="openSettingsModal()" title="Settings">⚙️</button>
@@ -990,14 +990,16 @@
         
         function populateAddedByDropdown() {
             const select = document.getElementById('addedBySelect');
+            const sortedMembers = [...coreMembers].sort((a, b) => a.localeCompare(b));
             select.innerHTML = '<option value="">Who is adding this guest?</option>' +
-                coreMembers.map(name => `<option value="${name}">${name}</option>`).join('');
+                sortedMembers.map(name => `<option value="${name}">${name}</option>`).join('');
         }
-        
+
         function populateNameDropdown() {
             const select = document.getElementById('nameSelect');
+            const sortedMembers = [...coreMembers].sort((a, b) => a.localeCompare(b));
             select.innerHTML = '<option value="">Select your name...</option>' +
-                coreMembers.map(name => `<option value="${name}">${name}</option>`).join('') +
+                sortedMembers.map(name => `<option value="${name}">${name}</option>`).join('') +
                 '<option value="__GUEST__">+ Add Guest</option>';
         }
         
@@ -1023,10 +1025,11 @@
         
         function renderMemberList() {
             const list = document.getElementById('memberList');
-            list.innerHTML = coreMembers.map((name, idx) => `
+            const sortedMembers = [...coreMembers].sort((a, b) => a.localeCompare(b));
+            list.innerHTML = sortedMembers.map((name) => `
                 <div class="member-item">
                     <span>${name}</span>
-                    <button onclick="removeCoreMember(${idx})">Remove</button>
+                    <button onclick="removeCoreMember('${name.replace(/'/g, "\\'")}')">Remove</button>
                 </div>
             `).join('');
         }
@@ -1048,9 +1051,12 @@
             renderMemberList();
         }
         
-        function removeCoreMember(index) {
-            if (confirm(`Remove ${coreMembers[index]} from core members?`)) {
-                coreMembers.splice(index, 1);
+        function removeCoreMember(name) {
+            if (confirm(`Remove ${name} from core members?`)) {
+                const index = coreMembers.indexOf(name);
+                if (index > -1) {
+                    coreMembers.splice(index, 1);
+                }
                 renderMemberList();
             }
         }

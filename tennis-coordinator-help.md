@@ -1,13 +1,15 @@
 # Tennis Coordinator - User Guide
+## Tue/Thu+ Midday Doubles
 
 ## Quick Start
 
 1. **First Time:** Enter group PIN (ask admin if you don't have it)
 2. **Select Date:** Tap any date in the next 2 weeks
 3. **Check In:**
-   - Select your name from dropdown
+   - Select your name from dropdown (alphabetically sorted)
    - Choose: Singles Only, Doubles Only, or Either
    - Optional: Set your available time
+   - Optional: Check/uncheck 3-player rotation preference
    - Tap "Check In"
 4. **View Matches:** See organized matches automatically
 
@@ -54,6 +56,21 @@
 - First grouped for doubles if enough players
 - If not used in doubles, available for singles
 - Recommended for maximum flexibility
+
+---
+
+## 3-Player Rotation Preference
+
+**Willing to Play Rotation (Default: Checked)**
+- When checked, you can be placed in a 3-player rotation group
+- Rotation groups form when exactly 3 compatible players remain
+- Choose between 1v1 rotation (singles practice) or 1v2 rotation (Australian doubles)
+- If unchecked, you'll only be placed in standard doubles or singles matches
+- All 3 players must have this checked for rotation to form
+
+**When to uncheck:**
+- If you only want traditional 2-person or 4-person matches
+- If you prefer to wait for a standard match rather than rotate
 
 ---
 
@@ -111,12 +128,17 @@ Click ⚙️ icon (top right), enter admin PIN.
 
 **Core Members:**
 - Add/remove regular group members
-- Members appear in name dropdown
+- Members displayed alphabetically in both admin list and name dropdown
+- New members automatically sorted into alphabetical order
+
+**Admin PIN:**
+- Required to access admin settings
+- Only admin can change this PIN
 
 **Group PIN:**
-- Change PIN for group access
-- Share new PIN with group members
-- Takes effect on next page load
+- Used by all members to access the app
+- Share this PIN with group members
+- Changes take effect on next page load
 
 ---
 
