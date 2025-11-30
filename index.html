@@ -74,35 +74,55 @@
         .date-selector {
             margin-bottom: 16px;
         }
-        
+
         .date-selector h2 {
-            font-size: 14px;
-            margin-bottom: 8px;
+            font-size: 13px;
+            margin-bottom: 6px;
             color: #666;
         }
-        
+
         .date-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-            margin-bottom: 16px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 4px 0 8px 0;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
         }
-        
+
+        .date-grid::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .date-grid::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .date-grid::-webkit-scrollbar-thumb {
+            background: #4CAF50;
+            border-radius: 4px;
+        }
+
         .date-btn {
-            padding: 6px 3px;
+            padding: 8px 12px;
             background: #d0d0d0;
             color: #333;
             border: 2px solid #b0b0b0;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             text-align: center;
-            font-size: 10px;
+            font-size: 11px;
             transition: all 0.2s;
-            min-height: 48px;
+            min-height: 56px;
+            min-width: 64px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            flex-shrink: 0;
+            white-space: nowrap;
         }
         
         .date-btn:active {
@@ -654,44 +674,64 @@
         .weather-widget {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 16px;
+            padding: 10px 14px;
             border-radius: 8px;
-            margin-bottom: 16px;
-            text-align: center;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 13px;
         }
-        
+
         .weather-widget h3 {
-            font-size: 14px;
-            margin-bottom: 8px;
+            font-size: 12px;
+            margin: 0;
             opacity: 0.9;
+            font-weight: 500;
         }
-        
+
         .weather-main {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 8px;
+            gap: 10px;
+            flex: 1;
         }
-        
+
         .weather-temp {
-            font-size: 32px;
+            font-size: 22px;
             font-weight: bold;
         }
-        
+
         .weather-desc {
-            font-size: 16px;
+            font-size: 13px;
             text-transform: capitalize;
         }
         
         .weather-details {
             display: flex;
-            justify-content: space-around;
-            font-size: 12px;
+            gap: 8px;
+            font-size: 11px;
             opacity: 0.9;
-            margin-top: 8px;
         }
-        
+
+        .weather-details > span {
+            white-space: nowrap;
+        }
+
+        .collapsible-form {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            opacity: 0;
+        }
+
+        .collapsible-form.expanded {
+            max-height: 1000px;
+            opacity: 1;
+            transition: max-height 0.4s ease-in, opacity 0.4s ease-in;
+        }
+
         .weather-error {
             background: #ffebee;
             color: #c62828;
@@ -896,69 +936,72 @@
             <button onclick="checkIn()">Check In</button>
         </div>
         
-        <div class="guest-form" id="guestForm">
-            <input 
-                type="text" 
-                id="guestNameInput" 
-                placeholder="Guest's name"
-            >
-            <select id="addedBySelect">
-                <option value="">Who is adding this guest?</option>
-            </select>
-        </div>
-        
-        <div class="preference-group">
-            <button class="preference-btn singles" id="singlesBtn" onclick="selectPreference('singles')">
-                Singles Only
-            </button>
-            <button class="preference-btn selected" id="bothBtn" onclick="selectPreference('both')">
-                Either
-            </button>
-            <button class="preference-btn doubles" id="doublesBtn" onclick="selectPreference('doubles')">
-                Doubles Only
-            </button>
-        </div>
-        
-        <div class="time-slots">
-            <h3>Available Time (optional)</h3>
-            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                <input 
-                    type="time" 
-                    id="startTimeInput"
-                    style="flex: 1; min-width: 120px; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;"
-                    placeholder="Start"
+        <!-- Collapsible form fields -->
+        <div class="collapsible-form" id="checkInFormFields">
+            <div class="guest-form" id="guestForm">
+                <input
+                    type="text"
+                    id="guestNameInput"
+                    placeholder="Guest's name"
                 >
-                <span style="color: #666;">to</span>
-                <input 
-                    type="time" 
-                    id="endTimeInput"
-                    style="flex: 1; min-width: 120px; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;"
-                    placeholder="End"
-                >
-                <button 
-                    onclick="clearTimeInputs()" 
-                    style="padding: 10px 12px; background: #f5f5f5; color: #666; font-size: 13px;"
-                >
-                    Clear
+                <select id="addedBySelect">
+                    <option value="">Who is adding this guest?</option>
+                </select>
+            </div>
+
+            <div class="preference-group">
+                <button class="preference-btn singles" id="singlesBtn" onclick="selectPreference('singles')">
+                    Singles Only
+                </button>
+                <button class="preference-btn selected" id="bothBtn" onclick="selectPreference('both')">
+                    Either
+                </button>
+                <button class="preference-btn doubles" id="doublesBtn" onclick="selectPreference('doubles')">
+                    Doubles Only
                 </button>
             </div>
-            <div style="font-size: 12px; color: #999; margin-top: 6px;">
-                Leave blank if available any time
-            </div>
-        </div>
 
-        <div style="margin-bottom: 16px; padding: 12px; background: #f9f9f9; border-radius: 8px;">
-            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 14px;">
-                <input
-                    type="checkbox"
-                    id="allowRotationCheckbox"
-                    checked
-                    style="width: 18px; height: 18px; cursor: pointer; margin-right: 4px;"
-                >
-                <span>Willing to play 3-player rotation (1v1 or 1v2 format)</span>
-            </label>
-            <div style="font-size: 12px; color: #666; margin-top: 4px; margin-left: 26px;">
-                If unchecked, you'll only be placed in doubles or singles matches
+            <div class="time-slots">
+                <h3>Available Time (optional)</h3>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <input
+                        type="time"
+                        id="startTimeInput"
+                        style="flex: 1; min-width: 120px; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;"
+                        placeholder="Start"
+                    >
+                    <span style="color: #666;">to</span>
+                    <input
+                        type="time"
+                        id="endTimeInput"
+                        style="flex: 1; min-width: 120px; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;"
+                        placeholder="End"
+                    >
+                    <button
+                        onclick="clearTimeInputs()"
+                        style="padding: 10px 12px; background: #f5f5f5; color: #666; font-size: 13px;"
+                    >
+                        Clear
+                    </button>
+                </div>
+                <div style="font-size: 12px; color: #999; margin-top: 6px;">
+                    Leave blank if available any time
+                </div>
+            </div>
+
+            <div style="margin-bottom: 16px; padding: 12px; background: #f9f9f9; border-radius: 8px;">
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 14px;">
+                    <input
+                        type="checkbox"
+                        id="allowRotationCheckbox"
+                        checked
+                        style="width: 18px; height: 18px; cursor: pointer; margin-right: 4px;"
+                    >
+                    <span>Willing to play 3-player rotation (1v1 or 1v2 format)</span>
+                </label>
+                <div style="font-size: 12px; color: #666; margin-top: 4px; margin-left: 26px;">
+                    If unchecked, you'll only be placed in doubles or singles matches
+                </div>
             </div>
         </div>
 
@@ -1564,16 +1607,23 @@
             const select = document.getElementById('nameSelect');
             const value = select.value;
             const guestForm = document.getElementById('guestForm');
-            
+            const formFields = document.getElementById('checkInFormFields');
+
             if (value === '__GUEST__') {
                 isGuest = true;
                 selectedName = '';
                 guestForm.classList.add('active');
                 populateAddedByDropdown();
-            } else {
+                formFields.classList.add('expanded');
+            } else if (value !== '') {
                 isGuest = false;
                 selectedName = value;
                 addedBy = '';
+                guestForm.classList.remove('active');
+                formFields.classList.add('expanded');
+            } else {
+                // No name selected - collapse form
+                formFields.classList.remove('expanded');
                 guestForm.classList.remove('active');
             }
         }
@@ -2084,15 +2134,16 @@
             
             widget.innerHTML = `
                 <div class="weather-widget">
-                    <h3>${weatherLocation.name} - ${dateDisplay}</h3>
-                    <div class="weather-main">
-                        <div class="weather-temp">${weather.tempMax}°</div>
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <h3>${weatherLocation.name}</h3>
                         <div class="weather-desc">${getWeatherDescription(weather.weatherCode)}</div>
                     </div>
-                    <div class="weather-details">
-                        <span>High: ${weather.tempMax}°F</span>
-                        <span>Low: ${weather.tempMin}°F</span>
-                        <span>Rain: ${weather.precipProb}%</span>
+                    <div class="weather-main">
+                        <div class="weather-temp">${weather.tempMax}°</div>
+                        <div class="weather-details">
+                            <span>${weather.tempMin}°-${weather.tempMax}°F</span>
+                            ${weather.precipProb > 0 ? `<span>💧${weather.precipProb}%</span>` : ''}
+                        </div>
                     </div>
                 </div>
             `;
@@ -2391,11 +2442,12 @@
             document.getElementById('guestNameInput').value = '';
             document.getElementById('addedBySelect').value = '';
             document.getElementById('guestForm').classList.remove('active');
+            document.getElementById('checkInFormFields').classList.remove('expanded');
             document.getElementById('allowRotationCheckbox').checked = true;
             clearTimeInputs();
             selectedName = '';
             isGuest = false;
-            
+
             saveAndRender();
         }
         
