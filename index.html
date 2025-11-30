@@ -5,14 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tue/Thu+ Midday Doubles</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+
     <!-- PWA Support -->
     <link rel="manifest" id="manifestLink" href="/manifest.json">
     <meta name="theme-color" content="#4CAF50">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Tennis">
-    <!-- iOS icon: 180x180 PNG with tennis ball emoji rendered -->
-    <link rel="apple-touch-icon" href="data:image/png;base64,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">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
     <style>
         * {
