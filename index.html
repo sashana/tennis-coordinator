@@ -2622,8 +2622,11 @@
         async function saveAndRender() {
             console.log('saveAndRender called');
             await saveFirebaseCheckins();
+            console.log('About to call initDates()');
             initDates();
+            console.log('About to call render()');
             render();
+            console.log('render() completed');
         }
         
         function formatTime(timestamp) {
