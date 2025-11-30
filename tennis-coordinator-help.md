@@ -96,19 +96,14 @@
 
 ## Partner Preferences (Singles Only)
 
-Access via ⚙️ Preferences button.
+Access via ⚙️ Preferences button next to your name.
 
-**Want to Play With:**
-- System tries to pair you with these players
-- Shows ✓ indicator when matched with preferred partner
-- Not guaranteed, just prioritized
-
-**Don't Want to Play With:**
-- **Hard rule** - system will never pair you with excluded players
-- Applies to singles matches only
+**Exclude Players:**
+- System will not pair you with excluded players in singles matches
+- Applies only to singles matches (not doubles or rotation)
 - If exclusions prevent pairing, you'll be placed in waiting
-
-**Preferences persist across all dates**
+- Preferences are private and persist across all dates
+- No visible indication that exclusions are set
 
 ---
 

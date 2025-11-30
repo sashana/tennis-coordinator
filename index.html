@@ -836,32 +836,17 @@
     <div class="modal" id="preferencesModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Partner Preferences (Singles)</h2>
+                <h2>Singles Match Preferences</h2>
                 <button class="close-btn" onclick="closePreferencesModal()">×</button>
             </div>
-            
+
             <div class="pref-section">
-                <h3>Want to Play With</h3>
-                <p style="font-size: 12px; color: #666; margin-bottom: 8px;">For singles matches only</p>
+                <h3>Exclude Players</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 8px;">You won't be paired with these players in singles matches</p>
                 <div class="pref-input-group">
-                    <input 
-                        type="text" 
-                        id="includeInput" 
-                        placeholder="Enter name"
-                        onkeypress="if(event.key==='Enter') addInclude()"
-                    >
-                    <button onclick="addInclude()">Add</button>
-                </div>
-                <div class="pref-list" id="includeList"></div>
-            </div>
-            
-            <div class="pref-section">
-                <h3>Don't Want to Play With</h3>
-                <p style="font-size: 12px; color: #666; margin-bottom: 8px;">For singles matches only</p>
-                <div class="pref-input-group">
-                    <input 
-                        type="text" 
-                        id="excludeInput" 
+                    <input
+                        type="text"
+                        id="excludeInput"
                         placeholder="Enter name"
                         onkeypress="if(event.key==='Enter') addExclude()"
                     >
@@ -869,7 +854,7 @@
                 </div>
                 <div class="pref-list" id="excludeList"></div>
             </div>
-            
+
             <button onclick="savePreferences()" style="width: 100%;">Save Preferences</button>
         </div>
     </div>
@@ -1402,22 +1387,10 @@
         }
         
         function renderPreferencesModal() {
-            const includeList = document.getElementById('includeList');
             const excludeList = document.getElementById('excludeList');
-            
-            if (tempInclude.length === 0) {
-                includeList.innerHTML = '<div class="pref-summary">No preferences set</div>';
-            } else {
-                includeList.innerHTML = tempInclude.map(name => `
-                    <div class="pref-tag include">
-                        ${name}
-                        <button onclick="removeInclude('${name}')">×</button>
-                    </div>
-                `).join('');
-            }
-            
+
             if (tempExclude.length === 0) {
-                excludeList.innerHTML = '<div class="pref-summary">No preferences set</div>';
+                excludeList.innerHTML = '<div class="pref-summary">No exclusions set</div>';
             } else {
                 excludeList.innerHTML = tempExclude.map(name => `
                     <div class="pref-tag exclude">
@@ -1804,11 +1777,6 @@
                 checkinList.innerHTML = '<div class="empty-state">No check-ins yet</div>';
             } else {
                 checkinList.innerHTML = checkins.map((c, i) => {
-                    const prefs = getUserPrefs(c.name);
-                    const prefSummary = (prefs.include.length + prefs.exclude.length) > 0
-                        ? `(${prefs.include.length} include, ${prefs.exclude.length} exclude)`
-                        : '';
-                    
                     const guestInfo = c.isGuest ? `<span class="guest-indicator">guest of ${c.addedBy}</span>` : '';
                     const timeInfo = c.timeRange ? `<span class="time-badge">${formatTimeRange(c.timeRange.start, c.timeRange.end)}</span>` : '';
                     const rotationInfo = c.allowRotation === false ? `<span class="time-badge" style="background: #ffebee; color: #c62828;">No rotation</span>` : '';
@@ -1818,7 +1786,6 @@
                             <span>
                                 <span class="checkin-name">${i + 1}. ${c.name} ${guestInfo}${timeInfo}${rotationInfo}</span>
                                 <span class="preference-badge ${c.playStyle || 'both'}">${getPreferenceLabel(c.playStyle || 'both')}</span>
-                                ${prefSummary ? `<span class="checkin-time">${prefSummary}</span>` : ''}
                                 <span class="checkin-time">${formatTime(c.timestamp)}</span>
                             </span>
                             <button class="remove-btn" onclick="removeCheckIn(${i})">Remove</button>
@@ -1862,7 +1829,7 @@
                                 ${match.players.map(p => {
                                     const guestTag = p.isGuest ? ` <span class="guest-indicator">(guest of ${p.addedBy})</span>` : '';
                                     const timeTag = p.timeRange ? ` <span class="time-badge">${formatTimeRange(p.timeRange.start, p.timeRange.end)}</span>` : '';
-                                    return `<li>• ${p.name}${guestTag}${timeTag} <span class="preference-badge ${p.playStyle || 'both'}">${getPreferenceLabel(p.playStyle || 'both')}</span>${getMatchIndicators(p, match.players, 'singles')}</li>`;
+                                    return `<li>• ${p.name}${guestTag}${timeTag} <span class="preference-badge ${p.playStyle || 'both'}">${getPreferenceLabel(p.playStyle || 'both')}</span></li>`;
                                 }).join('')}
                             </ul>
                         </div>
