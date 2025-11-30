@@ -1525,7 +1525,11 @@
         }
 
         async function saveFirebaseCheckins() {
-            if (!currentGroupId) return;
+            console.log('saveFirebaseCheckins called, currentGroupId:', currentGroupId);
+            if (!currentGroupId) {
+                console.error('Cannot save: currentGroupId is null');
+                return;
+            }
             try {
                 console.log('Saving check-ins to Firebase:', allCheckins);
                 await firebaseRef.checkins(currentGroupId).set(allCheckins);
@@ -2614,6 +2618,7 @@
         }
 
         async function saveAndRender() {
+            console.log('saveAndRender called');
             await saveFirebaseCheckins();
             initDates();
             render();
