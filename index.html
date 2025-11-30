@@ -896,12 +896,23 @@
             </div>
             
             <div class="pref-section">
+                <h3>Admin PIN (Alex Stolyar only)</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 8px;">Only you can access admin settings</p>
+                <input
+                    type="text"
+                    id="adminPinInput"
+                    value="14675"
+                    style="width: 100%; margin-bottom: 12px;"
+                >
+            </div>
+
+            <div class="pref-section">
                 <h3>Group PIN</h3>
-                <p style="font-size: 12px; color: #666; margin-bottom: 8px;">Share this PIN with group members</p>
-                <input 
-                    type="text" 
-                    id="groupPinInput" 
-                    value="1234"
+                <p style="font-size: 12px; color: #666; margin-bottom: 8px;">Share this PIN with all group members to access the app</p>
+                <input
+                    type="text"
+                    id="groupPinInput"
+                    value="14675"
                     style="width: 100%; margin-bottom: 12px;"
                 >
                 <button onclick="saveSettings()" style="width: 100%;">Save Settings</button>
@@ -913,11 +924,10 @@
         let allCheckins = JSON.parse(localStorage.getItem('tennisCheckinsV3')) || {};
         let userPreferences = JSON.parse(localStorage.getItem('userPreferencesV3')) || {};
         let coreMembers = JSON.parse(localStorage.getItem('coreMembers')) || [
-            'Alice Johnson', 'Bob Smith', 'Charlie Davis', 'Diana Prince',
-            'Eve Anderson', 'Frank Miller', 'Grace Lee', 'Henry Wilson'
-            // Add your actual 20 members here
+            'Alex Stolyar'
         ];
-        let groupPin = localStorage.getItem('groupPin') || '1234';
+        let groupPin = localStorage.getItem('groupPin') || '14675';
+        let adminPin = localStorage.getItem('adminPin') || '14675';
         let selectedDate = null;
         let selectedPreference = 'both';
         let currentEditingUser = null;
@@ -940,7 +950,7 @@
         function checkAuth() {
             const isAuth = localStorage.getItem('tennisAuth');
             if (!isAuth) {
-                const pin = prompt('Enter group PIN (default: 1234, or click Cancel to skip):');
+                const pin = prompt('Enter group PIN to access the app:');
                 if (pin === null || pin === '') {
                     // User clicked cancel or empty - allow access for testing
                     localStorage.setItem('tennisAuth', 'true');
@@ -993,16 +1003,17 @@
         }
         
         function openSettingsModal() {
-            const pin = prompt('Enter admin PIN (default: 1234):');
+            const pin = prompt('Enter admin PIN (Alex Stolyar only):');
             if (pin === null) {
                 return; // User cancelled
             }
-            if (pin !== groupPin) {
-                alert('Invalid admin PIN');
+            if (pin !== adminPin) {
+                alert('Invalid admin PIN - Only Alex Stolyar can access admin settings');
                 return;
             }
             
             renderMemberList();
+            document.getElementById('adminPinInput').value = adminPin;
             document.getElementById('groupPinInput').value = groupPin;
             document.getElementById('settingsModal').classList.add('active');
         }
@@ -1046,18 +1057,21 @@
         }
         
         function saveSettings() {
-            const newPin = document.getElementById('groupPinInput').value.trim();
-            
-            if (!newPin) {
-                alert('PIN cannot be empty');
+            const newGroupPin = document.getElementById('groupPinInput').value.trim();
+            const newAdminPin = document.getElementById('adminPinInput').value.trim();
+
+            if (!newGroupPin || !newAdminPin) {
+                alert('PINs cannot be empty');
                 return;
             }
-            
-            groupPin = newPin;
+
+            groupPin = newGroupPin;
+            adminPin = newAdminPin;
             localStorage.setItem('coreMembers', JSON.stringify(coreMembers));
             localStorage.setItem('groupPin', groupPin);
-            
-            alert('Settings saved! New PIN will apply on next page load.');
+            localStorage.setItem('adminPin', adminPin);
+
+            alert('Settings saved! New PINs will apply on next page load.');
             closeSettingsModal();
             populateNameDropdown();
         }
