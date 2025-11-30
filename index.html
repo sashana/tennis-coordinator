@@ -251,7 +251,31 @@
         .reset-btn:hover {
             background: #da190b;
         }
-        
+
+        .share-whatsapp-btn {
+            background: #25D366;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 12px 0;
+            touch-action: manipulation;
+        }
+
+        .share-whatsapp-btn:hover {
+            background: #20BA5A;
+        }
+
+        .share-whatsapp-btn:active {
+            transform: scale(0.97);
+        }
+
         .checkins {
             margin: 16px 0;
         }
@@ -2392,19 +2416,136 @@
         }
         
         function resetAll() {
-            const dateDisplay = new Date(selectedDate).toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+            const dateDisplay = new Date(selectedDate).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
             });
-            
+
             if (confirm(`Reset all check-ins for ${dateDisplay}?`)) {
                 setCurrentCheckins([]);
                 saveAndRender();
             }
         }
-        
+
+        // WhatsApp Sharing Functions
+        function formatMatchDetailsForWhatsApp() {
+            const checkins = getCurrentCheckins();
+            if (checkins.length === 0) {
+                return '';
+            }
+
+            const { matches } = organizeMatches(checkins);
+
+            // Format date
+            const dateObj = new Date(selectedDate);
+            const dateStr = dateObj.toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'short',
+                day: 'numeric'
+            });
+
+            // Start message
+            let message = `🎾 Tennis Matches - ${dateStr}\n\n`;
+
+            // Add each match group
+            let courtNumber = 1;
+            matches.forEach(match => {
+                if (match.type === 'doubles') {
+                    message += `Court ${courtNumber} - Doubles\n`;
+                    const players = match.players.map(p => p.name);
+                    if (players.length === 4) {
+                        message += `• ${players[0]} & ${players[1]} vs ${players[2]} & ${players[3]}\n`;
+                    } else {
+                        message += `• ${players.join(', ')}\n`;
+                    }
+
+                    // Add time window if available
+                    const times = match.players
+                        .filter(p => p.timeRange)
+                        .map(p => formatTimeRange(p.timeRange.start, p.timeRange.end));
+                    if (times.length > 0) {
+                        message += `  Time: ${times[0]}\n`;
+                    }
+                    message += '\n';
+                    courtNumber++;
+                } else if (match.type === 'singles') {
+                    message += `Court ${courtNumber} - Singles\n`;
+                    const players = match.players.map(p => p.name);
+                    message += `• ${players[0]} vs ${players[1]}\n`;
+
+                    // Add time window if available
+                    const times = match.players
+                        .filter(p => p.timeRange)
+                        .map(p => formatTimeRange(p.timeRange.start, p.timeRange.end));
+                    if (times.length > 0) {
+                        message += `  Time: ${times[0]}\n`;
+                    }
+                    message += '\n';
+                    courtNumber++;
+                } else if (match.type === 'singles-or-practice') {
+                    message += `Court ${courtNumber} - Rotation (3 players)\n`;
+                    message += `• ${match.players.map(p => p.name).join(', ')}\n`;
+
+                    // Add time window if available
+                    const times = match.players
+                        .filter(p => p.timeRange)
+                        .map(p => formatTimeRange(p.timeRange.start, p.timeRange.end));
+                    if (times.length > 0) {
+                        message += `  Time: ${times[0]}\n`;
+                    }
+                    message += '\n';
+                    courtNumber++;
+                }
+            });
+
+            // Add waiting list if any
+            const waitingMatch = matches.find(m => m.type === 'waiting');
+            if (waitingMatch && waitingMatch.players.length > 0) {
+                message += `Waiting List:\n`;
+                waitingMatch.players.forEach(p => {
+                    message += `• ${p.name}\n`;
+                });
+                message += '\n';
+            }
+
+            // Add weather if available
+            const weatherData = weatherCache[selectedDate];
+            if (weatherData) {
+                const weatherEmoji = getWeatherEmoji(weatherData.code);
+                message += `Weather: ${weatherEmoji} ${weatherData.desc}, ${weatherData.tempMax}°F\n\n`;
+            }
+
+            // Add group URL
+            message += `Check in at: ${window.location.origin}${window.location.pathname}`;
+
+            return message;
+        }
+
+        function getWeatherEmoji(code) {
+            if (code === 0) return '☀️';
+            if (code <= 3) return '⛅';
+            if (code <= 67) return '🌧️';
+            if (code <= 77) return '🌨️';
+            if (code <= 99) return '⛈️';
+            return '🌤️';
+        }
+
+        function shareToWhatsApp() {
+            const message = formatMatchDetailsForWhatsApp();
+            if (!message) {
+                showToast('No matches to share', 'error');
+                return;
+            }
+
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+
+            // Open WhatsApp in new window/tab
+            window.open(whatsappUrl, '_blank');
+        }
+
         function saveAndRender() {
             saveFirebaseCheckins();
             initDates();
@@ -2702,7 +2843,13 @@
             
             const { matches, warnings } = organizeMatches(checkins);
             let html = '<h2>Organized Matches</h2>';
-            
+
+            // Add WhatsApp share button if there are matches
+            const hasMatches = matches.some(m => m.type !== 'waiting' || m.players.length > 0);
+            if (hasMatches) {
+                html += '<button class="share-whatsapp-btn" onclick="shareToWhatsApp()">📱 Share to WhatsApp</button>';
+            }
+
             if (warnings.length > 0) {
                 html += '<div class="warning-box">' + warnings.join('<br>') + '</div>';
             }
