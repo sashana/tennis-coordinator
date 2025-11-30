@@ -1399,6 +1399,7 @@
         let selectedName = '';
         let isGuest = false;
         let addedBy = '';
+        let sessionUser = ''; // The actual person using the app (persists across check-ins)
 
         // Weather location (defaults to Los Gatos, CA)
         let weatherLocation = {
@@ -1757,6 +1758,13 @@
                     formFields.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }, 100);
             } else if (value !== '') {
+                // Set session user if not already set (first time selecting a name)
+                if (!sessionUser && !isGuest) {
+                    sessionUser = value;
+                    localStorage.setItem(`tennisSessionUser_${currentGroupId}`, value);
+                    console.log('Session user set to:', sessionUser);
+                }
+
                 isGuest = false;
                 selectedName = value;
                 addedBy = '';
@@ -1784,7 +1792,16 @@
             const select = document.getElementById('nameSelect');
             const sortedMembers = [...coreMembers].sort((a, b) => a.localeCompare(b));
 
-            // Get remembered user name for this group
+            // Initialize session user from localStorage
+            if (currentGroupId && !sessionUser) {
+                const savedSessionUser = localStorage.getItem(`tennisSessionUser_${currentGroupId}`);
+                if (savedSessionUser) {
+                    sessionUser = savedSessionUser;
+                    console.log('Loaded session user from storage:', sessionUser);
+                }
+            }
+
+            // Get remembered user name for this group (for backwards compatibility)
             const rememberedName = currentGroupId ? localStorage.getItem(`tennisUserName_${currentGroupId}`) : null;
 
             select.innerHTML = '<option value="">Select your name...</option>' +
@@ -2583,11 +2600,15 @@
                 };
             }
 
+            // Track who added this check-in (for permission control)
             if (isGuest) {
                 checkinData.isGuest = true;
                 checkinData.addedBy = guestAddedBy;
+            } else {
+                // For regular members, track the session user who added them
+                checkinData.addedBy = sessionUser || name; // Use sessionUser, fallback to name if checking in themselves
             }
-            
+
             checkins.push(checkinData);
 
             setCurrentCheckins(checkins);
@@ -2619,15 +2640,18 @@
             const person = checkins[index];
             const personName = person ? person.name : 'this person';
 
-            // Get current user - check remembered name or selected name
-            const currentUser = localStorage.getItem(`tennisUserName_${currentGroupId}`) || selectedName;
+            // Use sessionUser as the current user (the person using the app)
+            const currentUser = sessionUser || localStorage.getItem(`tennisSessionUser_${currentGroupId}`) || selectedName;
 
-            // Permission check: Can only remove your own check-in unless you're admin
+            // Permission check: Can remove if you're the owner, the adder, or admin
             const isOwner = currentUser && normalizeName(currentUser) === normalizeName(personName);
+            const isAdder = person && person.addedBy && currentUser && normalizeName(currentUser) === normalizeName(person.addedBy);
             const isAdmin = sessionStorage.getItem(`adminAuth_${currentGroupId}`) === 'true';
 
-            if (!isOwner && !isAdmin) {
-                showToast(`You can only remove your own check-in`, 'error');
+            console.log('Remove permission check:', { currentUser, personName, isOwner, isAdder, addedBy: person?.addedBy, isAdmin });
+
+            if (!isOwner && !isAdder && !isAdmin) {
+                showToast(`You can only remove check-ins you added`, 'error');
                 return;
             }
 
@@ -3053,14 +3077,22 @@
                 checkinList.innerHTML = '<div class="empty-state">No check-ins yet</div>';
             } else {
                 checkinList.innerHTML = checkins.map((c, i) => {
-                    const guestInfo = c.isGuest ? `<span class="guest-indicator">guest of ${c.addedBy}</span>` : '';
+                    // Show who added this check-in
+                    let addedByInfo = '';
+                    if (c.isGuest) {
+                        addedByInfo = `<span class="guest-indicator">guest of ${c.addedBy}</span>`;
+                    } else if (c.addedBy && normalizeName(c.addedBy) !== normalizeName(c.name)) {
+                        // Show "added by X" only if someone else added this check-in
+                        addedByInfo = `<span class="guest-indicator">added by ${c.addedBy}</span>`;
+                    }
+
                     const timeInfo = c.timeRange ? `<span class="time-badge">${formatTimeRange(c.timeRange.start, c.timeRange.end)}</span>` : '';
                     const rotationInfo = c.allowRotation === false ? `<span class="time-badge" style="background: #ffebee; color: #c62828;">No rotation</span>` : '';
 
                     return `
                         <div class="checkin-item">
                             <span>
-                                <span class="checkin-name">${i + 1}. ${c.name} ${guestInfo}${timeInfo}${rotationInfo}</span>
+                                <span class="checkin-name">${i + 1}. ${c.name} ${addedByInfo}${timeInfo}${rotationInfo}</span>
                                 <span class="preference-badge ${c.playStyle || 'both'}">${getPreferenceLabel(c.playStyle || 'both')}</span>
                                 <span class="checkin-time">${formatTime(c.timestamp)}</span>
                             </span>
