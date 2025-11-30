@@ -1,278 +1,418 @@
-# Tue/Thu+ Midday Doubles - User Guide
-## Tennis Coordinator
-
-## Quick Start
-
-1. **First Time:** Enter group PIN (ask admin if you don't have it)
-2. **Select Date:** Tap any date in the next 2 weeks
-3. **Check In:**
-   - Select your name from dropdown (alphabetically sorted)
-   - Choose: Singles Only, Doubles Only, or Either
-   - Optional: Set your available time
-   - Optional: Check/uncheck 3-player rotation preference
-   - Tap "Check In"
-4. **View Matches:** See organized matches automatically
+# 🎾 Tue/Thu+ Midday Doubles
+## Tennis Coordinator - User Guide
 
 ---
 
-## How It Works
+## 🚀 Quick Start
 
-### Check-In Priority
-- **First-come, first-served** based on check-in time
-- Earlier check-ins get priority in match organization
+### First-Time Setup
+1. **Enter PIN** → Ask admin for group PIN (default: 14675)
+2. **Select Date** → Choose from next 14 days
+3. **Check In** → Follow steps below
+4. **View Matches** → See organized games automatically
 
-### Match Organization Rules
+### How to Check In
 
-**Doubles Matches:**
-- Formed from first 4 players who selected "Doubles" or "Either"
-- Organized by check-in order
-- Time preferences shown but not enforced (group negotiates)
-- Need 4+ people for doubles
+**Step 1: Select Your Name**
+- Dropdown shows all members alphabetically
+- Or select "+ Add Guest" to bring a friend
 
-**Singles Matches:**
-- Formed from players who selected "Singles" or "Either" (if not in doubles)
-- **Requires time overlap** - won't pair people with conflicting times
-- **Respects exclusion preferences** - won't pair excluded players
-- Need 2+ people for singles
+**Step 2: Choose Play Style**
+- 🏸 **Singles Only** → Only 1v1 matches
+- 🎾 **Doubles Only** → Only 2v2 matches
+- ⚡ **Either** → Most flexible (recommended)
 
-**Remaining Players:**
-- 3 people: Rotation (choose 1v1 or 1v2 format)
-- 2 people: Singles match (if compatible)
-- 1 person: Waiting list
+**Step 3: Set Time (Optional)**
+- Leave blank if available anytime
+- Enter specific window (e.g., 2:00 PM - 5:00 PM)
 
----
+**Step 4: Rotation Preference**
+- ✅ Checked → Can play 3-player rotation
+- ⬜ Unchecked → Only standard matches
 
-## Play Style Options
-
-**Singles Only**
-- Only paired for singles matches
-- Never placed in doubles
-
-**Doubles Only**
-- Only placed in doubles matches
-- If not enough for doubles, goes to waiting
-
-**Either** (Most Flexible)
-- First grouped for doubles if enough players
-- If not used in doubles, available for singles
-- Recommended for maximum flexibility
+**Step 5: Tap "Check In"**
 
 ---
 
-## 3-Player Rotation Preference
+## 📋 How Match Organization Works
 
-**Willing to Play Rotation (Default: Checked)**
-- When checked, you can be placed in a 3-player rotation group
-- Rotation groups form when exactly 3 compatible players remain
-- Choose between 1v1 rotation (singles practice) or 1v2 rotation (Australian doubles)
-- If unchecked, you'll only be placed in standard doubles or singles matches
-- All 3 players must have this checked for rotation to form
+### Priority System
+⏰ **First-come, first-served** based on check-in time
 
-**When to uncheck:**
-- If you only want traditional 2-person or 4-person matches
-- If you prefer to wait for a standard match rather than rotate
+### Match Formation Order
 
----
+**1️⃣ Doubles Matches (Groups of 4)**
+- Takes first 4 players who selected "Doubles" or "Either"
+- Check-in order determines priority
+- Time shown but not enforced (you coordinate)
 
-## Time Availability
+**2️⃣ Singles Matches (Pairs)**
+- Pairs remaining players who selected "Singles" or "Either"
+- ⚠️ **Requires overlapping time windows**
+- ⚠️ **Respects exclusion preferences**
 
-**How to Use:**
-- Leave blank = Available any time
-- Enter start time only = "from X onwards"
-- Enter end time only = "until X"
-- Enter both = Specific window (e.g., 2:00PM-5:00PM)
-
-**Important:**
-- Times enforced for **singles matches only**
-- Times shown but ignored for doubles (group coordinates)
-- No time overlap = players placed in waiting, not paired
-
-**Examples:**
-- ✅ 9:00AM-11:00AM + 10:00AM-12:00PM = Can play (overlap 10-11AM)
-- ❌ 9:00AM-11:00AM + 12:00PM-5:00PM = Cannot play (no overlap)
-- ✅ Blank + any time = Always compatible
+**3️⃣ Remaining Players**
+- **3 people** → Rotation (1v1 or 1v2)
+- **2 people** → Singles (if compatible)
+- **1 person** → Waiting list
 
 ---
 
-## Partner Preferences (Singles Only)
+## 🏸 Play Style Guide
 
-Access via ⚙️ Preferences button next to your name.
+### Singles Only 🎯
+**Best for:** Players who prefer 1v1 matches
+- ✅ Only paired for singles matches
+- ❌ Never placed in doubles
+- ⚠️ May wait if no compatible partners
 
-**Exclude Players:**
-- System will not pair you with excluded players in singles matches
-- Applies only to singles matches (not doubles or rotation)
-- If exclusions prevent pairing, you'll be placed in waiting
-- Preferences are private and persist across all dates
-- No visible indication that exclusions are set
+### Doubles Only 🎾
+**Best for:** Players who prefer 2v2 matches
+- ✅ Only placed in doubles matches (groups of 4)
+- ❌ Never in singles or rotation
+- ⚠️ Goes to waiting if less than 4 doubles players
 
----
-
-## Adding Guests
-
-1. Select "+ Add Guest" from name dropdown
-2. Enter guest's name
-3. Select who is adding the guest
-4. Guest appears as: "Guest Name (guest of Your Name)"
-5. Guests can have same preferences as regular members
-
----
-
-## Admin Features
-
-Click ⚙️ icon (top right), enter admin PIN.
-
-**Core Members:**
-- Add/remove regular group members
-- Members displayed alphabetically in both admin list and name dropdown
-- New members automatically sorted into alphabetical order
-
-**Admin PIN:**
-- Required to access admin settings
-- Only admin can change this PIN
-
-**Group PIN:**
-- Used by all members to access the app
-- Share this PIN with group members
-- Changes take effect on next page load
+### Either ⚡ (Recommended)
+**Best for:** Maximum flexibility
+- 1️⃣ First considered for doubles
+- 2️⃣ Then available for singles if not in doubles
+- 3️⃣ Can be in rotation groups
+- ✅ Best chance of getting a match
 
 ---
 
-## Rules & Etiquette
+## 🔄 3-Player Rotation
 
-1. **Check in only if you can actually play**
-   - Don't reserve spots "just in case"
-   
-2. **Update your time accurately**
-   - Helps everyone coordinate better
-   - Be realistic about your availability
+### What Is It?
+When exactly 3 compatible players remain, they can form a rotation group
 
-3. **Remove yourself if plans change**
-   - Click "Remove" next to your name
-   - Frees up spot for others
+### Format Options
 
-4. **Respect exclusion preferences**
-   - If someone excludes you, don't take it personally
-   - Focus on playing with compatible partners
+**🎯 1v1 Rotation (Singles Practice)**
+- 2 players on court, 1 waits
+- Rotate after each game/set
+- Everyone gets equal practice time
 
-5. **Coordinate final time as a group**
-   - Check everyone's time windows
-   - Find overlap that works for all
-   - Use WhatsApp to confirm
-
-6. **First check-in gets priority**
-   - Don't check in super early to game the system
-   - Be reasonable (check in when you actually know)
-
-7. **Guests are welcome**
-   - Make sure your guest understands the level
-   - You're responsible for your guest's behavior
-
----
-
-## Common Scenarios
-
-**"I'm in waiting list"**
-- Not enough players with compatible times
-- Exclusion preferences preventing pairing
-- Coordinate with others to find overlapping time
-
-**"Match shows time conflict"**
-- Warning: some players have non-overlapping times
-- Group needs to negotiate a common time
-- For doubles only (singles won't match with conflicts)
-
-**"I want to change my check-in"**
-- Remove yourself, then check in again
-- Loses your original check-in time priority
-
-**"Same person checked in twice"**
-- System prevents this
-- Contact admin if you see duplicates
-
-**"I forgot the PIN"**
-- Ask any group member or admin
-- PIN is shared among all members
-
----
-
-## Match Organization Examples
-
-**Example 1: 8 Players**
-- All select "Either", no time restrictions
-- Result: 2 doubles matches
-
-**Example 2: 6 Players**
-- 4 select "Either", 2 select "Singles"
-- Result: 1 doubles match (first 4) + 1 singles match (remaining 2)
-
-**Example 3: 5 Players**
-- 3 select "Doubles", 2 select "Singles"
-- Result: 3 in waiting (need 4 for doubles) + 1 singles match (if times overlap)
-
-**Note on 3-Person Rotation:**
-When 3 compatible players remain, they can choose rotation format:
-
-**1v1 Rotation (Singles):**
-- 2 players on court play singles
-- 1 player waits off court
-- After each game/set, players rotate
-- Everyone gets equal singles practice
-
-**1v2 Rotation (Australian Doubles):**
-- 1 player on one side vs 2 players on other side
+**🎾 1v2 Rotation (Australian Doubles)**
+- 1 player vs 2 players
 - Rotate positions after each game
-- More continuous play, good practice
-- Challenges for the solo player
+- More continuous play
 
-**Example 4: 4 Players with Time Conflicts**
-- 2 available 9-11AM, 2 available 2-5PM
-- All select "Singles"
-- Result: 2 singles matches (within each time group)
+### Your Preference
+- ✅ **Checked** → Can be placed in rotation (default)
+- ⬜ **Unchecked** → Only standard matches
 
-**Example 5: Exclusions**
+**Note:** All 3 players must allow rotation for it to form
+
+---
+
+## ⏰ Time Windows
+
+### How It Works
+
+**Leave Blank**
+- Available anytime
+- ✅ Matches with everyone
+
+**Start Time Only**
+- Available "from X onwards"
+- Example: 2:00 PM → Available 2 PM and later
+
+**End Time Only**
+- Available "until X"
+- Example: 5:00 PM → Available anytime before 5 PM
+
+**Both Times**
+- Specific window
+- Example: 2:00 PM - 5:00 PM
+
+### Important Rules
+
+⚠️ **Singles Matches ONLY**
+- Time overlap required for pairing
+- No overlap = both go to waiting
+
+✅ **Doubles Matches**
+- Times shown but not enforced
+- Group coordinates together
+
+### Examples
+
+| Player A | Player B | Result |
+|----------|----------|--------|
+| 9 AM - 11 AM | 10 AM - 12 PM | ✅ Can play (10-11 AM overlap) |
+| 9 AM - 11 AM | 12 PM - 5 PM | ❌ Can't play (no overlap) |
+| Blank | Any time | ✅ Always compatible |
+| 2 PM - 5 PM | 3 PM - 4 PM | ✅ Can play (3-4 PM overlap) |
+
+---
+
+## 🔒 Partner Preferences
+
+### How to Access
+Click ⚙️ **Preferences** button next to your name in check-in list
+
+### Exclude Players (Singles Only)
+**What it does:**
+- System won't pair you with excluded players
+- Only applies to singles matches
+- Completely private - no one can see your exclusions
+
+**When you exclude someone:**
+- ✅ Works for singles matches
+- ❌ Doesn't affect doubles or rotation
+- ⚠️ May result in waiting if no other partners available
+
+**Privacy:**
+- No visible badges or indicators
+- Preferences persist across all dates
+- Discrete and confidential
+
+---
+
+## 👥 Adding Guests
+
+### Steps
+1. Select **"+ Add Guest"** from name dropdown
+2. Enter guest's full name
+3. Select who is bringing them
+4. Guest appears as: **"John Doe (guest of Alex)"**
+
+### Guest Features
+- ✅ Can check in like regular members
+- ✅ Can set play style and time preferences
+- ✅ Can be in any match type
+- ⚠️ You're responsible for your guest
+
+---
+
+## ⚙️ Admin Settings
+
+**Access:** Click ⚙️ icon (top right) → Enter admin PIN (3250)
+
+### Core Members
+- ➕ Add new members to the group
+- ➖ Remove members
+- 📝 Members shown alphabetically everywhere
+- ✅ Changes sync to all users instantly
+
+### Admin PIN
+- 🔐 Required for admin settings
+- 🔑 Only admin should know this
+- Can change members and PINs
+
+### Group PIN
+- 🚪 Required for app access
+- 📢 Share with all group members
+- Can be changed by admin
+
+---
+
+## ✅ Rules & Etiquette
+
+### Check-In Rules
+
+**✓ Only check in if you can play**
+- Don't reserve "just in case"
+- Be committed to playing
+
+**✓ Update time accurately**
+- Helps everyone coordinate
+- Be realistic about availability
+
+**✓ Remove yourself if plans change**
+- Click "Remove" next to your name
+- Frees spot for others
+
+### Playing Together
+
+**🤝 Respect exclusion preferences**
+- Don't take it personally
+- Focus on compatible partners
+- Keep it professional
+
+**💬 Coordinate as a group**
+- Check everyone's time windows
+- Find common overlap
+- Use WhatsApp to confirm details
+
+**⏰ Be fair with priority**
+- First check-in gets priority
+- Don't game the system
+- Check in when you know you can play
+
+### Guests
+
+**👥 Guests welcome!**
+- ✅ Ensure they match the skill level
+- ✅ You're responsible for their behavior
+- ✅ Introduce them to the group
+
+---
+
+## ❓ Common Questions
+
+### "Why am I in waiting?"
+
+**Possible reasons:**
+- ⏰ No time overlap with other players
+- 🚫 Exclusion preferences preventing pairing
+- 🎾 Not enough players for your play style
+
+**What to do:**
+- Check your time window
+- Coordinate with group via WhatsApp
+- Consider changing play style to "Either"
+
+### "Match shows time conflict"
+
+**What it means:**
+- Players have non-overlapping times
+- Only for doubles (shown as warning)
+
+**What to do:**
+- Group needs to negotiate common time
+- Use WhatsApp to coordinate
+- One person may need to adjust
+
+### "How do I change my check-in?"
+
+**Steps:**
+1. Click "Remove" next to your name
+2. Check in again with new settings
+
+**Note:** You lose original check-in time priority
+
+### "I forgot the PIN"
+
+**Solution:**
+- Ask any group member
+- Or contact admin
+- Group PIN shared with everyone
+
+### "Someone checked in twice"
+
+**This shouldn't happen:**
+- System prevents duplicates
+- Contact admin if you see this
+
+---
+
+## 📊 Match Organization Examples
+
+### Example 1: Perfect Doubles Day
+**8 Players, all select "Either"**
+```
+Result: 🎾 2 Doubles Matches
+```
+
+### Example 2: Mixed Preferences
+**6 Players: 4 "Either", 2 "Singles"**
+```
+Result:
+🎾 1 Doubles Match (first 4)
+🏸 1 Singles Match (remaining 2)
+```
+
+### Example 3: Not Enough for Doubles
+**5 Players: 3 "Doubles", 2 "Singles"**
+```
+Result:
+⏸️ 3 in Waiting (need 4 for doubles)
+🏸 1 Singles Match (if times compatible)
+```
+
+### Example 4: Time Conflicts
+**4 Players, all "Singles"**
+- 2 available 9-11 AM
+- 2 available 2-5 PM
+```
+Result: 🏸 2 Singles Matches
+(paired within same time windows)
+```
+
+### Example 5: Exclusion Impact
+**2 Players, both "Singles"**
 - Alice excludes Bob
-- Both select "Singles" 
-- Result: Both in waiting (cannot pair due to exclusion)
+```
+Result: ⏸️ Both in Waiting
+(cannot pair due to exclusion)
+```
+
+### Example 6: Rotation Group
+**3 Players, all "Either", all allow rotation**
+```
+Result: 🔄 Rotation Group
+(choose 1v1 or 1v2 format)
+```
 
 ---
 
-## Tips for Success
+## 💡 Tips for Success
 
-1. **Be flexible with times** - increases matching chances
-2. **Select "Either"** - get into more matches
-3. **Check in early** - better position in queue
-4. **Keep preferences minimal** - too many exclusions = fewer matches
-5. **Use WhatsApp** - coordinate final details after matches form
-6. **Check weather** - plan accordingly (shown for next 14 days when hosted)
+### Get More Matches
+- ⚡ **Select "Either"** → Maximum flexibility
+- ⏰ **Be flexible with times** → More partners
+- 🎯 **Limit exclusions** → Better pairing chances
 
----
+### Priority & Coordination
+- 🕐 **Check in early** → Better queue position
+- 💬 **Use WhatsApp** → Coordinate details
+- 🌤️ **Check weather** → Plan ahead
 
-## Troubleshooting
-
-**Can't access app:**
-- Check you have correct PIN
-- Try clicking "Cancel" to skip PIN for testing
-
-**Don't see my check-in:**
-- Verify you selected correct date
-- Check you clicked "Check In" button
-- Refresh page
-
-**Match seems wrong:**
-- Review time windows for conflicts
-- Check preference settings
-- Verify play style selections
-
-**Settings won't save:**
-- Make sure you entered correct admin PIN
-- Click "Save Settings" button
-- Refresh page to verify
+### Be a Good Member
+- ✅ **Commit when checking in** → Don't flake
+- 🔄 **Update if plans change** → Remove yourself
+- 🤝 **Be friendly** → Everyone wants to play
 
 ---
 
-## Contact
+## 🔧 Troubleshooting
 
-Questions or issues? Contact group admin via WhatsApp.
+### Can't Access App
+
+**Problem:** PIN not working
+- ✓ Verify you have correct group PIN
+- ✓ Ask group member or admin
+- ✓ Try "Cancel" to skip (testing only)
+
+### Check-In Not Showing
+
+**Problem:** Don't see my check-in
+- ✓ Verify correct date selected
+- ✓ Confirm you clicked "Check In" button
+- ✓ Refresh page (changes sync automatically)
+
+### Match Looks Wrong
+
+**Problem:** Organization seems incorrect
+- ✓ Review time windows for conflicts
+- ✓ Check exclusion preferences
+- ✓ Verify play style selections
+- ✓ Remember: first-come, first-served
+
+### Settings Won't Save
+
+**Problem:** Admin settings not persisting
+- ✓ Ensure correct admin PIN entered
+- ✓ Click "Save Settings" button
+- ✓ Wait a moment for sync
+- ✓ Check Firebase connection (see technical section)
+
+### Data Not Syncing
+
+**Problem:** Changes not appearing on other devices
+- ✓ Check internet connection
+- ✓ Ensure all users on same URL
+- ✓ Wait 1-2 seconds for sync
+- ✓ Refresh browser if needed
+
+---
+
+## 📞 Contact
+
+**Questions or issues?**
+Contact group admin via WhatsApp
 
 ---
 
