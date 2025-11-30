@@ -1401,6 +1401,13 @@
         }
 
         async function migrateOldData() {
+            // Check if migration has already been completed
+            const migrationFlagSnapshot = await db.ref('_migrationCompleted').once('value');
+            if (migrationFlagSnapshot.val() === true) {
+                console.log('Migration already completed, skipping');
+                return;
+            }
+
             // Check if old data structure exists
             const oldSettingsSnapshot = await db.ref('settings').once('value');
             const oldSettings = oldSettingsSnapshot.val();
@@ -1425,9 +1432,14 @@
                     await firebaseRef.checkins('tue-thu-midday-doubles').set(oldCheckins);
                 }
 
+                // Set migration flag so this doesn't run again
+                await db.ref('_migrationCompleted').set(true);
+
                 console.log('Migration completed successfully');
             } else {
-                console.log('No old data found to migrate. Old data may have been deleted.');
+                // No old data exists, mark migration as complete
+                await db.ref('_migrationCompleted').set(true);
+                console.log('No old data found to migrate. Marking migration as complete.');
             }
         }
 
