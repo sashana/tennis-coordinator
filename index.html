@@ -965,10 +965,36 @@
             alert('Firebase not configured. Please add your Firebase configuration.');
         }
 
-        // Current selected group
-        let currentGroupId = sessionStorage.getItem('currentGroupId') || null;
+        // Current selected group (determined by URL path)
+        let currentGroupId = null;
         let currentGroupName = '';
         let availableGroups = {};
+
+        // Parse group from URL path
+        function getGroupIdFromUrl() {
+            // Check if we were redirected from 404.html
+            const redirect = sessionStorage.getItem('redirect');
+            if (redirect) {
+                sessionStorage.removeItem('redirect');
+                const groupPath = redirect.replace(/^\/+|\/+$/g, '');
+                if (groupPath && groupPath !== 'index.html') {
+                    // Update browser URL without page reload
+                    history.replaceState(null, '', redirect);
+                    return groupPath;
+                }
+            }
+
+            const path = window.location.pathname;
+            // Remove leading/trailing slashes and get the group ID
+            const groupPath = path.replace(/^\/+|\/+$/g, '');
+
+            // If empty or index.html, return null (will show group selector)
+            if (!groupPath || groupPath === 'index.html') {
+                return null;
+            }
+
+            return groupPath;
+        }
 
         // Firebase helper functions (group-scoped)
         const firebaseRef = {
@@ -1158,22 +1184,22 @@
             }
         }
 
-        // PIN Authentication on load
-        function checkAuth() {
-            const isAuth = localStorage.getItem('tennisAuth');
+        // PIN Authentication for specific group
+        function checkAuth(groupId, groupName, correctPin) {
+            const authKey = `tennisAuth_${groupId}`;
+            const isAuth = sessionStorage.getItem(authKey);
+
             if (!isAuth) {
-                const pin = prompt('Enter group PIN to access the app:');
+                const pin = prompt(`Enter PIN for ${groupName}:`);
                 if (pin === null || pin === '') {
-                    // User clicked cancel or empty - allow access for testing
-                    localStorage.setItem('tennisAuth', 'true');
-                    return true;
-                } else if (pin === groupPin) {
-                    localStorage.setItem('tennisAuth', 'true');
+                    // User clicked cancel - deny access
+                    return false;
+                } else if (pin === correctPin) {
+                    sessionStorage.setItem(authKey, 'true');
                     return true;
                 } else {
-                    alert('Invalid PIN. Try again or click Cancel to skip.');
-                    localStorage.removeItem('tennisAuth');
-                    return checkAuth(); // Try again
+                    alert('Invalid PIN. Try again.');
+                    return checkAuth(groupId, groupName, correctPin); // Try again
                 }
             }
             return true;
@@ -1288,9 +1314,12 @@
                 return;
             }
 
-            // Successfully authenticated to group
-            await selectGroup(selectedGroupIdTemp);
-            closeGroupSelector();
+            // Store auth in session and navigate to group URL
+            const authKey = `tennisAuth_${selectedGroupIdTemp}`;
+            sessionStorage.setItem(authKey, 'true');
+
+            // Navigate to the group's URL
+            window.location.href = `/${selectedGroupIdTemp}`;
         }
 
         function cancelGroupSelection() {
@@ -1306,7 +1335,6 @@
 
         async function selectGroup(groupId) {
             currentGroupId = groupId;
-            sessionStorage.setItem('currentGroupId', groupId);
 
             // Load group settings
             const groupSettings = availableGroups[groupId]?.settings || {};
@@ -2191,12 +2219,24 @@
             // Load available groups from Firebase
             await loadAvailableGroups();
 
-            // Check if user has a group selected in session
-            if (currentGroupId && availableGroups[currentGroupId]) {
-                // User has previously selected a group - load it
-                await selectGroup(currentGroupId);
+            // Get group ID from URL path
+            const urlGroupId = getGroupIdFromUrl();
+
+            if (urlGroupId && availableGroups[urlGroupId]) {
+                // URL has a valid group - authenticate and load it
+                const groupSettings = availableGroups[urlGroupId].settings || {};
+                const groupName = groupSettings.groupName || urlGroupId;
+                const groupPin = groupSettings.groupPin || '';
+
+                if (checkAuth(urlGroupId, groupName, groupPin)) {
+                    await selectGroup(urlGroupId);
+                } else {
+                    // Authentication failed - redirect to root
+                    window.location.href = '/';
+                    return;
+                }
             } else {
-                // No group selected - show group selector
+                // No valid group in URL - show group selector
                 await openGroupSelector();
             }
 
