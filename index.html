@@ -2500,7 +2500,8 @@
                 sessionStorage.setItem(`adminAuth_${currentGroupId}`, 'true');
             }
 
-            const dateDisplay = new Date(selectedDate).toLocaleDateString('en-US', {
+            // Fix timezone bug - append T00:00:00 to parse in local time
+            const dateDisplay = new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
