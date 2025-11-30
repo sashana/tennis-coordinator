@@ -813,8 +813,35 @@
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
 
+    <!-- Landing Page (shown when no group selected) -->
+    <div id="landingPage" style="display: none; max-width: 800px; margin: 60px auto; padding: 40px 20px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+        <h1 style="font-size: 48px; margin-bottom: 20px;">🎾 Tennis Coordinator</h1>
+        <p style="font-size: 20px; color: #666; margin-bottom: 40px; line-height: 1.6;">
+            Organize tennis matches, coordinate players, and manage check-ins for your tennis group.
+        </p>
 
-    <div class="container">
+        <div style="background: #f5f5f5; padding: 30px; border-radius: 12px; margin-bottom: 40px;">
+            <h2 style="font-size: 24px; margin-bottom: 20px;">How It Works</h2>
+            <div style="text-align: left; max-width: 600px; margin: 0 auto;">
+                <p style="margin-bottom: 15px;">✓ <strong>Check In</strong> - Select your name, play style, and availability</p>
+                <p style="margin-bottom: 15px;">✓ <strong>Auto-Match</strong> - System organizes doubles, singles, and rotation matches</p>
+                <p style="margin-bottom: 15px;">✓ <strong>Real-Time Sync</strong> - Everyone sees updates instantly</p>
+                <p style="margin-bottom: 15px;">✓ <strong>Weather Forecast</strong> - Check conditions before you play</p>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 40px;">
+            <p style="font-size: 18px; color: #666; margin-bottom: 20px;">
+                To access your tennis group, visit your group's unique URL or contact your group admin for the link.
+            </p>
+        </div>
+
+        <div style="font-size: 14px; color: #999;">
+            <p>Site Administrator? <a href="/admin" style="color: #4CAF50; text-decoration: none;">Access Site Admin →</a></p>
+        </div>
+    </div>
+
+    <div class="container" id="appContainer">
         <h1>
             <span>
                 <span id="groupNameDisplay">🎾 Tennis Coordinator</span>
@@ -2761,14 +2788,19 @@
 
                 if (checkAuth(urlGroupId, groupName, groupPin)) {
                     await selectGroup(urlGroupId);
+                    // Show app, hide landing page
+                    document.getElementById('appContainer').style.display = 'block';
+                    document.getElementById('landingPage').style.display = 'none';
                 } else {
                     // Authentication failed - redirect to root
                     window.location.href = '/';
                     return;
                 }
             } else {
-                // No valid group in URL - show group selector
-                await openGroupSelector();
+                // No valid group in URL - show landing page
+                document.getElementById('appContainer').style.display = 'none';
+                document.getElementById('landingPage').style.display = 'block';
+                return;
             }
 
             // Initialize UI
