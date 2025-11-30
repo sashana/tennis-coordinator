@@ -1030,6 +1030,9 @@
         // Firebase Data Loading and Sync
         async function loadAvailableGroups() {
             try {
+                // Always check for old data to migrate first
+                await migrateOldData();
+
                 const groupsSnapshot = await firebaseRef.groups().once('value');
                 availableGroups = groupsSnapshot.val() || {};
 
@@ -1115,9 +1118,6 @@
         }
 
         async function initializeDefaultGroups() {
-            // First, try to migrate any old data
-            await migrateOldData();
-
             // Check if groups already exist
             const groupsSnapshot = await firebaseRef.groups().once('value');
             const existingGroups = groupsSnapshot.val() || {};
