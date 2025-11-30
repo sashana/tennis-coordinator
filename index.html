@@ -1011,8 +1011,8 @@
         </div>
         
         <div class="matches" id="matches"></div>
-        
-        <button class="reset-btn" onclick="resetAll()">Reset All</button>
+
+        <button class="reset-btn" onclick="resetAll()">🔒 Reset All (Admin Only)</button>
     </div>
     
     <!-- Preferences Modal -->
@@ -2156,15 +2156,16 @@
         function initDates() {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            
+
             if (!selectedDate) {
                 selectedDate = today.toISOString().split('T')[0];
             }
-            
+
             const dateGrid = document.getElementById('dateGrid');
             const dates = [];
-            
-            for (let i = 0; i < 14; i++) {
+
+            // Show 30 days (weather only available for first 14)
+            for (let i = 0; i < 30; i++) {
                 const date = new Date(today);
                 date.setDate(date.getDate() + i);
                 dates.push(date);
@@ -2456,6 +2457,18 @@
             const person = checkins[index];
             const personName = person ? person.name : 'this person';
 
+            // Get current user - check remembered name or selected name
+            const currentUser = localStorage.getItem(`tennisUserName_${currentGroupId}`) || selectedName;
+
+            // Permission check: Can only remove your own check-in unless you're admin
+            const isOwner = currentUser && normalizeName(currentUser) === normalizeName(personName);
+            const isAdmin = sessionStorage.getItem(`adminAuth_${currentGroupId}`) === 'true';
+
+            if (!isOwner && !isAdmin) {
+                showToast(`You can only remove your own check-in`, 'error');
+                return;
+            }
+
             // Confirmation dialog
             if (!confirm(`Remove ${personName} from check-ins?`)) {
                 return; // User cancelled
@@ -2470,6 +2483,23 @@
         }
         
         function resetAll() {
+            // Admin-only function
+            const isAdmin = sessionStorage.getItem(`adminAuth_${currentGroupId}`) === 'true';
+
+            if (!isAdmin) {
+                // Prompt for admin PIN
+                const enteredPin = prompt('Enter Admin PIN to reset all check-ins:');
+                if (enteredPin === null) return; // User cancelled
+
+                if (enteredPin !== adminPin) {
+                    showToast('Incorrect admin PIN', 'error');
+                    return;
+                }
+
+                // Set admin session for this action
+                sessionStorage.setItem(`adminAuth_${currentGroupId}`, 'true');
+            }
+
             const dateDisplay = new Date(selectedDate).toLocaleDateString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
@@ -2480,6 +2510,7 @@
             if (confirm(`Reset all check-ins for ${dateDisplay}?`)) {
                 setCurrentCheckins([]);
                 saveAndRender();
+                showToast('All check-ins reset', 'success');
             }
         }
 
