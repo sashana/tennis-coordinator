@@ -2884,7 +2884,8 @@
         
         function render() {
             const checkins = getCurrentCheckins();
-            
+            console.log('render() called. selectedDate:', selectedDate, 'checkins:', checkins, 'allCheckins:', allCheckins);
+
             document.getElementById('count').textContent = checkins.length;
             
             const checkinList = document.getElementById('checkinList');
