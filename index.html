@@ -1511,6 +1511,7 @@
             // Listen for changes to check-ins for current group
             activeListeners.checkins = firebaseRef.checkins(groupId);
             activeListeners.checkins.on('value', (snapshot) => {
+                console.log('Firebase check-ins updated:', snapshot.val());
                 allCheckins = snapshot.val() || {};
                 initDates();
                 render();
@@ -1526,9 +1527,12 @@
         async function saveFirebaseCheckins() {
             if (!currentGroupId) return;
             try {
+                console.log('Saving check-ins to Firebase:', allCheckins);
                 await firebaseRef.checkins(currentGroupId).set(allCheckins);
+                console.log('Check-ins saved successfully');
             } catch (error) {
                 console.error('Error saving check-ins:', error);
+                showToast('Error saving to database', 'error');
             }
         }
 
@@ -2609,8 +2613,8 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        function saveAndRender() {
-            saveFirebaseCheckins();
+        async function saveAndRender() {
+            await saveFirebaseCheckins();
             initDates();
             render();
         }
