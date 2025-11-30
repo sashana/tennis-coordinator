@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tue/Thu+ Midday Doubles</title>
+
+    <!-- PWA Support -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tennis">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🎾</text></svg>">
+
     <style>
         * {
             margin: 0;
@@ -729,9 +738,81 @@
             color: #1565c0;
             margin-left: 4px;
         }
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+        }
+
+        .toast {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .toast.error {
+            border-left-color: #f44336;
+        }
+
+        .toast.success {
+            border-left-color: #4CAF50;
+        }
+
+        .toast-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .toast-message {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .toast.removing {
+            animation: slideOut 0.3s ease-out forwards;
+        }
     </style>
 </head>
 <body>
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+
     <div class="container">
         <h1>
             <span>
@@ -907,6 +988,34 @@
                     value="14675"
                     style="width: 100%; margin-bottom: 12px;"
                 >
+            </div>
+
+            <div class="pref-section">
+                <h3>Weather Location</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 8px;">Set the location for weather forecasts</p>
+                <input
+                    type="text"
+                    id="locationNameInput"
+                    placeholder="Location name (e.g., Los Gatos, CA)"
+                    style="width: 100%; margin-bottom: 8px;"
+                >
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <input
+                        type="number"
+                        step="0.0001"
+                        id="locationLatInput"
+                        placeholder="Latitude"
+                        style="flex: 1;"
+                    >
+                    <input
+                        type="number"
+                        step="0.0001"
+                        id="locationLonInput"
+                        placeholder="Longitude"
+                        style="flex: 1;"
+                    >
+                </div>
+                <p style="font-size: 11px; color: #999; margin-bottom: 12px;">Tip: Use <a href="https://www.latlong.net/" target="_blank" style="color: #4CAF50;">latlong.net</a> to find coordinates</p>
                 <button onclick="saveSettings()" style="width: 100%;">Save Settings</button>
             </div>
         </div>
@@ -1017,14 +1126,14 @@
         let selectedName = '';
         let isGuest = false;
         let addedBy = '';
-        
-        // Los Gatos, CA coordinates
-        const LOCATION = {
+
+        // Weather location (defaults to Los Gatos, CA)
+        let weatherLocation = {
             lat: 37.2358,
             lon: -121.9623,
             name: 'Los Gatos, CA'
         };
-        
+
         let weatherCache = {};
 
         // Firebase Data Loading and Sync
@@ -1069,6 +1178,17 @@
                 coreMembers = settings.members || [];
                 groupPin = settings.groupPin || '14675';
                 adminPin = settings.adminPin || '3250';
+
+                // Load weather location (default to Los Gatos if not set)
+                if (settings.location) {
+                    weatherLocation = settings.location;
+                } else {
+                    weatherLocation = {
+                        lat: 37.2358,
+                        lon: -121.9623,
+                        name: 'Los Gatos, CA'
+                    };
+                }
 
                 // Load check-ins for the group
                 const checkinsSnapshot = await firebaseRef.checkins(groupId).once('value');
@@ -1213,7 +1333,8 @@
                     groupName: currentGroupName,
                     members: coreMembers,
                     groupPin: groupPin,
-                    adminPin: adminPin
+                    adminPin: adminPin,
+                    location: weatherLocation
                 });
             } catch (error) {
                 console.error('Error saving settings:', error);
@@ -1248,7 +1369,30 @@
             }
             return true;
         }
-        
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            const icon = type === 'success' ? '✓' : '✕';
+            toast.innerHTML = `
+                <span class="toast-icon">${icon}</span>
+                <span class="toast-message">${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                toast.classList.add('removing');
+                setTimeout(() => {
+                    container.removeChild(toast);
+                }, 300); // Wait for animation to complete
+            }, 3000);
+        }
+
         function normalizeName(name) {
             return name.trim().toLowerCase();
         }
@@ -1281,9 +1425,18 @@
         function populateNameDropdown() {
             const select = document.getElementById('nameSelect');
             const sortedMembers = [...coreMembers].sort((a, b) => a.localeCompare(b));
+
+            // Get remembered user name for this group
+            const rememberedName = currentGroupId ? localStorage.getItem(`tennisUserName_${currentGroupId}`) : null;
+
             select.innerHTML = '<option value="">Select your name...</option>' +
-                sortedMembers.map(name => `<option value="${name}">${name}</option>`).join('') +
+                sortedMembers.map(name => `<option value="${name}" ${name === rememberedName ? 'selected' : ''}>${name}</option>`).join('') +
                 '<option value="__GUEST__">+ Add Guest</option>';
+
+            // If we pre-selected a name, update the selectedName variable
+            if (rememberedName && sortedMembers.includes(rememberedName)) {
+                selectedName = rememberedName;
+            }
         }
         
         function openSettingsModal() {
@@ -1300,6 +1453,9 @@
             document.getElementById('adminPinInput').value = adminPin;
             document.getElementById('groupPinInput').value = groupPin;
             document.getElementById('adminGroupName').textContent = currentGroupName;
+            document.getElementById('locationNameInput').value = weatherLocation.name;
+            document.getElementById('locationLatInput').value = weatherLocation.lat;
+            document.getElementById('locationLonInput').value = weatherLocation.lon;
             document.getElementById('settingsModal').classList.add('active');
         }
         
@@ -1441,17 +1597,36 @@
         function saveSettings() {
             const newGroupPin = document.getElementById('groupPinInput').value.trim();
             const newAdminPin = document.getElementById('adminPinInput').value.trim();
+            const locationName = document.getElementById('locationNameInput').value.trim();
+            const locationLat = parseFloat(document.getElementById('locationLatInput').value);
+            const locationLon = parseFloat(document.getElementById('locationLonInput').value);
 
             if (!newGroupPin || !newAdminPin) {
                 alert('PINs cannot be empty');
                 return;
             }
 
+            // Validate location if provided
+            if (locationName && (isNaN(locationLat) || isNaN(locationLon))) {
+                alert('Please enter valid latitude and longitude coordinates');
+                return;
+            }
+
             groupPin = newGroupPin;
             adminPin = newAdminPin;
+
+            // Update weather location if provided
+            if (locationName && !isNaN(locationLat) && !isNaN(locationLon)) {
+                weatherLocation = {
+                    name: locationName,
+                    lat: locationLat,
+                    lon: locationLon
+                };
+            }
+
             saveFirebaseSettings();
 
-            alert('Settings saved! Changes will sync to all users.');
+            showToast('Settings saved! Changes will sync to all users.', 'success');
             closeSettingsModal();
             populateNameDropdown();
         }
@@ -1467,7 +1642,7 @@
             
             try {
                 // Using Open-Meteo API (free, no key needed)
-                const url = `https://api.open-meteo.com/v1/forecast?latitude=${LOCATION.lat}&longitude=${LOCATION.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&temperature_unit=fahrenheit&timezone=America/Los_Angeles&forecast_days=14`;
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${weatherLocation.lat}&longitude=${weatherLocation.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&temperature_unit=fahrenheit&timezone=America/Los_Angeles&forecast_days=14`;
                 
                 const response = await fetch(url, {
                     method: 'GET',
@@ -1567,7 +1742,7 @@
             
             widget.innerHTML = `
                 <div class="weather-widget">
-                    <h3>${LOCATION.name} - ${dateDisplay}</h3>
+                    <h3>${weatherLocation.name} - ${dateDisplay}</h3>
                     <div class="weather-main">
                         <div class="weather-temp">${weather.tempMax}°</div>
                         <div class="weather-desc">${getWeatherDescription(weather.weatherCode)}</div>
@@ -1858,9 +2033,17 @@
             }
             
             checkins.push(checkinData);
-            
+
             setCurrentCheckins(checkins);
-            
+
+            // Remember user's name for next time (if not a guest)
+            if (!isGuest && currentGroupId) {
+                localStorage.setItem(`tennisUserName_${currentGroupId}`, name);
+            }
+
+            // Show success notification
+            showToast('✓ Checked in successfully!', 'success');
+
             // Reset form
             document.getElementById('nameSelect').value = '';
             document.getElementById('guestNameInput').value = '';
@@ -1876,9 +2059,20 @@
         
         function removeCheckIn(index) {
             const checkins = getCurrentCheckins();
+            const person = checkins[index];
+            const personName = person ? person.name : 'this person';
+
+            // Confirmation dialog
+            if (!confirm(`Remove ${personName} from check-ins?`)) {
+                return; // User cancelled
+            }
+
             checkins.splice(index, 1);
             setCurrentCheckins(checkins);
             saveAndRender();
+
+            // Show success notification
+            showToast(`Removed ${personName}`, 'success');
         }
         
         function resetAll() {
@@ -2289,6 +2483,19 @@
 
         // Start the app
         init();
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registered:', registration);
+                    })
+                    .catch((error) => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
     </script>
 </body>
 </html>
