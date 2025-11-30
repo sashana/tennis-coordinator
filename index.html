@@ -2502,20 +2502,11 @@
             // Add weather if available - compact format
             const weatherData = weatherCache[selectedDate];
             if (weatherData) {
-                const weatherEmoji = getWeatherEmoji(weatherData.code);
-                message += `${weatherEmoji} ${weatherData.desc}, ${weatherData.tempMax}°F`;
+                const weatherDesc = getWeatherDescription(weatherData.weatherCode);
+                message += `${weatherDesc}, ${weatherData.tempMax}°F`;
             }
 
             return message.trim();
-        }
-
-        function getWeatherEmoji(code) {
-            if (code === 0) return '☀️';
-            if (code <= 3) return '⛅';
-            if (code <= 67) return '🌧️';
-            if (code <= 77) return '🌨️';
-            if (code <= 99) return '⛈️';
-            return '🌤️';
         }
 
         function shareToWhatsApp() {
