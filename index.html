@@ -1541,18 +1541,28 @@
             }
             try {
                 isSaving = true;
-                console.log('Saving check-ins to Firebase for selectedDate:', selectedDate, allCheckins[selectedDate]);
+                const checkinsForDate = allCheckins[selectedDate] || [];
+                const savePath = `groups/${currentGroupId}/checkins/${selectedDate}`;
+
+                console.log('=== SAVE DEBUG ===');
+                console.log('Selected date:', selectedDate);
+                console.log('Check-ins to save:', checkinsForDate);
+                console.log('Full save path:', savePath);
+                console.log('All checkins object:', allCheckins);
+                console.log('=================');
 
                 // Update only the specific date to avoid race conditions
-                const checkinsForDate = allCheckins[selectedDate] || [];
-                await firebaseRef.checkins(currentGroupId).child(selectedDate).set(checkinsForDate);
+                const ref = firebaseRef.checkins(currentGroupId).child(selectedDate);
+                console.log('Firebase ref path:', ref.toString());
+                await ref.set(checkinsForDate);
 
                 console.log('Check-ins saved successfully, verifying...');
 
                 // Verify the save by reading back
                 const snapshot = await firebaseRef.checkins(currentGroupId).child(selectedDate).once('value');
                 const savedData = snapshot.val();
-                console.log('Verification read - saved data:', savedData);
+                console.log('Verification read from path:', savePath);
+                console.log('Verification data:', savedData);
 
                 if (!savedData || savedData.length !== checkinsForDate.length) {
                     throw new Error('Data verification failed - saved data does not match');
