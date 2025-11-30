@@ -2438,7 +2438,7 @@
 
             const { matches } = organizeMatches(checkins);
 
-            // Format date
+            // Format date - compact
             const dateObj = new Date(selectedDate);
             const dateStr = dateObj.toLocaleDateString('en-US', {
                 weekday: 'long',
@@ -2446,81 +2446,67 @@
                 day: 'numeric'
             });
 
-            // Start message
-            let message = `🎾 Tennis Matches - ${dateStr}\n\n`;
+            // Start message - compact header
+            let message = `🎾 ${dateStr}\n\n`;
 
             // Add each match group
-            let courtNumber = 1;
             matches.forEach(match => {
                 if (match.type === 'doubles') {
-                    message += `Court ${courtNumber} - Doubles\n`;
+                    message += `Court ___ - Doubles\n`;
                     const players = match.players.map(p => p.name);
-                    if (players.length === 4) {
-                        message += `• ${players[0]} & ${players[1]} vs ${players[2]} & ${players[3]}\n`;
-                    } else {
-                        message += `• ${players.join(', ')}\n`;
-                    }
+                    message += `${players.join(', ')}\n`;
 
-                    // Add time window if available
+                    // Add time window if available - compact format
                     const times = match.players
                         .filter(p => p.timeRange)
                         .map(p => formatTimeRange(p.timeRange.start, p.timeRange.end));
                     if (times.length > 0) {
-                        message += `  Time: ${times[0]}\n`;
+                        message += `${times[0]}\n`;
                     }
                     message += '\n';
-                    courtNumber++;
                 } else if (match.type === 'singles') {
-                    message += `Court ${courtNumber} - Singles\n`;
+                    message += `Court ___ - Singles\n`;
                     const players = match.players.map(p => p.name);
-                    message += `• ${players[0]} vs ${players[1]}\n`;
+                    message += `${players.join(', ')}\n`;
 
-                    // Add time window if available
+                    // Add time window if available - compact format
                     const times = match.players
                         .filter(p => p.timeRange)
                         .map(p => formatTimeRange(p.timeRange.start, p.timeRange.end));
                     if (times.length > 0) {
-                        message += `  Time: ${times[0]}\n`;
+                        message += `${times[0]}\n`;
                     }
                     message += '\n';
-                    courtNumber++;
                 } else if (match.type === 'singles-or-practice') {
-                    message += `Court ${courtNumber} - Rotation (3 players)\n`;
-                    message += `• ${match.players.map(p => p.name).join(', ')}\n`;
+                    message += `Court ___ - Rotation\n`;
+                    message += `${match.players.map(p => p.name).join(', ')}\n`;
 
-                    // Add time window if available
+                    // Add time window if available - compact format
                     const times = match.players
                         .filter(p => p.timeRange)
                         .map(p => formatTimeRange(p.timeRange.start, p.timeRange.end));
                     if (times.length > 0) {
-                        message += `  Time: ${times[0]}\n`;
+                        message += `${times[0]}\n`;
                     }
                     message += '\n';
-                    courtNumber++;
                 }
             });
 
-            // Add waiting list if any
-            const waitingMatch = matches.find(m => m.type === 'waiting');
-            if (waitingMatch && waitingMatch.players.length > 0) {
-                message += `Waiting List:\n`;
-                waitingMatch.players.forEach(p => {
-                    message += `• ${p.name}\n`;
-                });
-                message += '\n';
+            // Add standby list if any
+            const standbyMatch = matches.find(m => m.type === 'waiting');
+            if (standbyMatch && standbyMatch.players.length > 0) {
+                message += `Standby:\n`;
+                message += standbyMatch.players.map(p => p.name).join(', ') + '\n\n';
             }
 
-            // Add weather if available
+            // Add weather if available - compact format
             const weatherData = weatherCache[selectedDate];
             if (weatherData) {
                 const weatherEmoji = getWeatherEmoji(weatherData.code);
-                message += `Weather: ${weatherEmoji} ${weatherData.desc}, ${weatherData.tempMax}°F\n\n`;
+                message += `${weatherEmoji} ${weatherData.desc}, ${weatherData.tempMax}°F`;
             }
 
-            // Add group URL
-            message += `Check in at: ${window.location.origin}${window.location.pathname}`;
-
-            return message;
+            return message.trim();
         }
 
         function getWeatherEmoji(code) {
