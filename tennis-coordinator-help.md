@@ -1,5 +1,5 @@
-# Tennis Coordinator - User Guide
-## Tue/Thu+ Midday Doubles
+# Tue/Thu+ Midday Doubles - User Guide
+## Tennis Coordinator
 
 ## Quick Start
 
