@@ -1,0 +1,1892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tennis Coordinator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 12px;
+            background: #f5f5f5;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 20px;
+            margin-bottom: 16px;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .settings-icon {
+            background: transparent;
+            color: #666;
+            border: none;
+            padding: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .settings-icon:hover {
+            background: #f0f0f0;
+        }
+        
+        .settings-icon:active {
+            transform: scale(0.95);
+        }
+        
+        .date-selector {
+            margin-bottom: 16px;
+        }
+        
+        .date-selector h2 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #666;
+        }
+        
+        .date-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 16px;
+        }
+        
+        .date-btn {
+            padding: 6px 3px;
+            background: #9e9e9e;
+            color: white;
+            border: 2px solid #757575;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 10px;
+            transition: all 0.2s;
+            min-height: 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .date-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .date-btn:hover {
+            background: #e8f5e9;
+            border-color: #4CAF50;
+        }
+        
+        .date-btn.selected {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+            font-weight: 600;
+        }
+        
+        .date-btn .day-name {
+            font-size: 9px;
+            text-transform: uppercase;
+            opacity: 0.8;
+            display: block;
+        }
+
+        .date-btn .day-num {
+            font-size: 14px;
+            font-weight: 600;
+            display: block;
+            margin: 2px 0;
+        }
+        
+        .date-btn .checkin-badge {
+            font-size: 9px;
+            background: #ff9800;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 5px;
+            margin-top: 2px;
+            display: inline-block;
+        }
+        
+        .date-btn.selected .checkin-badge {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        input {
+            flex: 1 1 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            min-width: 0;
+        }
+        
+        @media (min-width: 400px) {
+            input {
+                flex: 1 1 auto;
+            }
+        }
+        
+        .preference-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        
+        .preference-btn {
+            padding: 10px 6px;
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-align: center;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .preference-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .preference-btn:hover {
+            background: #e8f5e9;
+            border-color: #4CAF50;
+        }
+        
+        .preference-btn.selected {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        
+        .preference-btn.singles.selected {
+            background: #ff9800;
+            border-color: #ff9800;
+        }
+        
+        .preference-btn.doubles.selected {
+            background: #2196F3;
+            border-color: #2196F3;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        button {
+            padding: 12px 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        button:active {
+            transform: scale(0.97);
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        .reset-btn {
+            background: #f44336;
+            width: 100%;
+            margin-top: 16px;
+        }
+        
+        .reset-btn:hover {
+            background: #da190b;
+        }
+        
+        .checkins {
+            margin: 16px 0;
+        }
+        
+        .checkins h2 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        
+        .checkin-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+        
+        .checkin-item > span {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        @media (min-width: 500px) {
+            .checkin-item > span {
+                flex-direction: row;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+        }
+        
+        .checkin-name {
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .preference-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .preference-badge.singles {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        
+        .preference-badge.doubles {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .preference-badge.both {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .checkin-time {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .remove-btn {
+            padding: 8px 12px;
+            background: #ff5252;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+        
+        .matches {
+            margin-top: 20px;
+        }
+        
+        .match-group {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .match-group h3 {
+            font-size: 15px;
+            margin-bottom: 8px;
+            color: #2e7d32;
+        }
+        
+        .match-group ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .match-group li {
+            padding: 6px 0;
+            color: #333;
+            font-size: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .singles-group {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+        
+        .singles-group h3 {
+            color: #e65100;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 500px;
+            width: calc(100% - 40px);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .modal-header h2 {
+            font-size: 18px;
+            margin: 0;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+        
+        .pref-section {
+            margin-bottom: 20px;
+        }
+        
+        .pref-section h3 {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        
+        .pref-section p {
+            margin: 0 0 8px 0;
+        }
+        
+        .pref-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .pref-input-group input {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .pref-input-group button {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .pref-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        
+        .pref-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: #f5f5f5;
+            border-radius: 16px;
+            font-size: 13px;
+        }
+        
+        .pref-tag.include {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .pref-tag.exclude {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .pref-tag button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            color: inherit;
+            font-size: 16px;
+            line-height: 1;
+            opacity: 0.6;
+        }
+        
+        .pref-tag button:hover {
+            opacity: 1;
+        }
+        
+        .pref-summary {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+            padding: 8px;
+            background: #f9f9f9;
+            border-radius: 6px;
+        }
+        
+        .edit-prefs-btn {
+            background: transparent;
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+            padding: 6px 12px;
+            font-size: 13px;
+            margin-left: 8px;
+        }
+        
+        .edit-prefs-btn:hover {
+            background: #e8f5e9;
+        }
+        
+        .match-indicator {
+            font-size: 11px;
+            margin-left: 4px;
+        }
+        
+        .match-indicator.satisfied {
+            color: #4CAF50;
+        }
+        
+        .match-indicator.conflict {
+            color: #f44336;
+        }
+        
+        .warning-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .member-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+        
+        .member-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+        
+        .member-item button {
+            padding: 6px 10px;
+            background: #f44336;
+            font-size: 12px;
+        }
+        
+        .add-member-input {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .add-member-input input {
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+        }
+        
+        .add-member-input button {
+            padding: 10px 16px;
+            font-size: 14px;
+        }
+        
+        .guest-indicator {
+            font-size: 11px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            margin-bottom: 10px;
+        }
+        
+        .guest-form {
+            display: none;
+            margin-top: 10px;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        .guest-form.active {
+            display: block;
+        }
+        
+        .guest-form input {
+            margin-bottom: 8px;
+        }
+        
+        .weather-widget {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        .weather-widget h3 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+        
+        .weather-main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .weather-temp {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .weather-desc {
+            font-size: 16px;
+            text-transform: capitalize;
+        }
+        
+        .weather-details {
+            display: flex;
+            justify-content: space-around;
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 8px;
+        }
+        
+        .weather-error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+        
+        .weather-loading {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            text-align: center;
+            font-size: 13px;
+        }
+        
+        .time-slots {
+            margin-bottom: 16px;
+        }
+        
+        .time-slots h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+        
+        .time-slot-btn {
+            padding: 10px 6px;
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .time-slot-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .time-slot-btn:hover {
+            background: #e8f5e9;
+            border-color: #4CAF50;
+        }
+        
+        .time-slot-btn.selected {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+            font-weight: 600;
+        }
+        
+        .time-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            background: #e3f2fd;
+            color: #1565c0;
+            margin-left: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <span>🎾 Tennis Coordinator</span>
+            <div style="display: flex; gap: 8px;">
+                <button class="settings-icon" onclick="window.open('tennis-coordinator-help.md', '_blank')" title="Help">❓</button>
+                <button class="settings-icon" onclick="openSettingsModal()" title="Settings">⚙️</button>
+            </div>
+        </h1>
+        
+        <div class="date-selector">
+            <h2>Select Date</h2>
+            <div class="date-grid" id="dateGrid"></div>
+        </div>
+        
+        <div id="weatherWidget"></div>
+        
+        <div class="input-group">
+            <select id="nameSelect" onchange="handleNameSelect()">
+                <option value="">Select your name...</option>
+            </select>
+            <button class="edit-prefs-btn" onclick="openPreferencesModal()">⚙️</button>
+            <button onclick="checkIn()">Check In</button>
+        </div>
+        
+        <div class="guest-form" id="guestForm">
+            <input 
+                type="text" 
+                id="guestNameInput" 
+                placeholder="Guest's name"
+            >
+            <select id="addedBySelect">
+                <option value="">Who is adding this guest?</option>
+            </select>
+        </div>
+        
+        <div class="preference-group">
+            <button class="preference-btn singles" id="singlesBtn" onclick="selectPreference('singles')">
+                Singles Only
+            </button>
+            <button class="preference-btn selected" id="bothBtn" onclick="selectPreference('both')">
+                Either
+            </button>
+            <button class="preference-btn doubles" id="doublesBtn" onclick="selectPreference('doubles')">
+                Doubles Only
+            </button>
+        </div>
+        
+        <div class="time-slots">
+            <h3>Available Time (optional)</h3>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <input 
+                    type="time" 
+                    id="startTimeInput"
+                    style="flex: 1; min-width: 120px; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;"
+                    placeholder="Start"
+                >
+                <span style="color: #666;">to</span>
+                <input 
+                    type="time" 
+                    id="endTimeInput"
+                    style="flex: 1; min-width: 120px; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;"
+                    placeholder="End"
+                >
+                <button 
+                    onclick="clearTimeInputs()" 
+                    style="padding: 10px 12px; background: #f5f5f5; color: #666; font-size: 13px;"
+                >
+                    Clear
+                </button>
+            </div>
+            <div style="font-size: 12px; color: #999; margin-top: 6px;">
+                Leave blank if available any time
+            </div>
+        </div>
+
+        <div style="margin-bottom: 16px; padding: 12px; background: #f9f9f9; border-radius: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
+                <input
+                    type="checkbox"
+                    id="allowRotationCheckbox"
+                    checked
+                    style="width: 18px; height: 18px; cursor: pointer;"
+                >
+                <span>Willing to play 3-player rotation (1v1 or 1v2 format)</span>
+            </label>
+            <div style="font-size: 12px; color: #666; margin-top: 4px; margin-left: 26px;">
+                If unchecked, you'll only be placed in doubles or singles matches
+            </div>
+        </div>
+
+        <div class="checkins">
+            <h2>Check-ins (<span id="count">0</span>)</h2>
+            <div id="checkinList"></div>
+        </div>
+        
+        <div class="matches" id="matches"></div>
+        
+        <button class="reset-btn" onclick="resetAll()">Reset All</button>
+    </div>
+    
+    <!-- Preferences Modal -->
+    <div class="modal" id="preferencesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Partner Preferences (Singles)</h2>
+                <button class="close-btn" onclick="closePreferencesModal()">×</button>
+            </div>
+            
+            <div class="pref-section">
+                <h3>Want to Play With</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 8px;">For singles matches only</p>
+                <div class="pref-input-group">
+                    <input 
+                        type="text" 
+                        id="includeInput" 
+                        placeholder="Enter name"
+                        onkeypress="if(event.key==='Enter') addInclude()"
+                    >
+                    <button onclick="addInclude()">Add</button>
+                </div>
+                <div class="pref-list" id="includeList"></div>
+            </div>
+            
+            <div class="pref-section">
+                <h3>Don't Want to Play With</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 8px;">For singles matches only</p>
+                <div class="pref-input-group">
+                    <input 
+                        type="text" 
+                        id="excludeInput" 
+                        placeholder="Enter name"
+                        onkeypress="if(event.key==='Enter') addExclude()"
+                    >
+                    <button onclick="addExclude()">Add</button>
+                </div>
+                <div class="pref-list" id="excludeList"></div>
+            </div>
+            
+            <button onclick="savePreferences()" style="width: 100%;">Save Preferences</button>
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Admin Settings</h2>
+                <button class="close-btn" onclick="closeSettingsModal()">×</button>
+            </div>
+            
+            <div class="pref-section">
+                <h3>Core Members</h3>
+                <div class="member-list" id="memberList"></div>
+                <div class="add-member-input">
+                    <input 
+                        type="text" 
+                        id="newMemberInput" 
+                        placeholder="New member name"
+                        onkeypress="if(event.key==='Enter') addCoreMember()"
+                    >
+                    <button onclick="addCoreMember()">Add</button>
+                </div>
+            </div>
+            
+            <div class="pref-section">
+                <h3>Group PIN</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 8px;">Share this PIN with group members</p>
+                <input 
+                    type="text" 
+                    id="groupPinInput" 
+                    value="1234"
+                    style="width: 100%; margin-bottom: 12px;"
+                >
+                <button onclick="saveSettings()" style="width: 100%;">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allCheckins = JSON.parse(localStorage.getItem('tennisCheckinsV3')) || {};
+        let userPreferences = JSON.parse(localStorage.getItem('userPreferencesV3')) || {};
+        let coreMembers = JSON.parse(localStorage.getItem('coreMembers')) || [
+            'Alice Johnson', 'Bob Smith', 'Charlie Davis', 'Diana Prince',
+            'Eve Anderson', 'Frank Miller', 'Grace Lee', 'Henry Wilson'
+            // Add your actual 20 members here
+        ];
+        let groupPin = localStorage.getItem('groupPin') || '1234';
+        let selectedDate = null;
+        let selectedPreference = 'both';
+        let currentEditingUser = null;
+        let tempInclude = [];
+        let tempExclude = [];
+        let selectedName = '';
+        let isGuest = false;
+        let addedBy = '';
+        
+        // Los Gatos, CA coordinates
+        const LOCATION = {
+            lat: 37.2358,
+            lon: -121.9623,
+            name: 'Los Gatos, CA'
+        };
+        
+        let weatherCache = {};
+        
+        // PIN Authentication on load
+        function checkAuth() {
+            const isAuth = localStorage.getItem('tennisAuth');
+            if (!isAuth) {
+                const pin = prompt('Enter group PIN (default: 1234, or click Cancel to skip):');
+                if (pin === null || pin === '') {
+                    // User clicked cancel or empty - allow access for testing
+                    localStorage.setItem('tennisAuth', 'true');
+                    return true;
+                } else if (pin === groupPin) {
+                    localStorage.setItem('tennisAuth', 'true');
+                    return true;
+                } else {
+                    alert('Invalid PIN. Try again or click Cancel to skip.');
+                    localStorage.removeItem('tennisAuth');
+                    return checkAuth(); // Try again
+                }
+            }
+            return true;
+        }
+        
+        function normalizeName(name) {
+            return name.trim().toLowerCase();
+        }
+        
+        function handleNameSelect() {
+            const select = document.getElementById('nameSelect');
+            const value = select.value;
+            const guestForm = document.getElementById('guestForm');
+            
+            if (value === '__GUEST__') {
+                isGuest = true;
+                selectedName = '';
+                guestForm.classList.add('active');
+                populateAddedByDropdown();
+            } else {
+                isGuest = false;
+                selectedName = value;
+                addedBy = '';
+                guestForm.classList.remove('active');
+            }
+        }
+        
+        function populateAddedByDropdown() {
+            const select = document.getElementById('addedBySelect');
+            select.innerHTML = '<option value="">Who is adding this guest?</option>' +
+                coreMembers.map(name => `<option value="${name}">${name}</option>`).join('');
+        }
+        
+        function populateNameDropdown() {
+            const select = document.getElementById('nameSelect');
+            select.innerHTML = '<option value="">Select your name...</option>' +
+                coreMembers.map(name => `<option value="${name}">${name}</option>`).join('') +
+                '<option value="__GUEST__">+ Add Guest</option>';
+        }
+        
+        function openSettingsModal() {
+            const pin = prompt('Enter admin PIN (default: 1234):');
+            if (pin === null) {
+                return; // User cancelled
+            }
+            if (pin !== groupPin) {
+                alert('Invalid admin PIN');
+                return;
+            }
+            
+            renderMemberList();
+            document.getElementById('groupPinInput').value = groupPin;
+            document.getElementById('settingsModal').classList.add('active');
+        }
+        
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+        
+        function renderMemberList() {
+            const list = document.getElementById('memberList');
+            list.innerHTML = coreMembers.map((name, idx) => `
+                <div class="member-item">
+                    <span>${name}</span>
+                    <button onclick="removeCoreMember(${idx})">Remove</button>
+                </div>
+            `).join('');
+        }
+        
+        function addCoreMember() {
+            const input = document.getElementById('newMemberInput');
+            const name = input.value.trim();
+            
+            if (!name) return;
+            
+            if (coreMembers.some(m => normalizeName(m) === normalizeName(name))) {
+                alert('Member already exists');
+                input.value = '';
+                return;
+            }
+            
+            coreMembers.push(name);
+            input.value = '';
+            renderMemberList();
+        }
+        
+        function removeCoreMember(index) {
+            if (confirm(`Remove ${coreMembers[index]} from core members?`)) {
+                coreMembers.splice(index, 1);
+                renderMemberList();
+            }
+        }
+        
+        function saveSettings() {
+            const newPin = document.getElementById('groupPinInput').value.trim();
+            
+            if (!newPin) {
+                alert('PIN cannot be empty');
+                return;
+            }
+            
+            groupPin = newPin;
+            localStorage.setItem('coreMembers', JSON.stringify(coreMembers));
+            localStorage.setItem('groupPin', groupPin);
+            
+            alert('Settings saved! New PIN will apply on next page load.');
+            closeSettingsModal();
+            populateNameDropdown();
+        }
+        
+        async function fetchWeather(dateStr) {
+            // Check cache first
+            if (weatherCache[dateStr]) {
+                return weatherCache[dateStr];
+            }
+            
+            const widget = document.getElementById('weatherWidget');
+            widget.innerHTML = '<div class="weather-loading">Loading weather...</div>';
+            
+            try {
+                // Using Open-Meteo API (free, no key needed)
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${LOCATION.lat}&longitude=${LOCATION.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&temperature_unit=fahrenheit&timezone=America/Los_Angeles&forecast_days=14`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.daily || !data.daily.time) {
+                    throw new Error('Invalid weather data format');
+                }
+                
+                // Find the index for our selected date
+                const dateIndex = data.daily.time.indexOf(dateStr);
+                
+                if (dateIndex === -1) {
+                    throw new Error('Weather data not available for this date');
+                }
+                
+                const weatherData = {
+                    tempMax: Math.round(data.daily.temperature_2m_max[dateIndex]),
+                    tempMin: Math.round(data.daily.temperature_2m_min[dateIndex]),
+                    precipProb: data.daily.precipitation_probability_max[dateIndex] || 0,
+                    weatherCode: data.daily.weathercode[dateIndex]
+                };
+                
+                weatherCache[dateStr] = weatherData;
+                return weatherData;
+                
+            } catch (error) {
+                console.error('Weather fetch error:', error);
+                widget.innerHTML = `<div class="weather-error">Unable to load weather (${error.message})</div>`;
+                return null;
+            }
+        }
+        
+        function getWeatherDescription(code) {
+            const weatherCodes = {
+                0: '☀️ Clear sky',
+                1: '🌤️ Mainly clear',
+                2: '⛅ Partly cloudy',
+                3: '☁️ Overcast',
+                45: '🌫️ Foggy',
+                48: '🌫️ Foggy',
+                51: '🌦️ Light drizzle',
+                53: '🌦️ Drizzle',
+                55: '🌧️ Heavy drizzle',
+                61: '🌧️ Light rain',
+                63: '🌧️ Rain',
+                65: '🌧️ Heavy rain',
+                71: '🌨️ Light snow',
+                73: '🌨️ Snow',
+                75: '🌨️ Heavy snow',
+                77: '🌨️ Snow grains',
+                80: '🌦️ Rain showers',
+                81: '🌧️ Rain showers',
+                82: '⛈️ Heavy rain showers',
+                85: '🌨️ Snow showers',
+                86: '🌨️ Heavy snow showers',
+                95: '⛈️ Thunderstorm',
+                96: '⛈️ Thunderstorm with hail',
+                99: '⛈️ Severe thunderstorm'
+            };
+            
+            return weatherCodes[code] || '🌡️ Weather';
+        }
+        
+        async function displayWeather() {
+            const widget = document.getElementById('weatherWidget');
+            const dateObj = new Date(selectedDate + 'T00:00:00');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const daysFromToday = Math.floor((dateObj - today) / (1000 * 60 * 60 * 24));
+            
+            // Only show weather for next 14 days (API limitation)
+            if (daysFromToday < 0 || daysFromToday > 13) {
+                widget.innerHTML = '';
+                return;
+            }
+            
+            const weather = await fetchWeather(selectedDate);
+            
+            if (!weather) return;
+            
+            const dateDisplay = dateObj.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+            
+            widget.innerHTML = `
+                <div class="weather-widget">
+                    <h3>${LOCATION.name} - ${dateDisplay}</h3>
+                    <div class="weather-main">
+                        <div class="weather-temp">${weather.tempMax}°</div>
+                        <div class="weather-desc">${getWeatherDescription(weather.weatherCode)}</div>
+                    </div>
+                    <div class="weather-details">
+                        <span>High: ${weather.tempMax}°F</span>
+                        <span>Low: ${weather.tempMin}°F</span>
+                        <span>Rain: ${weather.precipProb}%</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function normalizeName(name) {
+            return name.trim().toLowerCase();
+        }
+        
+        function initDates() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (!selectedDate) {
+                selectedDate = today.toISOString().split('T')[0];
+            }
+            
+            const dateGrid = document.getElementById('dateGrid');
+            const dates = [];
+            
+            for (let i = 0; i < 14; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() + i);
+                dates.push(date);
+            }
+            
+            dateGrid.innerHTML = dates.map(date => {
+                const dateStr = date.toISOString().split('T')[0];
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const dayNum = date.getDate();
+                const month = date.toLocaleDateString('en-US', { month: 'short' });
+                const checkinCount = (allCheckins[dateStr] || []).length;
+                
+                return `
+                    <button class="date-btn ${dateStr === selectedDate ? 'selected' : ''}" 
+                            onclick="selectDate('${dateStr}')">
+                        <span class="day-name">${dayName}</span>
+                        <span class="day-num">${dayNum}</span>
+                        <span class="day-name">${month}</span>
+                        ${checkinCount > 0 ? `<span class="checkin-badge">${checkinCount}</span>` : ''}
+                    </button>
+                `;
+            }).join('');
+        }
+        
+        function selectDate(dateStr) {
+            selectedDate = dateStr;
+            initDates();
+            displayWeather();
+            render();
+        }
+        
+        function selectPreference(pref) {
+            selectedPreference = pref;
+            document.querySelectorAll('.preference-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.getElementById(pref + 'Btn').classList.add('selected');
+        }
+        
+        function clearTimeInputs() {
+            document.getElementById('startTimeInput').value = '';
+            document.getElementById('endTimeInput').value = '';
+        }
+        
+        function formatTimeRange(start, end) {
+            if (!start && !end) return '';
+            
+            const format12Hour = (time24) => {
+                if (!time24) return '';
+                const [hours, minutes] = time24.split(':');
+                const h = parseInt(hours);
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                const h12 = h % 12 || 12;
+                return `${h12}:${minutes}${ampm}`;
+            };
+            
+            if (start && end) {
+                return `${format12Hour(start)}-${format12Hour(end)}`;
+            } else if (start) {
+                return `from ${format12Hour(start)}`;
+            } else if (end) {
+                return `until ${format12Hour(end)}`;
+            }
+            return '';
+        }
+        
+        function getCurrentCheckins() {
+            return allCheckins[selectedDate] || [];
+        }
+        
+        function setCurrentCheckins(checkins) {
+            allCheckins[selectedDate] = checkins;
+        }
+        
+        function openPreferencesModal() {
+            if (!selectedName && !isGuest) {
+                alert('Please select your name first');
+                return;
+            }
+            
+            const name = isGuest ? document.getElementById('guestNameInput').value.trim() : selectedName;
+            
+            if (!name) {
+                alert('Please enter a name first');
+                return;
+            }
+            
+            currentEditingUser = normalizeName(name);
+            const prefs = userPreferences[currentEditingUser] || { include: [], exclude: [] };
+            tempInclude = [...prefs.include];
+            tempExclude = [...prefs.exclude];
+            
+            renderPreferencesModal();
+            document.getElementById('preferencesModal').classList.add('active');
+        }
+        
+        function closePreferencesModal() {
+            document.getElementById('preferencesModal').classList.remove('active');
+            currentEditingUser = null;
+        }
+        
+        function addInclude() {
+            const input = document.getElementById('includeInput');
+            const name = input.value.trim();
+            
+            if (!name) return;
+            
+            const normalized = normalizeName(name);
+            
+            if (normalized === currentEditingUser) {
+                alert("You can't add yourself!");
+                input.value = '';
+                return;
+            }
+            
+            if (tempInclude.includes(normalized)) {
+                alert('Already in your include list');
+                input.value = '';
+                return;
+            }
+            
+            // Remove from exclude if present
+            const excludeIdx = tempExclude.indexOf(normalized);
+            if (excludeIdx > -1) {
+                tempExclude.splice(excludeIdx, 1);
+            }
+            
+            tempInclude.push(normalized);
+            input.value = '';
+            renderPreferencesModal();
+        }
+        
+        function addExclude() {
+            const input = document.getElementById('excludeInput');
+            const name = input.value.trim();
+            
+            if (!name) return;
+            
+            const normalized = normalizeName(name);
+            
+            if (normalized === currentEditingUser) {
+                alert("You can't add yourself!");
+                input.value = '';
+                return;
+            }
+            
+            if (tempExclude.includes(normalized)) {
+                alert('Already in your exclude list');
+                input.value = '';
+                return;
+            }
+            
+            // Remove from include if present
+            const includeIdx = tempInclude.indexOf(normalized);
+            if (includeIdx > -1) {
+                tempInclude.splice(includeIdx, 1);
+            }
+            
+            tempExclude.push(normalized);
+            input.value = '';
+            renderPreferencesModal();
+        }
+        
+        function removeInclude(name) {
+            const idx = tempInclude.indexOf(name);
+            if (idx > -1) {
+                tempInclude.splice(idx, 1);
+                renderPreferencesModal();
+            }
+        }
+        
+        function removeExclude(name) {
+            const idx = tempExclude.indexOf(name);
+            if (idx > -1) {
+                tempExclude.splice(idx, 1);
+                renderPreferencesModal();
+            }
+        }
+        
+        function renderPreferencesModal() {
+            const includeList = document.getElementById('includeList');
+            const excludeList = document.getElementById('excludeList');
+            
+            if (tempInclude.length === 0) {
+                includeList.innerHTML = '<div class="pref-summary">No preferences set</div>';
+            } else {
+                includeList.innerHTML = tempInclude.map(name => `
+                    <div class="pref-tag include">
+                        ${name}
+                        <button onclick="removeInclude('${name}')">×</button>
+                    </div>
+                `).join('');
+            }
+            
+            if (tempExclude.length === 0) {
+                excludeList.innerHTML = '<div class="pref-summary">No preferences set</div>';
+            } else {
+                excludeList.innerHTML = tempExclude.map(name => `
+                    <div class="pref-tag exclude">
+                        ${name}
+                        <button onclick="removeExclude('${name}')">×</button>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        function savePreferences() {
+            userPreferences[currentEditingUser] = {
+                include: tempInclude,
+                exclude: tempExclude
+            };
+            
+            localStorage.setItem('userPreferencesV3', JSON.stringify(userPreferences));
+            closePreferencesModal();
+        }
+        
+        function checkIn() {
+            let name, guestAddedBy;
+            
+            if (isGuest) {
+                name = document.getElementById('guestNameInput').value.trim();
+                guestAddedBy = document.getElementById('addedBySelect').value;
+                
+                if (!name) {
+                    alert('Please enter guest name');
+                    return;
+                }
+                
+                if (!guestAddedBy) {
+                    alert('Please select who is adding this guest');
+                    return;
+                }
+            } else {
+                name = selectedName;
+                
+                if (!name) {
+                    alert('Please select your name');
+                    return;
+                }
+            }
+            
+            const checkins = getCurrentCheckins();
+            const normalized = normalizeName(name);
+            
+            if (checkins.some(c => normalizeName(c.name) === normalized)) {
+                alert('Already checked in for this date!');
+                return;
+            }
+            
+            const startTime = document.getElementById('startTimeInput').value;
+            const endTime = document.getElementById('endTimeInput').value;
+            const allowRotation = document.getElementById('allowRotationCheckbox').checked;
+
+            const checkinData = {
+                name: name,
+                timestamp: Date.now(),
+                playStyle: selectedPreference,
+                allowRotation: allowRotation
+            };
+
+            if (startTime || endTime) {
+                checkinData.timeRange = {
+                    start: startTime,
+                    end: endTime
+                };
+            }
+
+            if (isGuest) {
+                checkinData.isGuest = true;
+                checkinData.addedBy = guestAddedBy;
+            }
+            
+            checkins.push(checkinData);
+            
+            setCurrentCheckins(checkins);
+            
+            // Reset form
+            document.getElementById('nameSelect').value = '';
+            document.getElementById('guestNameInput').value = '';
+            document.getElementById('addedBySelect').value = '';
+            document.getElementById('guestForm').classList.remove('active');
+            document.getElementById('allowRotationCheckbox').checked = true;
+            clearTimeInputs();
+            selectedName = '';
+            isGuest = false;
+            
+            saveAndRender();
+        }
+        
+        function removeCheckIn(index) {
+            const checkins = getCurrentCheckins();
+            checkins.splice(index, 1);
+            setCurrentCheckins(checkins);
+            saveAndRender();
+        }
+        
+        function resetAll() {
+            const dateDisplay = new Date(selectedDate).toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            if (confirm(`Reset all check-ins for ${dateDisplay}?`)) {
+                setCurrentCheckins([]);
+                saveAndRender();
+            }
+        }
+        
+        function saveAndRender() {
+            localStorage.setItem('tennisCheckinsV3', JSON.stringify(allCheckins));
+            initDates();
+            render();
+        }
+        
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit'
+            });
+        }
+        
+        function getPreferenceLabel(pref) {
+            if (pref === 'singles') return 'Singles';
+            if (pref === 'doubles') return 'Doubles';
+            return 'Either';
+        }
+        
+        function getUserPrefs(name) {
+            return userPreferences[normalizeName(name)] || { include: [], exclude: [] };
+        }
+        
+        function canPlayTogether(name1, name2) {
+            const prefs1 = getUserPrefs(name1);
+            const prefs2 = getUserPrefs(name2);
+            const n1 = normalizeName(name1);
+            const n2 = normalizeName(name2);
+            
+            return !prefs1.exclude.includes(n2) && !prefs2.exclude.includes(n1);
+        }
+        
+        function timesOverlap(time1, time2) {
+            // If either has no time restriction, they can play together
+            if (!time1 || !time2) return true;
+            
+            // If both have no start/end times, they're flexible
+            if (!time1.start && !time1.end && !time2.start && !time2.end) return true;
+            
+            // Convert times to minutes for easier comparison
+            const timeToMinutes = (timeStr) => {
+                if (!timeStr) return null;
+                const [hours, minutes] = timeStr.split(':').map(Number);
+                return hours * 60 + minutes;
+            };
+            
+            // Get time ranges in minutes
+            const t1Start = timeToMinutes(time1.start);
+            const t1End = timeToMinutes(time1.end);
+            const t2Start = timeToMinutes(time2.start);
+            const t2End = timeToMinutes(time2.end);
+            
+            // Handle open-ended ranges
+            // "from X" means X to end of day
+            // "until X" means start of day to X
+            const START_OF_DAY = 6 * 60;  // 6 AM
+            const END_OF_DAY = 21 * 60;    // 9 PM
+            
+            const range1Start = t1Start || START_OF_DAY;
+            const range1End = t1End || END_OF_DAY;
+            const range2Start = t2Start || START_OF_DAY;
+            const range2End = t2End || END_OF_DAY;
+            
+            // Check if ranges overlap
+            // Ranges overlap if: start1 < end2 AND start2 < end1
+            return range1Start < range2End && range2Start < range1End;
+        }
+        
+        function canPlayTogetherWithTime(player1, player2) {
+            // First check exclusion preferences
+            if (!canPlayTogether(player1.name, player2.name)) {
+                return false;
+            }
+            
+            // Then check time overlap
+            return timesOverlap(player1.timeRange, player2.timeRange);
+        }
+        
+        function organizeMatches(checkins) {
+            const matches = [];
+            const warnings = [];
+            let remaining = checkins.map((c, idx) => ({ ...c, originalIndex: idx }));
+            
+            // Separate by play style
+            const doublesOnly = remaining.filter(p => p.playStyle === 'doubles');
+            const singlesOnly = remaining.filter(p => p.playStyle === 'singles');
+            const either = remaining.filter(p => p.playStyle === 'both');
+            
+            // Form doubles matches (NO preference filtering for doubles)
+            let doublesPool = [...doublesOnly, ...either];
+            const usedInDoubles = new Set();
+            
+            while (doublesPool.length >= 4) {
+                // Just take first 4 players for doubles - no preference filtering
+                const group = doublesPool.slice(0, 4);
+                
+                matches.push({
+                    type: 'doubles',
+                    number: matches.filter(m => m.type === 'doubles').length + 1,
+                    players: group
+                });
+                
+                // Mark these players as used in doubles
+                group.forEach(p => usedInDoubles.add(p.originalIndex));
+                
+                // Remove from pool
+                doublesPool.splice(0, 4);
+            }
+            
+            // Form singles matches (WITH preference filtering AND time overlap)
+            // Only include: singles-only players + "either" players not used in doubles
+            let singlesPool = [
+                ...singlesOnly,
+                ...doublesPool.filter(p => p.playStyle === 'both')
+            ];
+
+            // Special case: if exactly 3 players in singles pool, try rotation first
+            if (singlesPool.length === 3) {
+                const canAll3Play =
+                    canPlayTogetherWithTime(singlesPool[0], singlesPool[1]) &&
+                    canPlayTogetherWithTime(singlesPool[0], singlesPool[2]) &&
+                    canPlayTogetherWithTime(singlesPool[1], singlesPool[2]);
+
+                // Check if all 3 are willing to play rotation
+                const allAllowRotation =
+                    (singlesPool[0].allowRotation !== false) &&
+                    (singlesPool[1].allowRotation !== false) &&
+                    (singlesPool[2].allowRotation !== false);
+
+                if (canAll3Play && allAllowRotation) {
+                    matches.push({
+                        type: 'singles-or-practice',
+                        players: [...singlesPool]
+                    });
+                    singlesPool = []; // Clear the pool
+                }
+            }
+
+            while (singlesPool.length >= 2) {
+                let pair = null;
+                
+                // Try to find a valid pair respecting exclusions AND time overlap
+                for (let i = 0; i < singlesPool.length - 1; i++) {
+                    for (let j = i + 1; j < singlesPool.length; j++) {
+                        if (canPlayTogetherWithTime(singlesPool[i], singlesPool[j])) {
+                            pair = [singlesPool[i], singlesPool[j]];
+                            break;
+                        }
+                    }
+                    if (pair) break;
+                }
+                
+                if (pair) {
+                    matches.push({
+                        type: 'singles',
+                        players: pair
+                    });
+                    
+                    // Remove from pool
+                    pair.forEach(p => {
+                        const idx = singlesPool.findIndex(sp => sp.originalIndex === p.originalIndex);
+                        if (idx > -1) singlesPool.splice(idx, 1);
+                    });
+                } else {
+                    // No valid pairs possible due to exclusions or time conflicts
+                    break;
+                }
+            }
+            
+            // Handle remaining (only from singlesPool and doubles-only players in doublesPool)
+            const allRemaining = [
+                ...doublesPool.filter(p => p.playStyle === 'doubles'),
+                ...singlesPool
+            ];
+            
+            if (allRemaining.length === 3) {
+                // Check if they can all play together (preferences AND time)
+                const canAll3Play = allRemaining.length === 3 && 
+                    canPlayTogetherWithTime(allRemaining[0], allRemaining[1]) &&
+                    canPlayTogetherWithTime(allRemaining[0], allRemaining[2]) &&
+                    canPlayTogetherWithTime(allRemaining[1], allRemaining[2]);
+                
+                if (canAll3Play) {
+                    matches.push({
+                        type: 'singles-or-practice',
+                        players: allRemaining
+                    });
+                } else {
+                    // Can't all play together
+                    warnings.push(`3 remaining players have conflicts (preferences or time) - placed in waiting`);
+                    allRemaining.forEach(p => {
+                        matches.push({
+                            type: 'waiting',
+                            players: [p]
+                        });
+                    });
+                }
+            } else if (allRemaining.length === 2) {
+                if (canPlayTogetherWithTime(allRemaining[0], allRemaining[1])) {
+                    matches.push({
+                        type: 'singles',
+                        players: allRemaining
+                    });
+                } else {
+                    // Can't pair them
+                    allRemaining.forEach(p => {
+                        matches.push({
+                            type: 'waiting',
+                            players: [p]
+                        });
+                    });
+                    
+                    // Determine conflict type for warning
+                    const prefConflict = !canPlayTogether(allRemaining[0].name, allRemaining[1].name);
+                    const timeConflict = !timesOverlap(allRemaining[0].timeRange, allRemaining[1].timeRange);
+                    
+                    if (prefConflict && timeConflict) {
+                        warnings.push(`${allRemaining[0].name} and ${allRemaining[1].name} cannot be paired (exclusion preference + time conflict)`);
+                    } else if (prefConflict) {
+                        warnings.push(`${allRemaining[0].name} and ${allRemaining[1].name} cannot be paired (exclusion preference)`);
+                    } else if (timeConflict) {
+                        warnings.push(`${allRemaining[0].name} and ${allRemaining[1].name} cannot be paired (time conflict)`);
+                    }
+                }
+            } else if (allRemaining.length === 1) {
+                matches.push({
+                    type: 'waiting',
+                    players: allRemaining
+                });
+            } else if (allRemaining.length > 3) {
+                warnings.push(`${allRemaining.length} players could not be matched due to preference conflicts`);
+                allRemaining.forEach(p => {
+                    matches.push({
+                        type: 'waiting',
+                        players: [p]
+                    });
+                });
+            }
+            
+            return { matches, warnings };
+        }
+        
+        function getMatchIndicators(player, matchPlayers, matchType) {
+            // Only show indicators for singles matches
+            if (matchType !== 'singles') return '';
+            
+            const prefs = getUserPrefs(player.name);
+            const indicators = [];
+            
+            matchPlayers.forEach(other => {
+                if (other.name === player.name) return;
+                
+                const otherNorm = normalizeName(other.name);
+                if (prefs.include.includes(otherNorm)) {
+                    indicators.push(`<span class="match-indicator satisfied">✓ with ${other.name}</span>`);
+                }
+            });
+            
+            return indicators.join(' ');
+        }
+        
+        function render() {
+            const checkins = getCurrentCheckins();
+            
+            document.getElementById('count').textContent = checkins.length;
+            
+            const checkinList = document.getElementById('checkinList');
+            if (checkins.length === 0) {
+                checkinList.innerHTML = '<div class="empty-state">No check-ins yet</div>';
+            } else {
+                checkinList.innerHTML = checkins.map((c, i) => {
+                    const prefs = getUserPrefs(c.name);
+                    const prefSummary = (prefs.include.length + prefs.exclude.length) > 0
+                        ? `(${prefs.include.length} include, ${prefs.exclude.length} exclude)`
+                        : '';
+                    
+                    const guestInfo = c.isGuest ? `<span class="guest-indicator">guest of ${c.addedBy}</span>` : '';
+                    const timeInfo = c.timeRange ? `<span class="time-badge">${formatTimeRange(c.timeRange.start, c.timeRange.end)}</span>` : '';
+                    const rotationInfo = c.allowRotation === false ? `<span class="time-badge" style="background: #ffebee; color: #c62828;">No rotation</span>` : '';
+
+                    return `
+                        <div class="checkin-item">
+                            <span>
+                                <span class="checkin-name">${i + 1}. ${c.name} ${guestInfo}${timeInfo}${rotationInfo}</span>
+                                <span class="preference-badge ${c.playStyle || 'both'}">${getPreferenceLabel(c.playStyle || 'both')}</span>
+                                ${prefSummary ? `<span class="checkin-time">${prefSummary}</span>` : ''}
+                                <span class="checkin-time">${formatTime(c.timestamp)}</span>
+                            </span>
+                            <button class="remove-btn" onclick="removeCheckIn(${i})">Remove</button>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            const matchesDiv = document.getElementById('matches');
+            if (checkins.length === 0) {
+                matchesDiv.innerHTML = '';
+                return;
+            }
+            
+            const { matches, warnings } = organizeMatches(checkins);
+            let html = '<h2>Organized Matches</h2>';
+            
+            if (warnings.length > 0) {
+                html += '<div class="warning-box">' + warnings.join('<br>') + '</div>';
+            }
+            
+            matches.forEach(match => {
+                if (match.type === 'doubles') {
+                    html += `
+                        <div class="match-group">
+                            <h3>Doubles ${match.number}</h3>
+                            <ul>
+                                ${match.players.map(p => {
+                                    const guestTag = p.isGuest ? ` <span class="guest-indicator">(guest of ${p.addedBy})</span>` : '';
+                                    const timeTag = p.timeRange ? ` <span class="time-badge">${formatTimeRange(p.timeRange.start, p.timeRange.end)}</span>` : '';
+                                    return `<li>• ${p.name}${guestTag}${timeTag} <span class="preference-badge ${p.playStyle || 'both'}">${getPreferenceLabel(p.playStyle || 'both')}</span></li>`;
+                                }).join('')}
+                            </ul>
+                        </div>
+                    `;
+                } else if (match.type === 'singles') {
+                    html += `
+                        <div class="match-group singles-group">
+                            <h3>Singles Match</h3>
+                            <ul>
+                                ${match.players.map(p => {
+                                    const guestTag = p.isGuest ? ` <span class="guest-indicator">(guest of ${p.addedBy})</span>` : '';
+                                    const timeTag = p.timeRange ? ` <span class="time-badge">${formatTimeRange(p.timeRange.start, p.timeRange.end)}</span>` : '';
+                                    return `<li>• ${p.name}${guestTag}${timeTag} <span class="preference-badge ${p.playStyle || 'both'}">${getPreferenceLabel(p.playStyle || 'both')}</span>${getMatchIndicators(p, match.players, 'singles')}</li>`;
+                                }).join('')}
+                            </ul>
+                        </div>
+                    `;
+                } else if (match.type === 'singles-or-practice') {
+                    html += `
+                        <div class="match-group singles-group">
+                            <h3>Rotation (3 players) - 1v1 or 1v2</h3>
+                            <ul>
+                                ${match.players.map(p => {
+                                    const guestTag = p.isGuest ? ` <span class="guest-indicator">(guest of ${p.addedBy})</span>` : '';
+                                    const timeTag = p.timeRange ? ` <span class="time-badge">${formatTimeRange(p.timeRange.start, p.timeRange.end)}</span>` : '';
+                                    return `<li>• ${p.name}${guestTag}${timeTag} <span class="preference-badge ${p.playStyle || 'both'}">${getPreferenceLabel(p.playStyle || 'both')}</span></li>`;
+                                }).join('')}
+                            </ul>
+                        </div>
+                    `;
+                } else if (match.type === 'waiting') {
+                    html += `
+                        <div class="match-group singles-group">
+                            <h3>Waiting</h3>
+                            <ul>
+                                ${match.players.map(p => {
+                                    const guestTag = p.isGuest ? ` <span class="guest-indicator">(guest of ${p.addedBy})</span>` : '';
+                                    const timeTag = p.timeRange ? ` <span class="time-badge">${formatTimeRange(p.timeRange.start, p.timeRange.end)}</span>` : '';
+                                    return `<li>• ${p.name}${guestTag}${timeTag} <span class="preference-badge ${p.playStyle || 'both'}">${getPreferenceLabel(p.playStyle || 'both')}</span></li>`;
+                                }).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+            });
+            
+            matchesDiv.innerHTML = html;
+        }
+        
+        // Initial setup
+        if (checkAuth()) {
+            populateNameDropdown();
+            initDates();
+            displayWeather();
+            render();
+        }
+    </script>
+</body>
+</html>
