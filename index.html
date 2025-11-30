@@ -1165,7 +1165,14 @@
             if (redirect) {
                 sessionStorage.removeItem('redirect');
                 const groupPath = redirect.replace(/^\/+|\/+$/g, '');
-                if (groupPath && groupPath !== 'index.html' && groupPath !== 'admin') {
+
+                // Handle admin route from redirect
+                if (groupPath === 'admin') {
+                    history.replaceState(null, '', redirect);
+                    return 'admin';
+                }
+
+                if (groupPath && groupPath !== 'index.html') {
                     // Update browser URL without page reload
                     history.replaceState(null, '', redirect);
 
