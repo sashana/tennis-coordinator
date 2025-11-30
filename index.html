@@ -1033,11 +1033,15 @@
                 const groupsSnapshot = await firebaseRef.groups().once('value');
                 availableGroups = groupsSnapshot.val() || {};
 
+                console.log('Current groups in Firebase:', availableGroups);
+
                 // If no groups exist, create default groups
                 if (Object.keys(availableGroups).length === 0) {
+                    console.log('No groups found, initializing defaults...');
                     await initializeDefaultGroups();
                     const groupsSnapshot2 = await firebaseRef.groups().once('value');
                     availableGroups = groupsSnapshot2.val() || {};
+                    console.log('Groups after initialization:', availableGroups);
                 }
 
                 return true;
@@ -1084,8 +1088,10 @@
             const oldSettingsSnapshot = await db.ref('settings').once('value');
             const oldSettings = oldSettingsSnapshot.val();
 
+            console.log('Checking for old data at /settings:', oldSettings);
+
             if (oldSettings && oldSettings.coreMembers) {
-                console.log('Found old data structure, migrating...');
+                console.log('Found old data structure, migrating members:', oldSettings.coreMembers);
 
                 // Migrate to new structure for Tue/Thu+ group
                 await firebaseRef.settings('tue-thu-midday-doubles').update({
@@ -1102,7 +1108,9 @@
                     await firebaseRef.checkins('tue-thu-midday-doubles').set(oldCheckins);
                 }
 
-                console.log('Migration completed');
+                console.log('Migration completed successfully');
+            } else {
+                console.log('No old data found to migrate. Old data may have been deleted.');
             }
         }
 
