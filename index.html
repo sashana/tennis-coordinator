@@ -1079,9 +1079,44 @@
             }
         }
 
+        async function migrateOldData() {
+            // Check if old data structure exists
+            const oldSettingsSnapshot = await db.ref('settings').once('value');
+            const oldSettings = oldSettingsSnapshot.val();
+
+            if (oldSettings && oldSettings.coreMembers) {
+                console.log('Found old data structure, migrating...');
+
+                // Migrate to new structure for Tue/Thu+ group
+                await firebaseRef.settings('tue-thu-midday-doubles').update({
+                    groupName: 'Tue/Thu+ Midday Doubles',
+                    groupPin: oldSettings.groupPin || '14675',
+                    adminPin: oldSettings.adminPin || '3250',
+                    members: oldSettings.coreMembers || []
+                });
+
+                // Migrate old check-ins
+                const oldCheckinsSnapshot = await db.ref('checkins').once('value');
+                const oldCheckins = oldCheckinsSnapshot.val();
+                if (oldCheckins) {
+                    await firebaseRef.checkins('tue-thu-midday-doubles').set(oldCheckins);
+                }
+
+                console.log('Migration completed');
+            }
+        }
+
         async function initializeDefaultGroups() {
-            const defaultGroups = {
-                'tue-thu-midday-doubles': {
+            // First, try to migrate any old data
+            await migrateOldData();
+
+            // Check if groups already exist
+            const groupsSnapshot = await firebaseRef.groups().once('value');
+            const existingGroups = groupsSnapshot.val() || {};
+
+            // Only create groups that don't exist yet
+            if (!existingGroups['tue-thu-midday-doubles']) {
+                await firebaseRef.group('tue-thu-midday-doubles').set({
                     settings: {
                         groupName: 'Tue/Thu+ Midday Doubles',
                         groupPin: '14675',
@@ -1089,8 +1124,12 @@
                         members: []
                     },
                     checkins: {}
-                },
-                'singles-tuneup-tourny': {
+                });
+                console.log('Initialized tue-thu-midday-doubles group');
+            }
+
+            if (!existingGroups['singles-tuneup-tourny']) {
+                await firebaseRef.group('singles-tuneup-tourny').set({
                     settings: {
                         groupName: '18+ Singles Tune-up Tourny',
                         groupPin: '8888',
@@ -1098,11 +1137,9 @@
                         members: []
                     },
                     checkins: {}
-                }
-            };
-
-            await firebaseRef.groups().set(defaultGroups);
-            console.log('Default groups initialized');
+                });
+                console.log('Initialized singles-tuneup-tourny group');
+            }
         }
 
         let activeListeners = {
