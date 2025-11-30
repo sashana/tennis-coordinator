@@ -896,12 +896,12 @@
             </div>
             
             <div class="pref-section">
-                <h3>Admin PIN (Alex Stolyar only)</h3>
-                <p style="font-size: 12px; color: #666; margin-bottom: 8px;">Only you can access admin settings</p>
+                <h3>Admin PIN</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 8px;">Required to access admin settings</p>
                 <input
                     type="text"
                     id="adminPinInput"
-                    value="14675"
+                    value="3250"
                     style="width: 100%; margin-bottom: 12px;"
                 >
             </div>
@@ -923,11 +923,9 @@
     <script>
         let allCheckins = JSON.parse(localStorage.getItem('tennisCheckinsV3')) || {};
         let userPreferences = JSON.parse(localStorage.getItem('userPreferencesV3')) || {};
-        let coreMembers = JSON.parse(localStorage.getItem('coreMembers')) || [
-            'Alex Stolyar'
-        ];
+        let coreMembers = JSON.parse(localStorage.getItem('coreMembers')) || [];
         let groupPin = localStorage.getItem('groupPin') || '14675';
-        let adminPin = localStorage.getItem('adminPin') || '14675';
+        let adminPin = localStorage.getItem('adminPin') || '3250';
         let selectedDate = null;
         let selectedPreference = 'both';
         let currentEditingUser = null;
@@ -1003,12 +1001,12 @@
         }
         
         function openSettingsModal() {
-            const pin = prompt('Enter admin PIN (Alex Stolyar only):');
+            const pin = prompt('Enter admin PIN:');
             if (pin === null) {
                 return; // User cancelled
             }
             if (pin !== adminPin) {
-                alert('Invalid admin PIN - Only Alex Stolyar can access admin settings');
+                alert('Invalid admin PIN - Only admin can access admin settings');
                 return;
             }
             
