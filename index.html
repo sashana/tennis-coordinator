@@ -996,7 +996,7 @@
             <select id="nameSelect" onchange="handleNameSelect()">
                 <option value="">Select your name...</option>
             </select>
-            <button class="edit-prefs-btn" onclick="openPreferencesModal()" title="Edit Singles Preferences">⚙️</button>
+            <button id="prefsBtn" class="edit-prefs-btn" onclick="openPreferencesModal()" title="Edit Singles Preferences" style="display: none;">⚙️</button>
         </div>
 
         <!-- Collapsible form fields -->
@@ -1102,7 +1102,7 @@
                 <button class="close-btn" onclick="closePreferencesModal()">×</button>
             </div>
 
-            <div class="pref-section">
+            <div id="excludeSection" class="pref-section" style="display: none;">
                 <h3>Exclude Players</h3>
                 <p style="font-size: 12px; color: #666; margin-bottom: 8px;">You won't be paired with these players in singles matches</p>
                 <div class="pref-input-group">
@@ -1384,6 +1384,12 @@
             settings: (groupId) => db.ref(`groups/${groupId}/settings`),
             userPreferences: () => db.ref('userPreferences'),
             siteSettings: () => db.ref('siteSettings')
+        };
+
+        // Group Feature Configuration
+        // Simplified config for tight-knit groups - will expand to full template system later
+        const groupFeatures = {
+            excludeListForSingles: false  // Hide for tight-knit groups, enable for club/competitive groups later
         };
 
         let allCheckins = {};
@@ -3292,6 +3298,21 @@
             matchesDiv.innerHTML = html;
         }
         
+        // Apply feature flags to UI
+        function applyFeatureFlags() {
+            // Show/hide exclude list feature based on config
+            const prefsBtn = document.getElementById('prefsBtn');
+            const excludeSection = document.getElementById('excludeSection');
+
+            if (groupFeatures.excludeListForSingles) {
+                if (prefsBtn) prefsBtn.style.display = 'inline-block';
+                if (excludeSection) excludeSection.style.display = 'block';
+            } else {
+                if (prefsBtn) prefsBtn.style.display = 'none';
+                if (excludeSection) excludeSection.style.display = 'none';
+            }
+        }
+
         // Initial setup
         async function init() {
             // Load available groups from Firebase
@@ -3317,6 +3338,9 @@
                     // Show app, hide landing page
                     document.getElementById('appContainer').style.display = 'block';
                     document.getElementById('landingPage').style.display = 'none';
+
+                    // Apply feature flags to UI
+                    applyFeatureFlags();
                 } else {
                     // Authentication failed - redirect to root
                     window.location.href = '/';
