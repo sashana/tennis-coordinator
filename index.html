@@ -321,7 +321,24 @@
             margin-bottom: 8px;
             gap: 8px;
         }
-        
+
+        .checkin-item.current-user {
+            background: #e8f5e9;
+            border: 2px solid #4CAF50;
+            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.1);
+        }
+
+        .current-user-badge {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            font-weight: 600;
+        }
+
         .checkin-item > span {
             flex: 1;
             min-width: 0;
@@ -981,7 +998,7 @@
             </span>
             <div style="display: flex; gap: 8px;">
                 <button class="settings-icon" onclick="window.open('tennis-coordinator-help.md', '_blank')" title="Help">❓</button>
-                <button class="settings-icon" onclick="openSettingsModal()" title="Settings">⚙️</button>
+                <button class="settings-icon" onclick="openSettingsModal()" title="Admin Settings">⚙️</button>
             </div>
         </h1>
         
@@ -1090,8 +1107,6 @@
         </div>
 
         <div class="matches" id="matches" style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #f0f0f0;"></div>
-
-        <button class="reset-btn" onclick="resetAll()">🔒 Reset All (Admin Only)</button>
     </div>
     
     <!-- Preferences Modal -->
@@ -1192,7 +1207,17 @@
                     >
                 </div>
                 <p style="font-size: 11px; color: #999; margin-bottom: 12px;">Tip: Use <a href="https://www.latlong.net/" target="_blank" style="color: #4CAF50;">latlong.net</a> to find coordinates</p>
-                <button onclick="saveSettings()" style="width: 100%;">Save Settings</button>
+                <button onclick="saveSettings()" style="width: 100%; margin-bottom: 12px;">Save Settings</button>
+            </div>
+
+            <div class="pref-section" style="border-top: 2px solid #ffebee; padding-top: 16px;">
+                <h3 style="color: #d32f2f;">⚠️ Danger Zone</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 12px;">
+                    Reset all check-ins for all dates. This cannot be undone.
+                </p>
+                <button onclick="resetAll()" style="width: 100%; background: #f44336; color: white;">
+                    🔒 Reset All Check-ins
+                </button>
             </div>
         </div>
     </div>
@@ -3195,6 +3220,11 @@
                 checkinList.innerHTML = '<div class="empty-state">No check-ins yet</div>';
             } else {
                 checkinList.innerHTML = checkins.map((c, i) => {
+                    // Determine if this is the current user
+                    const isCurrentUser = sessionUser && normalizeName(c.name) === normalizeName(sessionUser);
+                    const itemClass = isCurrentUser ? 'checkin-item current-user' : 'checkin-item';
+                    const userBadge = isCurrentUser ? '<span class="current-user-badge">YOU</span>' : '';
+
                     // Show who added this check-in
                     let addedByInfo = '';
                     if (c.isGuest) {
@@ -3208,9 +3238,9 @@
                     const rotationInfo = c.allowRotation === false ? `<span class="time-badge" style="background: #ffebee; color: #c62828;">No rotation</span>` : '';
 
                     return `
-                        <div class="checkin-item">
+                        <div class="${itemClass}">
                             <span>
-                                <span class="checkin-name">${i + 1}. ${c.name} ${addedByInfo}${timeInfo}${rotationInfo}</span>
+                                <span class="checkin-name">${i + 1}. ${c.name}${userBadge} ${addedByInfo}${timeInfo}${rotationInfo}</span>
                                 <span class="preference-badge ${c.playStyle || 'both'}">${getPreferenceLabel(c.playStyle || 'both')}</span>
                                 <span class="checkin-time">${formatTime(c.timestamp)}</span>
                             </span>
