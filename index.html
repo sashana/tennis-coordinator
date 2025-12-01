@@ -2825,8 +2825,18 @@
             const ordinal = getOrdinalSuffix(day);
             const dateStr = `${weekday}, ${month} ${day}${ordinal}`;
 
+            // Determine if checking in self or someone else
+            const checkingInSelf = !sessionUser || !checkinData.addedBy ||
+                                   normalizeName(name) === normalizeName(sessionUser) ||
+                                   normalizeName(name) === normalizeName(checkinData.addedBy);
+
             // Build message
-            let message = `I am in for ${dateStr}`;
+            let message;
+            if (checkingInSelf) {
+                message = `I am in for ${dateStr}`;
+            } else {
+                message = `${name} is in for ${dateStr}`;
+            }
 
             // Add play style preference - simplified text
             const playStyle = checkinData.playStyle || 'both';
