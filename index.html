@@ -2806,34 +2806,47 @@
         }
 
         // Personal Check-in WhatsApp Share
+        function getOrdinalSuffix(day) {
+            if (day > 3 && day < 21) return 'th';
+            switch (day % 10) {
+                case 1: return 'st';
+                case 2: return 'nd';
+                case 3: return 'rd';
+                default: return 'th';
+            }
+        }
+
         function formatPersonalCheckinForWhatsApp(name, checkinData) {
-            // Format date
+            // Format date with ordinal
             const dateObj = new Date(selectedDate + 'T00:00:00');
-            const dateStr = dateObj.toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'short',
-                day: 'numeric'
-            });
+            const weekday = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+            const month = dateObj.toLocaleDateString('en-US', { month: 'short' });
+            const day = dateObj.getDate();
+            const ordinal = getOrdinalSuffix(day);
+            const dateStr = `${weekday}, ${month} ${day}${ordinal}`;
 
             // Build message
-            let message = `I'm checked in for ${dateStr}`;
+            let message = `I am in for ${dateStr}`;
 
-            // Add group name if available
-            if (currentGroupName && currentGroupName !== 'Tennis Coordinator') {
-                message += ` at ${currentGroupName}`;
+            // Add play style preference - simplified text
+            const playStyle = checkinData.playStyle || 'both';
+            let playStyleText;
+            if (playStyle === 'singles') {
+                playStyleText = 'Singles Only';
+            } else if (playStyle === 'doubles') {
+                playStyleText = 'Doubles Only';
+            } else {
+                playStyleText = 'Doubles or Singles';
             }
+            message += `\n${playStyleText}`;
 
-            // Add play style preference
-            const playStyleLabel = getPreferenceLabel(checkinData.playStyle || 'both');
-            message += `\n🎾 ${playStyleLabel}`;
-
-            // Add time availability if specified
-            if (checkinData.timeRange) {
+            // Add time availability
+            if (checkinData.timeRange && (checkinData.timeRange.start || checkinData.timeRange.end)) {
                 const timeStr = formatTimeRange(checkinData.timeRange.start, checkinData.timeRange.end);
-                message += `\n⏰ ${timeStr}`;
+                message += `\n${timeStr}`;
+            } else {
+                message += `\nFlexible on time`;
             }
-
-            message += `\n\n🎾 Tennis Coordinator`;
 
             return message;
         }
