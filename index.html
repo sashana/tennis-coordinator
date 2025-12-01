@@ -2624,6 +2624,13 @@
             // Show success notification
             showToast('✓ Checked in successfully!', 'success');
 
+            // Offer to share to WhatsApp
+            setTimeout(() => {
+                if (confirm(`Share your check-in to WhatsApp group?`)) {
+                    sharePersonalCheckinToWhatsApp(name, checkinData);
+                }
+            }, 500); // Small delay so toast shows first
+
             // Reset form
             document.getElementById('nameSelect').value = '';
             document.getElementById('guestNameInput').value = '';
@@ -2795,6 +2802,46 @@
             const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
 
             // Open WhatsApp in new window/tab
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Personal Check-in WhatsApp Share
+        function formatPersonalCheckinForWhatsApp(name, checkinData) {
+            // Format date
+            const dateObj = new Date(selectedDate + 'T00:00:00');
+            const dateStr = dateObj.toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'short',
+                day: 'numeric'
+            });
+
+            // Build message
+            let message = `I'm checked in for ${dateStr}`;
+
+            // Add group name if available
+            if (currentGroupName && currentGroupName !== 'Tennis Coordinator') {
+                message += ` at ${currentGroupName}`;
+            }
+
+            // Add play style preference
+            const playStyleLabel = getPreferenceLabel(checkinData.playStyle || 'both');
+            message += `\n🎾 ${playStyleLabel}`;
+
+            // Add time availability if specified
+            if (checkinData.timeRange) {
+                const timeStr = formatTimeRange(checkinData.timeRange.start, checkinData.timeRange.end);
+                message += `\n⏰ ${timeStr}`;
+            }
+
+            message += `\n\n🎾 Tennis Coordinator`;
+
+            return message;
+        }
+
+        function sharePersonalCheckinToWhatsApp(name, checkinData) {
+            const message = formatPersonalCheckinForWhatsApp(name, checkinData);
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
             window.open(whatsappUrl, '_blank');
         }
 
