@@ -2676,6 +2676,13 @@
 
             // Show success notification
             showToast(`Removed ${personName}`, 'success');
+
+            // Offer to share removal to WhatsApp
+            setTimeout(() => {
+                if (confirm(`Share removal to WhatsApp group?`)) {
+                    shareRemovalToWhatsApp(personName);
+                }
+            }, 500); // Small delay so toast shows first
         }
         
         function resetAll() {
@@ -2863,6 +2870,38 @@
 
         function sharePersonalCheckinToWhatsApp(name, checkinData) {
             const message = formatPersonalCheckinForWhatsApp(name, checkinData);
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Personal Removal WhatsApp Share
+        function formatRemovalForWhatsApp(name) {
+            // Format date with ordinal
+            const dateObj = new Date(selectedDate + 'T00:00:00');
+            const weekday = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+            const month = dateObj.toLocaleDateString('en-US', { month: 'short' });
+            const day = dateObj.getDate();
+            const ordinal = getOrdinalSuffix(day);
+            const dateStr = `${weekday}, ${month} ${day}${ordinal}`;
+
+            // Determine if removing self or someone else
+            const currentUser = sessionUser || localStorage.getItem(`tennisSessionUser_${currentGroupId}`);
+            const removingSelf = !currentUser || normalizeName(name) === normalizeName(currentUser);
+
+            // Build message
+            let message;
+            if (removingSelf) {
+                message = `I am out for ${dateStr}`;
+            } else {
+                message = `${name} is out for ${dateStr}`;
+            }
+
+            return message;
+        }
+
+        function shareRemovalToWhatsApp(name) {
+            const message = formatRemovalForWhatsApp(name);
             const encodedMessage = encodeURIComponent(message);
             const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
             window.open(whatsappUrl, '_blank');
