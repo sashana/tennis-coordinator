@@ -2573,29 +2573,40 @@
                 for (const activity of activityArray) {
                     const time = formatTime(activity.timestamp);
                     const icon = activity.action === 'check-in' ? '✅' : '❌';
-                    const actionText = activity.action === 'check-in' ? 'checked in' : 'removed';
 
-                    let details = '';
-                    if (activity.playStyle) {
-                        details += ` (${getPreferenceLabel(activity.playStyle)}`;
-                        if (activity.timeRange) {
-                            const start = activity.timeRange.start || '';
-                            const end = activity.timeRange.end || '';
-                            if (start || end) {
-                                details += `, ${start || 'anytime'}–${end || 'anytime'}`;
-                            }
+                    let actionDescription = '';
+                    if (activity.action === 'check-in') {
+                        // Check-in: "Alex checked in" or "Alex checked in by Bob"
+                        actionDescription = `<strong>${activity.player}</strong> checked in`;
+                        if (activity.by && activity.by !== activity.player) {
+                            actionDescription += ` <span style="color: #999;">by ${activity.by}</span>`;
                         }
-                        details += ')';
-                    }
 
-                    const byText = activity.by && activity.by !== activity.player
-                        ? ` <span style="color: #999;">by ${activity.by}</span>`
-                        : '';
+                        // Add play style and time details
+                        if (activity.playStyle) {
+                            actionDescription += ` (${getPreferenceLabel(activity.playStyle)}`;
+                            if (activity.timeRange) {
+                                const start = activity.timeRange.start || '';
+                                const end = activity.timeRange.end || '';
+                                if (start || end) {
+                                    actionDescription += `, ${start || 'anytime'}–${end || 'anytime'}`;
+                                }
+                            }
+                            actionDescription += ')';
+                        }
+                    } else {
+                        // Removal: "Alex removed himself" or "Bob removed Alex"
+                        if (activity.by && activity.by !== activity.player) {
+                            actionDescription = `<strong>${activity.by}</strong> removed <strong>${activity.player}</strong>`;
+                        } else {
+                            actionDescription = `<strong>${activity.player}</strong> removed themselves`;
+                        }
+                    }
 
                     html += `
                         <div style="padding: 10px; background: #f9f9f9; border-radius: 6px; font-size: 14px;">
                             <span style="margin-right: 6px;">${icon}</span>
-                            <strong>${activity.player}</strong> ${actionText}${details}${byText}
+                            ${actionDescription}
                             <div style="font-size: 12px; color: #999; margin-top: 4px;">${time}</div>
                         </div>
                     `;
