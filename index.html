@@ -2968,10 +2968,24 @@
         
         function formatTime(timestamp) {
             const date = new Date(timestamp);
-            return date.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
+            const now = new Date();
+            const isToday = date.toDateString() === now.toDateString();
+
+            const timeStr = date.toLocaleTimeString('en-US', {
+                hour: 'numeric',
                 minute: '2-digit'
             });
+
+            if (isToday) {
+                return timeStr;
+            } else {
+                // Show date for check-ins from previous days
+                const dateStr = date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                });
+                return `${dateStr} ${timeStr}`;
+            }
         }
         
         function getPreferenceLabel(pref) {
@@ -3050,7 +3064,8 @@
             const either = remaining.filter(p => p.playStyle === 'both');
             
             // Form doubles matches (NO preference filtering for doubles)
-            let doublesPool = [...doublesOnly, ...either];
+            // Sort by timestamp (first-come, first-served)
+            let doublesPool = [...doublesOnly, ...either].sort((a, b) => a.timestamp - b.timestamp);
             const usedInDoubles = new Set();
             
             while (doublesPool.length >= 4) {
