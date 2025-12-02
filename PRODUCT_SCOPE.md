@@ -1,6 +1,6 @@
 # Tennis Coordinator - Product Scope
 
-**Version:** 0.2.0
+**Version:** 0.4.0
 **Last Updated:** 2025-11-30
 **Status:** Active Development
 
@@ -10,6 +10,8 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.4.0 | 2025-12-01 | Added UC-T5 Activity History use case |
+| 0.3.0 | 2025-11-30 | Added Location-Flexible group archetype and use cases |
 | 0.2.0 | 2025-11-30 | Updated with implemented features, clarified privacy/transparency principles |
 | 0.1.0 | 2024-11-30 | Initial draft - product vision, group archetypes, use cases |
 
@@ -29,6 +31,7 @@ The product serves different types of tennis groups, each with unique characteri
 |-----------|---------|------|-------------|-----------|
 | **Tight-knit Group** | Tue/Thu Midday Doubles | ~20 | Everyone knows each other | Honor system, minimal friction, primarily doubles |
 | **Club Community** | Bay Club 18+ Tennis | 50+ | Mixed familiarity | Partner preferences, skill filtering, privacy |
+| **Location-Flexible Group** | Coworkers / Friends across town | Variable | Know each other | Location consensus needed before commitment, travel distance matters |
 | **Casual Drop-in** | Weekend Warriors | Variable | Loose connections | Simple coordination, flexible |
 | **Competitive League** | USTA Practice Partners | Varies | Skill-focused | Ratings, level matching |
 
@@ -124,6 +127,13 @@ The product serves different types of tennis groups, each with unique characteri
 
 **Status:** Implemented with automatic WhatsApp sharing prompts after check-in/removal; messages auto-formatted
 
+#### UC-T5: Activity History ⚠️
+**As a** member
+**I want to** see a log of recent check-ins and removals for the day
+**So that** I can understand what changed (who dropped, who joined) without asking in chat
+
+**Status:** In progress - activity icon opens modal showing timestamped history of actions
+
 ---
 
 ### Larger/Mixed-Familiarity Group Use Cases
@@ -162,6 +172,31 @@ The product serves different types of tennis groups, each with unique characteri
 **So that** the group maintains quality and trust
 
 **Status:** Partial - Group-level PIN authentication; individual member verification not implemented
+
+---
+
+### Location-Flexible Group Use Cases
+
+#### UC-F1: Propose Locations ❌
+**As a** player in a geographically dispersed group
+**I want to** indicate which cities/areas I can play in
+**So that** the group can find a location that works for enough people
+
+**Status:** Not implemented
+
+#### UC-F2: Location Preferences ❌
+**As a** player
+**I want to** see proposed locations and indicate which work for me
+**So that** I only commit when the venue is convenient
+
+**Status:** Not implemented
+
+#### UC-F3: Location Consensus ❌
+**As a** group
+**We need** the system to help find a location that works for enough players
+**So that** matches form at mutually convenient venues
+
+**Status:** Not implemented
 
 ---
 

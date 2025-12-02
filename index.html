@@ -1009,6 +1009,7 @@
                 </small>
             </span>
             <div style="display: flex; gap: 8px;">
+                <button class="settings-icon" onclick="openActivityModal()" title="Activity History">📋</button>
                 <button class="settings-icon" onclick="window.open('tennis-coordinator-help.md', '_blank')" title="Help">❓</button>
                 <button class="settings-icon" onclick="openSettingsModal()" title="Admin Settings">⚙️</button>
             </div>
@@ -1147,7 +1148,21 @@
             <button onclick="savePreferences()" style="width: 100%;">Save Preferences</button>
         </div>
     </div>
-    
+
+    <!-- Activity Modal -->
+    <div class="modal" id="activityModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Activity History</h2>
+                <button class="close-btn" onclick="closeActivityModal()">×</button>
+            </div>
+            <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Recent check-ins and removals for <strong id="activityDateDisplay"></strong></p>
+            <div id="activityList" style="max-height: 400px; overflow-y: auto;">
+                <p style="color: #999; text-align: center;">Loading...</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Settings Modal -->
     <div class="modal" id="settingsModal">
         <div class="modal-content">
@@ -1419,6 +1434,7 @@
             group: (groupId) => db.ref(`groups/${groupId}`),
             checkins: (groupId) => db.ref(`groups/${groupId}/checkins`),
             settings: (groupId) => db.ref(`groups/${groupId}/settings`),
+            activity: (groupId, date) => db.ref(`groups/${groupId}/activity/${date}`),
             userPreferences: () => db.ref('userPreferences'),
             siteSettings: () => db.ref('siteSettings')
         };
@@ -2492,7 +2508,108 @@
             document.getElementById('preferencesModal').classList.remove('active');
             currentEditingUser = null;
         }
-        
+
+        // Activity Log Functions
+        async function logActivity(action, playerName, details = {}) {
+            if (!currentGroupId || !selectedDate) return;
+
+            const activityEntry = {
+                timestamp: Date.now(),
+                action: action, // 'check-in' or 'removal'
+                player: playerName,
+                by: sessionUser || playerName,
+                ...details
+            };
+
+            try {
+                await firebaseRef.activity(currentGroupId, selectedDate).push(activityEntry);
+            } catch (error) {
+                console.error('Error logging activity:', error);
+            }
+        }
+
+        async function openActivityModal() {
+            if (!selectedDate) {
+                showToast('Please select a date first', 'error');
+                return;
+            }
+
+            document.getElementById('activityModal').classList.add('active');
+
+            // Format date for display
+            const dateObj = new Date(selectedDate + 'T00:00:00');
+            const dateStr = dateObj.toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('activityDateDisplay').textContent = dateStr;
+
+            // Load activity
+            await loadActivityLog();
+        }
+
+        function closeActivityModal() {
+            document.getElementById('activityModal').classList.remove('active');
+        }
+
+        async function loadActivityLog() {
+            const listDiv = document.getElementById('activityList');
+
+            try {
+                const snapshot = await firebaseRef.activity(currentGroupId, selectedDate).once('value');
+                const activities = snapshot.val();
+
+                if (!activities) {
+                    listDiv.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No activity recorded for this date yet.</p>';
+                    return;
+                }
+
+                // Convert to array and sort by timestamp (newest first)
+                const activityArray = Object.values(activities).sort((a, b) => b.timestamp - a.timestamp);
+
+                let html = '<div style="display: flex; flex-direction: column; gap: 8px;">';
+
+                for (const activity of activityArray) {
+                    const time = formatTime(activity.timestamp);
+                    const icon = activity.action === 'check-in' ? '✅' : '❌';
+                    const actionText = activity.action === 'check-in' ? 'checked in' : 'removed';
+
+                    let details = '';
+                    if (activity.playStyle) {
+                        details += ` (${getPreferenceLabel(activity.playStyle)}`;
+                        if (activity.timeRange) {
+                            const start = activity.timeRange.start || '';
+                            const end = activity.timeRange.end || '';
+                            if (start || end) {
+                                details += `, ${start || 'anytime'}–${end || 'anytime'}`;
+                            }
+                        }
+                        details += ')';
+                    }
+
+                    const byText = activity.by && activity.by !== activity.player
+                        ? ` <span style="color: #999;">by ${activity.by}</span>`
+                        : '';
+
+                    html += `
+                        <div style="padding: 10px; background: #f9f9f9; border-radius: 6px; font-size: 14px;">
+                            <span style="margin-right: 6px;">${icon}</span>
+                            <strong>${activity.player}</strong> ${actionText}${details}${byText}
+                            <div style="font-size: 12px; color: #999; margin-top: 4px;">${time}</div>
+                        </div>
+                    `;
+                }
+
+                html += '</div>';
+                listDiv.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading activity:', error);
+                listDiv.innerHTML = '<p style="color: #c00; text-align: center;">Error loading activity log.</p>';
+            }
+        }
+
         function addInclude() {
             const input = document.getElementById('includeInput');
             const name = input.value.trim();
@@ -2660,6 +2777,12 @@
 
             setCurrentCheckins(checkins);
 
+            // Log activity
+            logActivity('check-in', name, {
+                playStyle: checkinData.playStyle,
+                timeRange: checkinData.timeRange
+            });
+
             // Remember user's name for next time (if not a guest)
             if (!isGuest && currentGroupId) {
                 localStorage.setItem(`tennisUserName_${currentGroupId}`, name);
@@ -2716,6 +2839,10 @@
 
             checkins.splice(index, 1);
             setCurrentCheckins(checkins);
+
+            // Log activity
+            logActivity('removal', personName);
+
             saveAndRender();
 
             // Show success notification
