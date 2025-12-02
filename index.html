@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tue/Thu+ Midday Doubles</title>
+    <title>Tennis Coordinator</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="favicon.png">
@@ -1000,7 +1000,7 @@
         </div>
     </div>
 
-    <div class="container" id="appContainer">
+    <div class="container" id="appContainer" style="display: none;">
         <h1>
             <span>
                 <span id="groupNameDisplay">🎾 Tennis Coordinator</span>
@@ -2154,6 +2154,7 @@
         function updateGroupDisplay() {
             document.getElementById('groupNameDisplay').textContent = currentGroupName;
             document.getElementById('groupSubtitle').textContent = 'Tennis Coordinator';
+            document.title = currentGroupName ? `${currentGroupName} - Tennis Coordinator` : 'Tennis Coordinator';
         }
 
         function renderMemberList() {
