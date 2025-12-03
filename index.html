@@ -2931,9 +2931,8 @@
             // Add each match group
             matches.forEach(match => {
                 if (match.type === 'doubles') {
-                    message += `Court ___ - Doubles\n`;
                     const players = match.players.map(p => p.name);
-                    message += `${players.join(', ')}\n`;
+                    message += `Doubles: ${players.join(', ')}\n`;
 
                     // Add time window if available - compact format
                     const times = match.players
@@ -2944,9 +2943,8 @@
                     }
                     message += '\n';
                 } else if (match.type === 'singles') {
-                    message += `Court ___ - Singles\n`;
                     const players = match.players.map(p => p.name);
-                    message += `${players.join(', ')}\n`;
+                    message += `Singles: ${players.join(', ')}\n`;
 
                     // Add time window if available - compact format
                     const times = match.players
@@ -2957,8 +2955,7 @@
                     }
                     message += '\n';
                 } else if (match.type === 'singles-or-practice') {
-                    message += `Court ___ - Rotation\n`;
-                    message += `${match.players.map(p => p.name).join(', ')}\n`;
+                    message += `Rotation: ${match.players.map(p => p.name).join(', ')}\n`;
 
                     // Add time window if available - compact format
                     const times = match.players
