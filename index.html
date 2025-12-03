@@ -1008,10 +1008,13 @@
                     <span id="groupSubtitle">Tennis Coordinator</span>
                 </small>
             </span>
-            <div style="display: flex; gap: 8px;">
+            <div style="display: flex; gap: 8px; align-items: center;">
                 <button class="settings-icon" onclick="openActivityModal()" title="Activity History">📋</button>
                 <button class="settings-icon" onclick="window.open('tennis-coordinator-help.md', '_blank')" title="Help">❓</button>
                 <button class="settings-icon" onclick="openSettingsModal()" title="Admin Settings">⚙️</button>
+                <button id="sessionUserBtn" class="settings-icon" onclick="changeSessionUser()" title="Click to change user" style="display: none; padding: 6px 10px; width: auto; font-size: 14px;">
+                    <span id="sessionUserIcon">👤 <span id="sessionUserNameBtn"></span> ▼</span>
+                </button>
             </div>
         </h1>
         
@@ -1021,12 +1024,6 @@
         </div>
         
         <div id="weatherWidget"></div>
-
-        <!-- Session User Display -->
-        <div id="sessionUserDisplay" style="display: none; background: #e8f5e9; padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; color: #2e7d32;">
-            <span>Logged in as: <strong id="sessionUserName"></strong></span>
-            <button onclick="changeSessionUser()" style="background: transparent; border: none; color: #2e7d32; text-decoration: underline; cursor: pointer; padding: 0; margin-left: 8px; font-size: 13px;">Change</button>
-        </div>
 
         <div class="input-group">
             <select id="nameSelect" onchange="handleNameSelect()">
@@ -1879,14 +1876,14 @@
         }
 
         function updateSessionUserDisplay() {
-            const display = document.getElementById('sessionUserDisplay');
-            const nameDisplay = document.getElementById('sessionUserName');
+            const button = document.getElementById('sessionUserBtn');
+            const nameDisplay = document.getElementById('sessionUserNameBtn');
 
             if (sessionUser) {
                 nameDisplay.textContent = sessionUser;
-                display.style.display = 'block';
+                button.style.display = 'block';
             } else {
-                display.style.display = 'none';
+                button.style.display = 'none';
             }
         }
 
