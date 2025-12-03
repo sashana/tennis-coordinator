@@ -1878,6 +1878,9 @@
                 return;
             }
 
+            // Set admin session when successfully authenticated
+            sessionStorage.setItem(`adminAuth_${currentGroupId}`, 'true');
+
             renderMemberList();
             document.getElementById('adminPinInput').value = adminPin;
             document.getElementById('groupPinInput').value = groupPin;
@@ -3427,9 +3430,12 @@
                 html += '<button class="share-whatsapp-btn" onclick="shareToWhatsApp()">📱 Share to WhatsApp</button>';
             }
 
-            // Add reset button (only if there are check-ins, admin PIN required on click)
+            // Add reset button for admins (only if there are check-ins)
             if (checkins.length > 0) {
-                html += '<button class="reset-day-btn" onclick="resetAll()" style="background: #f44336; color: white; margin-left: 8px;">🗑️ Reset This Day</button>';
+                const isAdmin = sessionStorage.getItem(`adminAuth_${currentGroupId}`) === 'true';
+                if (isAdmin) {
+                    html += '<button class="reset-day-btn" onclick="resetAll()" style="background: #f44336; color: white; margin-left: 8px;">🗑️ Reset This Day</button>';
+                }
             }
 
             if (warnings.length > 0) {
