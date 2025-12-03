@@ -2522,6 +2522,13 @@
                 ...details
             };
 
+            // Remove undefined values (Firebase doesn't accept them)
+            Object.keys(activityEntry).forEach(key => {
+                if (activityEntry[key] === undefined) {
+                    delete activityEntry[key];
+                }
+            });
+
             try {
                 await firebaseRef.activity(currentGroupId, selectedDate).push(activityEntry);
             } catch (error) {
