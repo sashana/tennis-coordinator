@@ -209,15 +209,58 @@ If you accidentally selected the wrong name:
 
 ---
 
+## 👤 Adding New Members
+
+### How It Works (Tight-Knit Groups)
+Anyone can add new permanent members - no admin approval needed! This is based on trust and social accountability.
+
+### Steps
+1. Select **"+ Add New Member"** from name dropdown
+2. Fill in member details:
+   - **Name** (required)
+   - **Contact** - email or phone (optional)
+   - **Notes** - skill level, how you know them (optional)
+3. Click **"Add Member"**
+4. Member instantly appears in dropdown for everyone
+
+### Transparency & Accountability
+- **Who added them?** Shown in admin settings (anyone can view with group PIN)
+- **When added?** Date recorded
+- **Contact & notes:** Visible to all in admin settings
+- **Social accountability:** Your name is attached to members you add
+
+### Example in Admin Settings:
+```
+John Smith                              [Remove]
+  Added by: Alex on Dec 3, 2024
+  Contact: john@email.com
+  Notes: 4.0 player, friend from work
+```
+
+### Guidelines
+- ✅ Add players who match the group's skill level
+- ✅ Be thoughtful - your name is attached
+- ✅ Include contact info to help coordination
+- ⚠️ Admin can remove if someone adds poorly
+
+---
+
 ## ⚙️ Admin Settings
 
 **Access:** Click ⚙️ icon (top right) → Enter admin PIN
 
 ### Core Members
-- ➕ Add new members to the group
-- ➖ Remove members
+- 👀 **View all members** and who added them
+- ➕ **Add members manually** (admin can also add directly)
+- 📋 **See member details:**
+  - Who added them and when
+  - Contact information
+  - Notes about skill level, etc.
+- ➖ **Remove members** (removes member and their details)
 - 📝 Members shown alphabetically everywhere
 - ✅ Changes sync to all users instantly
+
+**Note:** Anyone with group PIN can view member details in settings. This promotes transparency about who vouched for new members.
 
 ### Admin PIN
 - 🔐 Required for admin settings

@@ -1,7 +1,7 @@
 # Tennis Coordinator - Product Scope
 
-**Version:** 0.4.0
-**Last Updated:** 2025-11-30
+**Version:** 0.5.0
+**Last Updated:** 2025-12-03
 **Status:** Active Development
 
 ---
@@ -10,6 +10,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.5.0 | 2025-12-03 | Added UC-T6 Community Member Management; Updated UC-T5 to completed status |
 | 0.4.0 | 2025-12-01 | Added UC-T5 Activity History use case |
 | 0.3.0 | 2025-11-30 | Added Location-Flexible group archetype and use cases |
 | 0.2.0 | 2025-11-30 | Updated with implemented features, clarified privacy/transparency principles |
@@ -127,12 +128,19 @@ The product serves different types of tennis groups, each with unique characteri
 
 **Status:** Implemented with automatic WhatsApp sharing prompts after check-in/removal; messages auto-formatted
 
-#### UC-T5: Activity History ⚠️
+#### UC-T5: Activity History ✅
 **As a** member
 **I want to** see a log of recent check-ins and removals for the day
 **So that** I can understand what changed (who dropped, who joined) without asking in chat
 
-**Status:** In progress - activity icon opens modal showing timestamped history of actions
+**Status:** Implemented - activity icon opens modal showing timestamped history of check-ins, removals, and member additions
+
+#### UC-T6: Community Member Management ✅
+**As a** member of a trusted group
+**I want to** add new members myself without admin approval
+**So that** we can grow organically while maintaining accountability
+
+**Status:** Implemented - Any member can add new members via "+ Add New Member" option; tracks who added whom, when, contact info, and notes; all details visible in admin settings for transparency and social accountability
 
 ---
 
