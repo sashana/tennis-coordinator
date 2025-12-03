@@ -1045,6 +1045,35 @@
                 </select>
             </div>
 
+            <div class="member-form" id="newMemberForm" style="display: none;">
+                <h3 style="font-size: 14px; margin-bottom: 12px; color: #333;">Add New Member</h3>
+                <input
+                    type="text"
+                    id="newMemberNameInput"
+                    placeholder="Member's full name"
+                    style="margin-bottom: 8px;"
+                >
+                <input
+                    type="text"
+                    id="newMemberContactInput"
+                    placeholder="Contact (email or phone) - optional"
+                    style="margin-bottom: 8px;"
+                >
+                <textarea
+                    id="newMemberNotesInput"
+                    placeholder="Notes (skill level, how you know them, etc.) - optional"
+                    rows="3"
+                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin-bottom: 12px;"
+                ></textarea>
+                <div style="font-size: 12px; color: #666; margin-bottom: 12px;">
+                    Added by: <strong id="newMemberAddedBy"></strong>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="cancelNewMember()" style="flex: 1; background: #ccc; color: #333;">Cancel</button>
+                    <button onclick="submitNewMember()" style="flex: 2; background: #4CAF50; color: white;">Add Member</button>
+                </div>
+            </div>
+
             <div class="preference-group">
                 <button class="preference-btn singles" id="singlesBtn" onclick="selectPreference('singles')">
                     Singles Only
@@ -1442,6 +1471,7 @@
         let allCheckins = {};
         let userPreferences = {};
         let coreMembers = [];
+        let memberDetails = {}; // Stores details about who added each member
         let groupPin = '14675';
         let adminPin = '3250';
         let selectedDate = null;
@@ -1503,6 +1533,7 @@
 
                 currentGroupName = settings.groupName || 'Unknown Group';
                 coreMembers = settings.members || [];
+                memberDetails = settings.memberDetails || {};
                 groupPin = settings.groupPin || '14675';
                 adminPin = settings.adminPin || '3250';
 
@@ -1647,6 +1678,7 @@
                 const settings = snapshot.val() || {};
                 currentGroupName = settings.groupName || 'Unknown Group';
                 coreMembers = settings.members || [];
+                memberDetails = settings.memberDetails || {};
                 groupPin = settings.groupPin || '14675';
                 adminPin = settings.adminPin || '3250';
                 populateNameDropdown();
@@ -1733,6 +1765,7 @@
                 await firebaseRef.settings(currentGroupId).update({
                     groupName: currentGroupName,
                     members: coreMembers,
+                    memberDetails: memberDetails,
                     groupPin: groupPin,
                     adminPin: adminPin,
                     location: weatherLocation
@@ -1802,13 +1835,30 @@
             const select = document.getElementById('nameSelect');
             const value = select.value;
             const guestForm = document.getElementById('guestForm');
+            const newMemberForm = document.getElementById('newMemberForm');
             const formFields = document.getElementById('checkInFormFields');
 
             if (value === '__GUEST__') {
                 isGuest = true;
                 selectedName = '';
                 guestForm.classList.add('active');
+                newMemberForm.style.display = 'none';
                 populateAddedByDropdown();
+                formFields.classList.add('expanded');
+                // Auto-scroll to form after a brief delay for animation
+                setTimeout(() => {
+                    formFields.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+            } else if (value === '__NEW_MEMBER__') {
+                // Show new member form
+                if (!sessionUser) {
+                    showToast('Please select your name first', 'error');
+                    select.value = '';
+                    return;
+                }
+                guestForm.classList.remove('active');
+                newMemberForm.style.display = 'block';
+                document.getElementById('newMemberAddedBy').textContent = sessionUser;
                 formFields.classList.add('expanded');
                 // Auto-scroll to form after a brief delay for animation
                 setTimeout(() => {
@@ -1827,6 +1877,7 @@
                 selectedName = value;
                 addedBy = '';
                 guestForm.classList.remove('active');
+                newMemberForm.style.display = 'none';
                 formFields.classList.add('expanded');
                 // Auto-scroll to form after a brief delay for animation
                 setTimeout(() => {
@@ -1836,6 +1887,7 @@
                 // No name selected - collapse form
                 formFields.classList.remove('expanded');
                 guestForm.classList.remove('active');
+                newMemberForm.style.display = 'none';
             }
         }
         
@@ -1864,7 +1916,8 @@
 
             select.innerHTML = '<option value="">Select your name...</option>' +
                 sortedMembers.map(name => `<option value="${name}" ${name === rememberedName ? 'selected' : ''}>${name}</option>`).join('') +
-                '<option value="__GUEST__">+ Add Guest</option>';
+                '<option value="__GUEST__">+ Add Guest</option>' +
+                '<option value="__NEW_MEMBER__">+ Add New Member</option>';
 
             // If we pre-selected a name, update the selectedName variable
             if (rememberedName && sortedMembers.includes(rememberedName)) {
@@ -1896,6 +1949,81 @@
                 document.getElementById('checkInFormFields').classList.remove('expanded');
                 updateSessionUserDisplay();
                 showToast('Please select your name again', 'info');
+            }
+        }
+
+        function cancelNewMember() {
+            document.getElementById('newMemberForm').style.display = 'none';
+            document.getElementById('nameSelect').value = '';
+            document.getElementById('checkInFormFields').classList.remove('expanded');
+            // Clear form fields
+            document.getElementById('newMemberNameInput').value = '';
+            document.getElementById('newMemberContactInput').value = '';
+            document.getElementById('newMemberNotesInput').value = '';
+        }
+
+        async function submitNewMember() {
+            const name = document.getElementById('newMemberNameInput').value.trim();
+            const contact = document.getElementById('newMemberContactInput').value.trim();
+            const notes = document.getElementById('newMemberNotesInput').value.trim();
+
+            if (!name) {
+                showToast('Please enter member name', 'error');
+                return;
+            }
+
+            // Check if member already exists
+            if (coreMembers.includes(name)) {
+                showToast(`${name} is already a member`, 'error');
+                return;
+            }
+
+            if (!sessionUser) {
+                showToast('Session user not set', 'error');
+                return;
+            }
+
+            // Add member to coreMembers
+            coreMembers.push(name);
+            coreMembers.sort((a, b) => a.localeCompare(b));
+
+            // Create or update memberDetails object
+            if (!memberDetails) {
+                memberDetails = {};
+            }
+
+            memberDetails[name] = {
+                addedBy: sessionUser,
+                addedDate: Date.now(),
+                contact: contact || '',
+                notes: notes || ''
+            };
+
+            // Save to Firebase
+            try {
+                await firebaseRef.settings(currentGroupId).update({
+                    members: coreMembers,
+                    memberDetails: memberDetails
+                });
+
+                showToast(`${name} added as member`, 'success');
+
+                // Clear form and close
+                cancelNewMember();
+
+                // Refresh dropdown
+                populateNameDropdown();
+
+                // Log activity
+                logActivity('member_added', name, {
+                    addedBy: sessionUser,
+                    contact: contact,
+                    notes: notes
+                });
+
+            } catch (error) {
+                console.error('Error adding member:', error);
+                showToast('Error adding member', 'error');
             }
         }
 
@@ -2202,12 +2330,35 @@
         function renderMemberList() {
             const list = document.getElementById('memberList');
             const sortedMembers = [...coreMembers].sort((a, b) => a.localeCompare(b));
-            list.innerHTML = sortedMembers.map((name) => `
-                <div class="member-item">
-                    <span>${name}</span>
-                    <button onclick="removeCoreMember('${name.replace(/'/g, "\\'")}')">Remove</button>
-                </div>
-            `).join('');
+            list.innerHTML = sortedMembers.map((name) => {
+                const details = memberDetails[name];
+                let detailsHtml = '';
+
+                if (details) {
+                    const addedDate = new Date(details.addedDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    detailsHtml = `
+                        <div style="font-size: 12px; color: #666; margin-top: 4px; padding-left: 12px; border-left: 3px solid #4CAF50;">
+                            <div>Added by: <strong>${details.addedBy}</strong> on ${addedDate}</div>
+                            ${details.contact ? `<div>Contact: ${details.contact}</div>` : ''}
+                            ${details.notes ? `<div>Notes: ${details.notes}</div>` : ''}
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="member-item" style="flex-direction: column; align-items: flex-start;">
+                        <div style="display: flex; justify-content: space-between; width: 100%;">
+                            <span>${name}</span>
+                            <button onclick="removeCoreMember('${name.replace(/'/g, "\\'")}')">Remove</button>
+                        </div>
+                        ${detailsHtml}
+                    </div>
+                `;
+            }).join('');
         }
         
         function addCoreMember() {
@@ -2232,6 +2383,10 @@
                 const index = coreMembers.indexOf(name);
                 if (index > -1) {
                     coreMembers.splice(index, 1);
+                }
+                // Also remove member details if they exist
+                if (memberDetails[name]) {
+                    delete memberDetails[name];
                 }
                 renderMemberList();
             }
