@@ -1237,15 +1237,6 @@
                 <button onclick="saveSettings()" style="width: 100%; margin-bottom: 12px;">Save Settings</button>
             </div>
 
-            <div class="pref-section" style="border-top: 2px solid #ffebee; padding-top: 16px;">
-                <h3 style="color: #d32f2f;">⚠️ Danger Zone</h3>
-                <p style="font-size: 12px; color: #666; margin-bottom: 12px;">
-                    Reset all check-ins for all dates. This cannot be undone.
-                </p>
-                <button onclick="resetAll()" style="width: 100%; background: #f44336; color: white;">
-                    🔒 Reset All Check-ins
-                </button>
-            </div>
         </div>
     </div>
 
@@ -3434,6 +3425,14 @@
             const hasMatches = matches.some(m => m.type !== 'waiting' || m.players.length > 0);
             if (hasMatches) {
                 html += '<button class="share-whatsapp-btn" onclick="shareToWhatsApp()">📱 Share to WhatsApp</button>';
+            }
+
+            // Add reset button for admins (only if there are check-ins)
+            if (checkins.length > 0) {
+                const isAdmin = sessionStorage.getItem(`adminAuth_${currentGroupId}`) === 'true';
+                if (isAdmin) {
+                    html += '<button class="reset-day-btn" onclick="resetAll()" style="background: #f44336; color: white; margin-left: 8px;">🗑️ Reset This Day</button>';
+                }
             }
 
             if (warnings.length > 0) {
