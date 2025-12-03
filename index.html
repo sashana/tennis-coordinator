@@ -1021,7 +1021,13 @@
         </div>
         
         <div id="weatherWidget"></div>
-        
+
+        <!-- Session User Display -->
+        <div id="sessionUserDisplay" style="display: none; background: #e8f5e9; padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; color: #2e7d32;">
+            <span>Logged in as: <strong id="sessionUserName"></strong></span>
+            <button onclick="changeSessionUser()" style="background: transparent; border: none; color: #2e7d32; text-decoration: underline; cursor: pointer; padding: 0; margin-left: 8px; font-size: 13px;">Change</button>
+        </div>
+
         <div class="input-group">
             <select id="nameSelect" onchange="handleNameSelect()">
                 <option value="">Select your name...</option>
@@ -1817,6 +1823,7 @@
                     sessionUser = value;
                     localStorage.setItem(`tennisSessionUser_${currentGroupId}`, value);
                     console.log('Session user set to:', sessionUser);
+                    updateSessionUserDisplay();
                 }
 
                 isGuest = false;
@@ -1866,8 +1873,35 @@
             if (rememberedName && sortedMembers.includes(rememberedName)) {
                 selectedName = rememberedName;
             }
+
+            // Update session user display
+            updateSessionUserDisplay();
         }
-        
+
+        function updateSessionUserDisplay() {
+            const display = document.getElementById('sessionUserDisplay');
+            const nameDisplay = document.getElementById('sessionUserName');
+
+            if (sessionUser) {
+                nameDisplay.textContent = sessionUser;
+                display.style.display = 'block';
+            } else {
+                display.style.display = 'none';
+            }
+        }
+
+        function changeSessionUser() {
+            if (confirm('Change logged-in user? This will clear your current session.')) {
+                sessionUser = '';
+                localStorage.removeItem(`tennisSessionUser_${currentGroupId}`);
+                selectedName = '';
+                document.getElementById('nameSelect').value = '';
+                document.getElementById('checkInFormFields').classList.remove('expanded');
+                updateSessionUserDisplay();
+                showToast('Please select your name again', 'info');
+            }
+        }
+
         function openSettingsModal() {
             const pin = prompt('Enter admin PIN:');
             if (pin === null) {
