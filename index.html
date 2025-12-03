@@ -2364,16 +2364,30 @@
         function addCoreMember() {
             const input = document.getElementById('newMemberInput');
             const name = input.value.trim();
-            
+
             if (!name) return;
-            
+
             if (coreMembers.some(m => normalizeName(m) === normalizeName(name))) {
                 alert('Member already exists');
                 input.value = '';
                 return;
             }
-            
+
             coreMembers.push(name);
+
+            // Track who added this member (admin)
+            if (sessionUser) {
+                if (!memberDetails) {
+                    memberDetails = {};
+                }
+                memberDetails[name] = {
+                    addedBy: sessionUser,
+                    addedDate: Date.now(),
+                    contact: '',
+                    notes: 'Added via admin settings'
+                };
+            }
+
             input.value = '';
             renderMemberList();
         }
