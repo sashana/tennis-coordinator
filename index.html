@@ -1735,7 +1735,8 @@
         async function saveFirebaseSettings() {
             if (!currentGroupId) return;
             try {
-                await firebaseRef.settings(currentGroupId).set({
+                // Use update() instead of set() to preserve fields like shortCode
+                await firebaseRef.settings(currentGroupId).update({
                     groupName: currentGroupName,
                     members: coreMembers,
                     groupPin: groupPin,
