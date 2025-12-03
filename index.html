@@ -2918,7 +2918,7 @@
             const { matches } = organizeMatches(checkins);
 
             // Format date - compact
-            const dateObj = new Date(selectedDate);
+            const dateObj = new Date(selectedDate + 'T00:00:00');
             const dateStr = dateObj.toLocaleDateString('en-US', {
                 weekday: 'long',
                 month: 'short',
