@@ -2396,7 +2396,8 @@
                 const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                 const dayNum = date.getDate();
                 const month = date.toLocaleDateString('en-US', { month: 'short' });
-                const checkinCount = (allCheckins[dateStr] || []).length;
+                // Filter out empty array slots (sparse arrays from deleted items)
+                const checkinCount = (allCheckins[dateStr] || []).filter(c => c).length;
                 
                 return `
                     <button class="date-btn ${dateStr === selectedDate ? 'selected' : ''}" 
@@ -2470,7 +2471,9 @@
         }
         
         function getCurrentCheckins() {
-            return allCheckins[selectedDate] || [];
+            // Filter out empty array slots to prevent sparse arrays
+            const checkins = allCheckins[selectedDate] || [];
+            return checkins.filter(c => c);
         }
         
         function setCurrentCheckins(checkins) {
