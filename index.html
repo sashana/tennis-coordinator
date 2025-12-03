@@ -2926,7 +2926,7 @@
             });
 
             // Start message - compact header
-            let message = `🎾 ${dateStr}\n\n`;
+            let message = `${dateStr}\n`;
 
             // Add each match group
             matches.forEach(match => {
@@ -2975,7 +2975,7 @@
             const standbyMatch = matches.find(m => m.type === 'waiting');
             if (standbyMatch && standbyMatch.players.length > 0) {
                 message += `Standby:\n`;
-                message += standbyMatch.players.map(p => p.name).join(', ') + '\n\n';
+                message += standbyMatch.players.map(p => p.name).join(', ') + '\n';
             }
 
             // Add weather if available - compact format
