@@ -6,10 +6,11 @@
 ## 🚀 Quick Start
 
 ### First-Time Setup
-1. **Enter PIN** → Ask admin for group PIN (default: 14675)
-2. **Select Date** → Choose from next 14 days
-3. **Check In** → Follow steps below
-4. **View Matches** → See organized games automatically
+1. **Enter PIN** → Ask admin for group PIN
+2. **Select Your Name** → Choose from dropdown (creates your session)
+3. **Select Date** → Choose from next 14 days
+4. **Check In** → Follow steps below
+5. **View Matches** → See organized games automatically
 
 ### How to Check In
 
@@ -170,6 +171,28 @@ Click ⚙️ **Preferences** button next to your name in check-in list
 
 ---
 
+## 👤 Your Session & Changing User
+
+### Session User Button
+After selecting your name, you'll see **"[Your Name] ▼"** in the top right corner next to the settings icon.
+
+**What it shows:**
+- Your currently logged-in identity
+- Persists across page refreshes
+- Used to determine permissions (who can remove check-ins)
+
+### Changing Your User
+If you accidentally selected the wrong name:
+
+1. Click **"[Your Name] ▼"** button (top right)
+2. Confirm you want to change
+3. Select correct name from dropdown
+4. New name appears in button
+
+**Note:** This clears your session and permissions. You'll need to select your name again.
+
+---
+
 ## 👥 Adding Guests
 
 ### Steps
@@ -188,7 +211,7 @@ Click ⚙️ **Preferences** button next to your name in check-in list
 
 ## ⚙️ Admin Settings
 
-**Access:** Click ⚙️ icon (top right) → Enter admin PIN (3250)
+**Access:** Click ⚙️ icon (top right) → Enter admin PIN
 
 ### Core Members
 - ➕ Add new members to the group
@@ -205,6 +228,28 @@ Click ⚙️ **Preferences** button next to your name in check-in list
 - 🚪 Required for app access
 - 📢 Share with all group members
 - Can be changed by admin
+
+### Activity History
+- 📋 Click activity icon (top right) to view recent actions
+- Shows check-ins, removals, and who performed them
+- Helps track changes throughout the day
+
+### Reset Day (Admin Only)
+- 🗑️ **"Reset This Day"** button appears next to WhatsApp share (when logged in as admin)
+- Clears all check-ins for currently selected date only
+- Requires admin PIN confirmation
+- Cannot be undone
+
+### WhatsApp Sharing
+- 📱 Share button appears when matches are organized
+- Automatically formats message with:
+  - Date
+  - Match assignments (Doubles/Singles/Rotation)
+  - Player names and time windows
+  - Standby list (if any)
+  - Weather forecast
+- Compact, text-only format for easy sharing
+- Opens WhatsApp with pre-filled message
 
 ---
 
@@ -519,13 +564,13 @@ Contact group admin via WhatsApp
 
 ## Authentication & Security
 
-**Group PIN (Default: 14675):**
+**Group PIN:**
 - Required for app access
 - Shared among all group members
-- Can be changed by admin
+- Can be changed by admin in settings
 - Prevents random access
 
-**Admin PIN (Default: 3250):**
+**Admin PIN:**
 - Required for admin settings
 - Only admin should know this
 - Can change member list and PINs
@@ -590,13 +635,20 @@ Contact group admin via WhatsApp
 
 **Data Structure:**
 ```
-/checkins/
-  /2025-11-29/
-    - [checkin objects]
-/settings/
-  - coreMembers: []
-  - groupPin: "14675"
-  - adminPin: "3250"
+/groups/
+  /[group-id]/
+    /checkins/
+      /2025-11-29/
+        - [checkin objects]
+    /activity/
+      /2025-11-29/
+        - [activity log entries]
+    /settings/
+      - groupName: ""
+      - coreMembers: []
+      - groupPin: ""
+      - adminPin: ""
+      - location: {name, lat, lon}
 /userPreferences/
   /PlayerName/
     - include: []
@@ -633,6 +685,14 @@ Contact group admin via WhatsApp
 
 ---
 
-**Version:** 2.0 (Firebase)
+**Version:** 2.5 (Multi-Group Firebase)
 **Last Updated:** December 2024
 **Repository:** https://github.com/sashana/tennis-coordinator
+
+**Recent Updates:**
+- Session user management with changeable identity
+- Activity history tracking
+- Admin-only day reset functionality
+- Improved WhatsApp message formatting
+- Multi-group support with unique URLs
+- Sparse array handling for accurate check-in counts
