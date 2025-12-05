@@ -2017,14 +2017,19 @@
             const sessionUserCheckedIn = sessionUser && checkins.some(c => normalizeName(c.name) === normalizeName(sessionUser));
             const placeholder = sessionUserCheckedIn ? 'Check in another player...' : 'Select your name...';
 
+            // Only pre-select remembered name if they're NOT already checked in
+            const shouldPreselect = rememberedName && !sessionUserCheckedIn;
+
             select.innerHTML = `<option value="">${placeholder}</option>` +
-                sortedMembers.map(name => `<option value="${name}" ${name === rememberedName ? 'selected' : ''}>${name}</option>`).join('') +
+                sortedMembers.map(name => `<option value="${name}" ${name === rememberedName && shouldPreselect ? 'selected' : ''}>${name}</option>`).join('') +
                 '<option value="__GUEST__">+ Add Guest</option>' +
                 '<option value="__NEW_MEMBER__">+ Add New Member</option>';
 
             // If we pre-selected a name, update the selectedName variable
-            if (rememberedName && sortedMembers.includes(rememberedName)) {
+            if (shouldPreselect && sortedMembers.includes(rememberedName)) {
                 selectedName = rememberedName;
+            } else if (sessionUserCheckedIn) {
+                selectedName = '';
             }
 
             // Update session user display
