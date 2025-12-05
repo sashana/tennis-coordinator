@@ -715,7 +715,23 @@
         .guest-form input {
             margin-bottom: 8px;
         }
-        
+
+        .member-form {
+            margin-top: 10px;
+            padding: 12px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            border: 1px solid #c8e6c9;
+        }
+
+        /* Hide other form elements when new member form is visible */
+        .member-form:not([style*="display: none"]) ~ .preference-group,
+        .member-form:not([style*="display: none"]) ~ .time-slots,
+        .member-form:not([style*="display: none"]) ~ .rotation-option,
+        .member-form:not([style*="display: none"]) ~ div[style*="flex"] {
+            display: none !important;
+        }
+
         .weather-widget {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -1149,7 +1165,7 @@
                 </div>
             </div>
 
-            <div style="margin-bottom: 16px; padding: 12px; background: #f9f9f9; border-radius: 8px;">
+            <div class="rotation-option" style="margin-bottom: 16px; padding: 12px; background: #f9f9f9; border-radius: 8px;">
                 <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 14px;">
                     <input
                         type="checkbox"
