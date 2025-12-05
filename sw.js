@@ -1,5 +1,5 @@
 // Service Worker for Tennis Coordinator PWA
-const CACHE_NAME = 'tennis-coordinator-v27';
+const CACHE_NAME = 'tennis-coordinator-v28';
 const urlsToCache = [
   '/',
   '/index.html',

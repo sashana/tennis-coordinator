@@ -1434,6 +1434,18 @@
         </div>
     </div>
 
+    <!-- Welcome Modal (shown after PIN for first-time users) -->
+    <div id="welcomeModal" class="modal">
+        <div class="modal-content" style="max-width: 380px; text-align: center;">
+            <h2 style="margin-top: 0;">👋 Welcome!</h2>
+            <p id="welcomeGroupName" style="color: #4CAF50; font-weight: 500; margin-bottom: 16px;"></p>
+            <p style="color: #666; margin-bottom: 20px;">Select your name to start</p>
+            <select id="welcomeNameSelect" onchange="onWelcomeNameSelect()" style="width: 100%; padding: 12px; font-size: 16px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                <option value="">Select your name...</option>
+            </select>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -2025,11 +2037,15 @@
                 '<option value="__GUEST__">+ Add Guest</option>' +
                 '<option value="__NEW_MEMBER__">+ Add New Member</option>';
 
-            // If we pre-selected a name, update the selectedName variable
+            // If we pre-selected a name, update the selectedName variable and expand form
             if (shouldPreselect && sortedMembers.includes(rememberedName)) {
                 selectedName = rememberedName;
+                // Expand the form so user can check in
+                document.getElementById('checkInFormFields').classList.add('expanded');
             } else if (sessionUserCheckedIn) {
                 selectedName = '';
+                // Collapse form when already checked in
+                document.getElementById('checkInFormFields').classList.remove('expanded');
             }
 
             // Update session user display
@@ -2046,6 +2062,41 @@
             } else {
                 button.style.display = 'none';
             }
+        }
+
+        function showWelcomeModal() {
+            // Show group name
+            document.getElementById('welcomeGroupName').textContent = currentGroupName || '';
+
+            // Populate the welcome dropdown with member names
+            const select = document.getElementById('welcomeNameSelect');
+            const sortedMembers = [...coreMembers].sort((a, b) => a.localeCompare(b));
+            select.innerHTML = '<option value="">Select your name...</option>' +
+                sortedMembers.map(name => `<option value="${name}">${name}</option>`).join('');
+
+            // Show the modal
+            document.getElementById('welcomeModal').classList.add('active');
+        }
+
+        function onWelcomeNameSelect() {
+            const select = document.getElementById('welcomeNameSelect');
+            const name = select.value;
+
+            if (!name) return; // Ignore if placeholder selected
+
+            // Set as session user
+            sessionUser = name;
+            localStorage.setItem(`tennisSessionUser_${currentGroupId}`, name);
+            localStorage.setItem(`tennisUserName_${currentGroupId}`, name);
+
+            // Close modal
+            document.getElementById('welcomeModal').classList.remove('active');
+
+            // Update UI
+            updateSessionUserDisplay();
+            populateNameDropdown();
+
+            showToast(`Welcome, ${name}!`, 'success');
         }
 
         function changeSessionUser() {
@@ -2725,6 +2776,8 @@
             initDates();
             displayWeather();
             render();
+            // Update dropdown placeholder based on check-in status for new date
+            populateNameDropdown();
         }
         
         function selectPreference(pref) {
@@ -4092,6 +4145,11 @@
             await loadMatchNotes();
             displayWeather();
             render();
+
+            // Show welcome modal for first-time users (no session user set)
+            if (!sessionUser) {
+                showWelcomeModal();
+            }
         }
 
         // Create dynamic manifest based on current URL
