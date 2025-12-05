@@ -970,6 +970,27 @@
             color: #333;
         }
 
+        .toast-action {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+
+        .toast-action:hover {
+            background: #388E3C;
+        }
+
+        .toast-action:active {
+            transform: scale(0.95);
+        }
+
         @keyframes slideIn {
             from {
                 transform: translateX(400px);
@@ -1862,26 +1883,46 @@
         }
 
         // Toast Notification System
-        function showToast(message, type = 'success') {
+        function showToast(message, type = 'success', action = null) {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
 
             const icon = type === 'success' ? '✓' : '✕';
+            let actionHtml = '';
+            if (action) {
+                actionHtml = `<button class="toast-action">${action.label}</button>`;
+            }
+
             toast.innerHTML = `
                 <span class="toast-icon">${icon}</span>
                 <span class="toast-message">${message}</span>
+                ${actionHtml}
             `;
+
+            // Add click handler for action button
+            if (action) {
+                const actionBtn = toast.querySelector('.toast-action');
+                actionBtn.addEventListener('click', () => {
+                    action.onClick();
+                    // Remove toast after action
+                    toast.classList.add('removing');
+                    setTimeout(() => {
+                        if (toast.parentNode) container.removeChild(toast);
+                    }, 300);
+                });
+            }
 
             container.appendChild(toast);
 
-            // Auto-remove after 3 seconds
+            // Auto-remove after specified duration (longer if there's an action)
+            const duration = action ? 5000 : 3000;
             setTimeout(() => {
                 toast.classList.add('removing');
                 setTimeout(() => {
-                    container.removeChild(toast);
+                    if (toast.parentNode) container.removeChild(toast);
                 }, 300); // Wait for animation to complete
-            }, 3000);
+            }, duration);
         }
 
         function normalizeName(name) {
@@ -2856,6 +2897,9 @@
             }
         }
 
+        // Debounce timers for match notes
+        const noteDebounceTimers = {};
+
         async function saveMatchNote(matchKey, note) {
             if (!currentGroupId || !selectedDate) return;
 
@@ -2872,6 +2916,32 @@
             } catch (error) {
                 console.error('Error saving match note:', error);
                 showToast('Error saving note', 'error');
+            }
+        }
+
+        // Debounced version - saves 1.5 seconds after user stops typing
+        function saveMatchNoteDebounced(matchKey, note) {
+            // Clear existing timer for this matchKey
+            if (noteDebounceTimers[matchKey]) {
+                clearTimeout(noteDebounceTimers[matchKey]);
+            }
+
+            // Set new timer
+            noteDebounceTimers[matchKey] = setTimeout(() => {
+                saveMatchNote(matchKey, note);
+            }, 1500);
+        }
+
+        // Handle Enter key on note input - save immediately
+        function handleNoteKeydown(event, matchKey) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                // Clear any pending debounce
+                if (noteDebounceTimers[matchKey]) {
+                    clearTimeout(noteDebounceTimers[matchKey]);
+                }
+                saveMatchNote(matchKey, event.target.value);
+                event.target.blur(); // Remove focus to indicate save complete
             }
         }
 
@@ -3183,15 +3253,13 @@
                 localStorage.setItem(`tennisUserName_${currentGroupId}`, name);
             }
 
-            // Show success notification
-            showToast('✓ Checked in successfully!', 'success');
-
-            // Offer to share to WhatsApp
-            setTimeout(() => {
-                if (confirm(`Share your check-in to WhatsApp group?`)) {
-                    sharePersonalCheckinToWhatsApp(name, checkinData);
-                }
-            }, 500); // Small delay so toast shows first
+            // Show success notification with WhatsApp share action
+            const checkinDataForShare = {...checkinData}; // Copy for closure
+            const nameForShare = name;
+            showToast('Checked in successfully!', 'success', {
+                label: '📱 Share',
+                onClick: () => sharePersonalCheckinToWhatsApp(nameForShare, checkinDataForShare)
+            });
 
             // Reset form
             document.getElementById('nameSelect').value = '';
@@ -3240,15 +3308,12 @@
 
             saveAndRender();
 
-            // Show success notification
-            showToast(`Removed ${personName}`, 'success');
-
-            // Offer to share removal to WhatsApp
-            setTimeout(() => {
-                if (confirm(`Share removal to WhatsApp group?`)) {
-                    shareRemovalToWhatsApp(personName);
-                }
-            }, 500); // Small delay so toast shows first
+            // Show success notification with WhatsApp share action
+            const nameForShare = personName;
+            showToast(`Removed ${personName}`, 'success', {
+                label: '📱 Share',
+                onClick: () => shareRemovalToWhatsApp(nameForShare)
+            });
         }
         
         function resetAll() {
@@ -3815,7 +3880,7 @@
                     }
 
                     const timeInfo = c.timeRange ? `<span class="time-badge">${formatTimeRange(c.timeRange.start, c.timeRange.end)}</span>` : '';
-                    const rotationInfo = c.allowRotation === false ? `<span class="time-badge" style="background: #ffebee; color: #c62828;">No rotation</span>` : '';
+                    const rotationInfo = c.allowRotation === false ? `<span class="time-badge" style="background: #fff3e0; color: #e65100;">4+ only</span>` : '';
 
                     return `
                         <div class="${itemClass}">
@@ -3878,7 +3943,8 @@
                                 <input type="text"
                                     placeholder="📝 Add note (court, time, etc.)"
                                     value="${existingNote.replace(/"/g, '&quot;')}"
-                                    onchange="saveMatchNote('${matchKey}', this.value)"
+                                    oninput="saveMatchNoteDebounced('${matchKey}', this.value)"
+                                    onkeydown="handleNoteKeydown(event, '${matchKey}')"
                                     class="match-note-input">
                             </div>
                         </div>
@@ -3901,7 +3967,8 @@
                                 <input type="text"
                                     placeholder="📝 Add note (court, time, etc.)"
                                     value="${existingNote.replace(/"/g, '&quot;')}"
-                                    onchange="saveMatchNote('${matchKey}', this.value)"
+                                    oninput="saveMatchNoteDebounced('${matchKey}', this.value)"
+                                    onkeydown="handleNoteKeydown(event, '${matchKey}')"
                                     class="match-note-input">
                             </div>
                         </div>
@@ -3924,7 +3991,8 @@
                                 <input type="text"
                                     placeholder="📝 Add note (court, time, etc.)"
                                     value="${existingNote.replace(/"/g, '&quot;')}"
-                                    onchange="saveMatchNote('${matchKey}', this.value)"
+                                    oninput="saveMatchNoteDebounced('${matchKey}', this.value)"
+                                    onkeydown="handleNoteKeydown(event, '${matchKey}')"
                                     class="match-note-input">
                             </div>
                         </div>

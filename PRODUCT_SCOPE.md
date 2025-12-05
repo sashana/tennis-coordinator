@@ -1,7 +1,7 @@
 # Tennis Coordinator - Product Scope
 
-**Version:** 0.5.0
-**Last Updated:** 2025-12-03
+**Version:** 0.6.0
+**Last Updated:** 2025-12-04
 **Status:** Active Development
 
 ---
@@ -10,6 +10,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.6.0 | 2025-12-04 | Added UC-T7 Match Notes, UC-T8 Weather Integration; Updated UC-T5 with WhatsApp/notes activity logging; UI reorder (matches first, collapsible check-ins) |
 | 0.5.0 | 2025-12-03 | Added UC-T6 Community Member Management; Updated UC-T5 to completed status |
 | 0.4.0 | 2025-12-01 | Added UC-T5 Activity History use case |
 | 0.3.0 | 2025-11-30 | Added Location-Flexible group archetype and use cases |
@@ -133,7 +134,13 @@ The product serves different types of tennis groups, each with unique characteri
 **I want to** see a log of recent check-ins and removals for the day
 **So that** I can understand what changed (who dropped, who joined) without asking in chat
 
-**Status:** Implemented - activity icon opens modal showing timestamped history of check-ins, removals, and member additions
+**Status:** Implemented - activity icon opens modal showing timestamped history of:
+- Check-ins and removals (✅/❌)
+- Member additions (👤)
+- WhatsApp shares (📤)
+- Match notes saved (📝)
+
+Admin can view activity across all dates via "Show all dates" toggle.
 
 #### UC-T6: Community Member Management ✅
 **As a** member of a trusted group
@@ -141,6 +148,20 @@ The product serves different types of tennis groups, each with unique characteri
 **So that** we can grow organically while maintaining accountability
 
 **Status:** Implemented - Any member can add new members via "+ Add New Member" option; tracks who added whom, when, contact info, and notes; all details visible in admin settings for transparency and social accountability
+
+#### UC-T7: Match Notes ✅
+**As a** member
+**I want to** add notes to organized matches (e.g., court number, meeting spot)
+**So that** everyone knows the details without extra coordination
+
+**Status:** Implemented - Each match group has an optional notes field; notes persist per date; included in WhatsApp share with 📝 prefix
+
+#### UC-T8: Weather Awareness ✅
+**As a** member
+**I want to** see the weather forecast for play day
+**So that** I can plan accordingly (dress, backup plans)
+
+**Status:** Implemented - Weather displayed for group location; configurable per group in admin settings; shows conditions and temperature
 
 ---
 
