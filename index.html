@@ -2012,7 +2012,12 @@
             // Get remembered user name for this group (for backwards compatibility)
             const rememberedName = currentGroupId ? localStorage.getItem(`tennisUserName_${currentGroupId}`) : null;
 
-            select.innerHTML = '<option value="">Select your name...</option>' +
+            // Check if session user is already checked in for today
+            const checkins = getCurrentCheckins();
+            const sessionUserCheckedIn = sessionUser && checkins.some(c => normalizeName(c.name) === normalizeName(sessionUser));
+            const placeholder = sessionUserCheckedIn ? 'Check in another player...' : 'Select your name...';
+
+            select.innerHTML = `<option value="">${placeholder}</option>` +
                 sortedMembers.map(name => `<option value="${name}" ${name === rememberedName ? 'selected' : ''}>${name}</option>`).join('') +
                 '<option value="__GUEST__">+ Add Guest</option>' +
                 '<option value="__NEW_MEMBER__">+ Add New Member</option>';
@@ -3586,6 +3591,8 @@
                 initDates();
                 console.log('About to call render()');
                 render();
+                // Update dropdown placeholder based on check-in status
+                populateNameDropdown();
                 console.log('render() completed');
             } catch (error) {
                 console.error('Error in saveAndRender:', error);
