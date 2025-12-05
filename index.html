@@ -3999,7 +3999,9 @@
 
             // Initialize UI
             initDates();
+            await loadMatchNotes();
             displayWeather();
+            render();
         }
 
         // Create dynamic manifest based on current URL
