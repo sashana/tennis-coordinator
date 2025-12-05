@@ -3308,6 +3308,16 @@
 
             saveAndRender();
 
+            // If the removed person is the session user, re-expand the form so they can check in again
+            const removedSelf = sessionUser && normalizeName(personName) === normalizeName(sessionUser);
+            if (removedSelf) {
+                // Re-select the user's name and expand the form
+                const select = document.getElementById('nameSelect');
+                select.value = sessionUser;
+                selectedName = sessionUser;
+                document.getElementById('checkInFormFields').classList.add('expanded');
+            }
+
             // Show success notification with WhatsApp share action
             const nameForShare = personName;
             showToast(`Removed ${personName}`, 'success', {
