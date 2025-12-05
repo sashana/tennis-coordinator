@@ -433,9 +433,34 @@
             background: #fff3e0;
             border-left-color: #ff9800;
         }
-        
+
         .singles-group h3 {
             color: #e65100;
+        }
+
+        .match-notes {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #ddd;
+        }
+
+        .match-note-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            background: #fafafa;
+        }
+
+        .match-note-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: #fff;
+        }
+
+        .match-note-input::placeholder {
+            color: #999;
         }
         
         .empty-state {
@@ -1188,7 +1213,13 @@
                 <h2>Activity History</h2>
                 <button class="close-btn" onclick="closeActivityModal()">×</button>
             </div>
-            <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Recent check-ins and removals for <strong id="activityDateDisplay"></strong></p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <p style="font-size: 13px; color: #666; margin: 0;">Recent activity for <strong id="activityDateDisplay"></strong></p>
+                <label id="showAllDatesToggle" style="display: none; font-size: 13px; color: #666; cursor: pointer;">
+                    <input type="checkbox" id="showAllDatesCheckbox" onchange="loadActivityLog()" style="margin-right: 4px;">
+                    Show All Dates
+                </label>
+            </div>
             <div id="activityList" style="max-height: 400px; overflow-y: auto;">
                 <p style="color: #999; text-align: center;">Loading...</p>
             </div>
@@ -1458,9 +1489,14 @@
             checkins: (groupId) => db.ref(`groups/${groupId}/checkins`),
             settings: (groupId) => db.ref(`groups/${groupId}/settings`),
             activity: (groupId, date) => db.ref(`groups/${groupId}/activity/${date}`),
+            activityAll: (groupId) => db.ref(`groups/${groupId}/activity`),
+            matchNotes: (groupId, date) => db.ref(`groups/${groupId}/matchNotes/${date}`),
             userPreferences: () => db.ref('userPreferences'),
             siteSettings: () => db.ref('siteSettings')
         };
+
+        // Match notes cache (per date)
+        let matchNotes = {};
 
         // Group Feature Configuration
         // Simplified config for tight-knit groups - will expand to full template system later
@@ -2611,8 +2647,9 @@
             }).join('');
         }
         
-        function selectDate(dateStr) {
+        async function selectDate(dateStr) {
             selectedDate = dateStr;
+            await loadMatchNotes();
             initDates();
             displayWeather();
             render();
@@ -2741,6 +2778,17 @@
 
             document.getElementById('activityModal').classList.add('active');
 
+            // Show "Show All Dates" toggle for admins
+            const isAdmin = sessionStorage.getItem(`adminAuth_${currentGroupId}`) === 'true';
+            const toggle = document.getElementById('showAllDatesToggle');
+            if (isAdmin) {
+                toggle.style.display = 'block';
+            } else {
+                toggle.style.display = 'none';
+                // Uncheck if not admin
+                document.getElementById('showAllDatesCheckbox').checked = false;
+            }
+
             // Format date for display
             const dateObj = new Date(selectedDate + 'T00:00:00');
             const dateStr = dateObj.toLocaleDateString('en-US', {
@@ -2758,36 +2806,103 @@
             document.getElementById('activityModal').classList.remove('active');
         }
 
-        async function loadActivityLog() {
-            const listDiv = document.getElementById('activityList');
+        // Match Notes Functions
+        async function loadMatchNotes() {
+            if (!currentGroupId || !selectedDate) return;
 
             try {
-                const snapshot = await firebaseRef.activity(currentGroupId, selectedDate).once('value');
-                const activities = snapshot.val();
+                const snapshot = await firebaseRef.matchNotes(currentGroupId, selectedDate).once('value');
+                matchNotes = snapshot.val() || {};
+            } catch (error) {
+                console.error('Error loading match notes:', error);
+                matchNotes = {};
+            }
+        }
 
-                if (!activities) {
-                    listDiv.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No activity recorded for this date yet.</p>';
+        async function saveMatchNote(matchKey, note) {
+            if (!currentGroupId || !selectedDate) return;
+
+            try {
+                await firebaseRef.matchNotes(currentGroupId, selectedDate).child(matchKey).set(note);
+                matchNotes[matchKey] = note;
+                showToast('Note saved', 'success');
+            } catch (error) {
+                console.error('Error saving match note:', error);
+                showToast('Error saving note', 'error');
+            }
+        }
+
+        function getMatchKey(matchType, matchNumber) {
+            return `${matchType}-${matchNumber || 1}`;
+        }
+
+        async function loadActivityLog() {
+            const listDiv = document.getElementById('activityList');
+            const showAllDates = document.getElementById('showAllDatesCheckbox').checked;
+
+            try {
+                let allActivities = [];
+
+                if (showAllDates) {
+                    // Load activity from ALL dates
+                    const allActivitySnapshot = await firebaseRef.activityAll(currentGroupId).once('value');
+                    const allActivityData = allActivitySnapshot.val();
+
+                    if (allActivityData) {
+                        // Flatten all dates' activities into one array with date info
+                        for (const [date, dateActivities] of Object.entries(allActivityData)) {
+                            if (dateActivities) {
+                                for (const activity of Object.values(dateActivities)) {
+                                    allActivities.push({...activity, date});
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // Load activity for selected date only
+                    const snapshot = await firebaseRef.activity(currentGroupId, selectedDate).once('value');
+                    const activities = snapshot.val();
+
+                    if (activities) {
+                        allActivities = Object.values(activities).map(a => ({...a, date: selectedDate}));
+                    }
+                }
+
+                if (allActivities.length === 0) {
+                    listDiv.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No activity recorded yet.</p>';
                     return;
                 }
 
-                // Convert to array and sort by timestamp (newest first)
-                const activityArray = Object.values(activities).sort((a, b) => b.timestamp - a.timestamp);
+                // Sort by timestamp (newest first)
+                allActivities.sort((a, b) => b.timestamp - a.timestamp);
 
                 let html = '<div style="display: flex; flex-direction: column; gap: 8px;">';
+                let currentDate = null;
 
-                for (const activity of activityArray) {
+                for (const activity of allActivities) {
+                    // Add date header if showing all dates and date changes
+                    if (showAllDates && activity.date !== currentDate) {
+                        currentDate = activity.date;
+                        const dateObj = new Date(activity.date + 'T00:00:00');
+                        const dateStr = dateObj.toLocaleDateString('en-US', {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                        });
+                        html += `<div style="font-weight: bold; color: #666; margin-top: 12px; padding-bottom: 4px; border-bottom: 1px solid #ddd;">${dateStr}</div>`;
+                    }
+
                     const time = formatTime(activity.timestamp);
-                    const icon = activity.action === 'check-in' ? '✅' : '❌';
-
+                    let icon = '';
                     let actionDescription = '';
+
                     if (activity.action === 'check-in') {
-                        // Check-in: "Alex checked in" or "Alex checked in by Bob"
+                        icon = '✅';
                         actionDescription = `<strong>${activity.player}</strong> checked in`;
                         if (activity.by && activity.by !== activity.player) {
                             actionDescription += ` <span style="color: #999;">by ${activity.by}</span>`;
                         }
-
-                        // Add play style and time details
                         if (activity.playStyle) {
                             actionDescription += ` (${getPreferenceLabel(activity.playStyle)}`;
                             if (activity.timeRange) {
@@ -2799,12 +2914,21 @@
                             }
                             actionDescription += ')';
                         }
-                    } else {
-                        // Removal: "Alex removed himself" or "Bob removed Alex"
+                    } else if (activity.action === 'removal') {
+                        icon = '❌';
                         if (activity.by && activity.by !== activity.player) {
                             actionDescription = `<strong>${activity.by}</strong> removed <strong>${activity.player}</strong>`;
                         } else {
                             actionDescription = `<strong>${activity.player}</strong> removed themselves`;
+                        }
+                    } else if (activity.action === 'member_added') {
+                        icon = '👤';
+                        actionDescription = `<strong>${activity.by}</strong> added <strong>${activity.player}</strong> as member`;
+                        if (activity.contact || activity.notes) {
+                            actionDescription += '<div style="font-size: 12px; color: #666; margin-top: 4px;">';
+                            if (activity.contact) actionDescription += `Contact: ${activity.contact}<br>`;
+                            if (activity.notes) actionDescription += `Notes: ${activity.notes}`;
+                            actionDescription += '</div>';
                         }
                     }
 
@@ -3126,6 +3250,9 @@
             let message = `${dateStr}\n`;
 
             // Add each match group
+            let singlesCount = 0;
+            let rotationCount = 0;
+
             matches.forEach(match => {
                 if (match.type === 'doubles') {
                     const players = match.players.map(p => p.name);
@@ -3138,8 +3265,15 @@
                     if (times.length > 0) {
                         message += `${times[0]}\n`;
                     }
+
+                    // Add note if exists
+                    const matchKey = getMatchKey('doubles', match.number);
+                    if (matchNotes[matchKey]) {
+                        message += `📝 ${matchNotes[matchKey]}\n`;
+                    }
                     message += '\n';
                 } else if (match.type === 'singles') {
+                    singlesCount++;
                     const players = match.players.map(p => p.name);
                     message += `Singles: ${players.join(', ')}\n`;
 
@@ -3150,8 +3284,15 @@
                     if (times.length > 0) {
                         message += `${times[0]}\n`;
                     }
+
+                    // Add note if exists
+                    const matchKey = getMatchKey('singles', singlesCount);
+                    if (matchNotes[matchKey]) {
+                        message += `📝 ${matchNotes[matchKey]}\n`;
+                    }
                     message += '\n';
                 } else if (match.type === 'singles-or-practice') {
+                    rotationCount++;
                     message += `Rotation: ${match.players.map(p => p.name).join(', ')}\n`;
 
                     // Add time window if available - compact format
@@ -3161,15 +3302,20 @@
                     if (times.length > 0) {
                         message += `${times[0]}\n`;
                     }
+
+                    // Add note if exists
+                    const matchKey = getMatchKey('rotation', rotationCount);
+                    if (matchNotes[matchKey]) {
+                        message += `📝 ${matchNotes[matchKey]}\n`;
+                    }
                     message += '\n';
                 }
             });
 
-            // Add standby list if any
+            // Add standby list if any (on same line)
             const standbyMatch = matches.find(m => m.type === 'waiting');
             if (standbyMatch && standbyMatch.players.length > 0) {
-                message += `Standby:\n`;
-                message += standbyMatch.players.map(p => p.name).join(', ') + '\n';
+                message += `Standby: ${standbyMatch.players.map(p => p.name).join(', ')}\n`;
             }
 
             // Add weather if available - compact format
@@ -3645,8 +3791,13 @@
                 html += '<div class="warning-box">' + warnings.join('<br>') + '</div>';
             }
             
+            let singlesCount = 0;
+            let rotationCount = 0;
+
             matches.forEach(match => {
                 if (match.type === 'doubles') {
+                    const matchKey = getMatchKey('doubles', match.number);
+                    const existingNote = matchNotes[matchKey] || '';
                     html += `
                         <div class="match-group">
                             <h3>Doubles ${match.number}</h3>
@@ -3657,12 +3808,22 @@
                                     return `<li>• ${p.name}${guestTag}${timeTag} <span class="preference-badge ${p.playStyle || 'both'}">${getPreferenceLabel(p.playStyle || 'both')}</span></li>`;
                                 }).join('')}
                             </ul>
+                            <div class="match-notes">
+                                <input type="text"
+                                    placeholder="📝 Add note (court, time, etc.)"
+                                    value="${existingNote.replace(/"/g, '&quot;')}"
+                                    onchange="saveMatchNote('${matchKey}', this.value)"
+                                    class="match-note-input">
+                            </div>
                         </div>
                     `;
                 } else if (match.type === 'singles') {
+                    singlesCount++;
+                    const matchKey = getMatchKey('singles', singlesCount);
+                    const existingNote = matchNotes[matchKey] || '';
                     html += `
                         <div class="match-group singles-group">
-                            <h3>Singles Match</h3>
+                            <h3>Singles Match${singlesCount > 1 ? ' ' + singlesCount : ''}</h3>
                             <ul>
                                 ${match.players.map(p => {
                                     const guestTag = p.isGuest ? ` <span class="guest-indicator">(guest of ${p.addedBy})</span>` : '';
@@ -3670,9 +3831,19 @@
                                     return `<li>• ${p.name}${guestTag}${timeTag} <span class="preference-badge ${p.playStyle || 'both'}">${getPreferenceLabel(p.playStyle || 'both')}</span></li>`;
                                 }).join('')}
                             </ul>
+                            <div class="match-notes">
+                                <input type="text"
+                                    placeholder="📝 Add note (court, time, etc.)"
+                                    value="${existingNote.replace(/"/g, '&quot;')}"
+                                    onchange="saveMatchNote('${matchKey}', this.value)"
+                                    class="match-note-input">
+                            </div>
                         </div>
                     `;
                 } else if (match.type === 'singles-or-practice') {
+                    rotationCount++;
+                    const matchKey = getMatchKey('rotation', rotationCount);
+                    const existingNote = matchNotes[matchKey] || '';
                     html += `
                         <div class="match-group singles-group">
                             <h3>Rotation (3 players) - 1v1 or 1v2</h3>
@@ -3683,19 +3854,20 @@
                                     return `<li>• ${p.name}${guestTag}${timeTag} <span class="preference-badge ${p.playStyle || 'both'}">${getPreferenceLabel(p.playStyle || 'both')}</span></li>`;
                                 }).join('')}
                             </ul>
+                            <div class="match-notes">
+                                <input type="text"
+                                    placeholder="📝 Add note (court, time, etc.)"
+                                    value="${existingNote.replace(/"/g, '&quot;')}"
+                                    onchange="saveMatchNote('${matchKey}', this.value)"
+                                    class="match-note-input">
+                            </div>
                         </div>
                     `;
                 } else if (match.type === 'waiting') {
+                    const playerNames = match.players.map(p => p.name).join(', ');
                     html += `
                         <div class="match-group singles-group">
-                            <h3>Waiting</h3>
-                            <ul>
-                                ${match.players.map(p => {
-                                    const guestTag = p.isGuest ? ` <span class="guest-indicator">(guest of ${p.addedBy})</span>` : '';
-                                    const timeTag = p.timeRange ? ` <span class="time-badge">${formatTimeRange(p.timeRange.start, p.timeRange.end)}</span>` : '';
-                                    return `<li>• ${p.name}${guestTag}${timeTag} <span class="preference-badge ${p.playStyle || 'both'}">${getPreferenceLabel(p.playStyle || 'both')}</span></li>`;
-                                }).join('')}
-                            </ul>
+                            <h3>Standby: ${playerNames}</h3>
                         </div>
                     `;
                 }
