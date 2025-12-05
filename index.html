@@ -1171,12 +1171,17 @@
             </div>
         </div>
 
+        <!-- Organized Matches (primary view) -->
+        <div class="matches" id="matches" style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #f0f0f0;"></div>
+
+        <!-- Check-ins (collapsible) -->
         <div class="checkins" style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #f0f0f0;">
-            <h2>Check-ins (<span id="count">0</span>)</h2>
+            <h2 onclick="toggleCheckinList()" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <span id="checkinToggleIcon">▼</span>
+                <span>Check-ins (<span id="count">0</span>)</span>
+            </h2>
             <div id="checkinList"></div>
         </div>
-
-        <div class="matches" id="matches" style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #f0f0f0;"></div>
     </div>
     
     <!-- Preferences Modal -->
@@ -2684,7 +2689,24 @@
             selectedName = '';
             isGuest = false;
         }
-        
+
+        // Check-in list toggle (collapsible)
+        let checkinListExpanded = true;
+
+        function toggleCheckinList() {
+            checkinListExpanded = !checkinListExpanded;
+            const list = document.getElementById('checkinList');
+            const icon = document.getElementById('checkinToggleIcon');
+
+            if (checkinListExpanded) {
+                list.style.display = 'block';
+                icon.textContent = '▼';
+            } else {
+                list.style.display = 'none';
+                icon.textContent = '▶';
+            }
+        }
+
         function formatTimeRange(start, end) {
             if (!start && !end) return '';
             
