@@ -2816,14 +2816,13 @@
 
             document.getElementById('activityModal').classList.add('active');
 
-            // Show "Show All Dates" toggle for admins
+            // Show "Show All Dates" toggle for admins only
             const isAdmin = sessionStorage.getItem(`adminAuth_${currentGroupId}`) === 'true';
             const toggle = document.getElementById('showAllDatesToggle');
             if (isAdmin) {
                 toggle.style.display = 'block';
             } else {
                 toggle.style.display = 'none';
-                // Uncheck if not admin
                 document.getElementById('showAllDatesCheckbox').checked = false;
             }
 
@@ -2863,6 +2862,12 @@
             try {
                 await firebaseRef.matchNotes(currentGroupId, selectedDate).child(matchKey).set(note);
                 matchNotes[matchKey] = note;
+
+                // Log activity for non-empty notes
+                if (note && note.trim()) {
+                    logActivity('notes_saved', sessionUser || 'Unknown', { matchKey: matchKey });
+                }
+
                 showToast('Note saved', 'success');
             } catch (error) {
                 console.error('Error saving match note:', error);
@@ -2968,6 +2973,18 @@
                             if (activity.notes) actionDescription += `Notes: ${activity.notes}`;
                             actionDescription += '</div>';
                         }
+                    } else if (activity.action === 'whatsapp_share') {
+                        icon = '📤';
+                        const shareType = activity.type === 'matches' ? 'matches' :
+                                         activity.type === 'checkin' ? 'check-in' : 'removal';
+                        actionDescription = `<strong>${activity.by}</strong> shared ${shareType} to WhatsApp`;
+                        if (activity.player && activity.player !== activity.by) {
+                            actionDescription += ` <span style="color: #999;">for ${activity.player}</span>`;
+                        }
+                    } else if (activity.action === 'notes_saved') {
+                        icon = '📝';
+                        const matchLabel = activity.matchKey ? activity.matchKey.replace('-', ' #') : 'match';
+                        actionDescription = `<strong>${activity.by}</strong> added note to ${matchLabel}`;
                     }
 
                     html += `
@@ -3376,6 +3393,9 @@
             const encodedMessage = encodeURIComponent(message);
             const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
 
+            // Log activity
+            logActivity('whatsapp_share', sessionUser || 'Unknown', { type: 'matches' });
+
             // Open WhatsApp in new window/tab
             window.open(whatsappUrl, '_blank');
         }
@@ -3440,6 +3460,10 @@
             const message = formatPersonalCheckinForWhatsApp(name, checkinData);
             const encodedMessage = encodeURIComponent(message);
             const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+
+            // Log activity
+            logActivity('whatsapp_share', sessionUser || 'Unknown', { type: 'checkin', player: name });
+
             window.open(whatsappUrl, '_blank');
         }
 
@@ -3472,6 +3496,10 @@
             const message = formatRemovalForWhatsApp(name);
             const encodedMessage = encodeURIComponent(message);
             const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+
+            // Log activity
+            logActivity('whatsapp_share', sessionUser || 'Unknown', { type: 'removal', player: name });
+
             window.open(whatsappUrl, '_blank');
         }
 
