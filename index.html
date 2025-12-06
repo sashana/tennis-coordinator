@@ -3597,6 +3597,13 @@
                     const players = match.players.map(p => p.name);
                     message += `Singles: ${players.join(', ')}\n`;
 
+                    // Check if this is a "provisional" singles - both flexible and at least one open to rotation
+                    const bothFlexible = match.players.every(p => (p.playStyle || 'both') === 'both');
+                    const anyOpenToRotation = match.players.some(p => p.allowRotation === true);
+                    if (bothFlexible && anyOpenToRotation) {
+                        message += `Open to more players\n`;
+                    }
+
                     // Add time window if available - compact format
                     const times = match.players
                         .filter(p => p.timeRange)
