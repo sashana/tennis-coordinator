@@ -3643,11 +3643,13 @@
                     message += `${neededText}\n`;
 
                     // Add fallback info
+                    // Only show singles fallback if there are enough Either players
                     if (match.canRotate) {
                         message += `Can rotate if no 4th\n`;
                     } else if (match.canPlaySingles && match.eitherCount >= 2) {
                         message += `Will play singles if no more join\n`;
-                    } else if (match.eitherCount === 1) {
+                    } else if (match.eitherCount === 1 && match.players.length === 1) {
+                        // Only show this if the 1 Either player is alone
                         message += `Can play singles if 1 more joins\n`;
                     }
 
@@ -4213,12 +4215,14 @@
                     const neededText = match.needed === 1 ? 'Need 1 more' : `Need ${match.needed} more`;
 
                     // Build fallback text based on situation
+                    // Only show singles fallback if there are enough Either players (who can actually play singles)
                     let fallbackText = '';
                     if (match.canRotate) {
                         fallbackText = '<p style="color: #666; font-size: 13px; margin: 8px 0 4px 0; font-style: italic;">Can rotate if no 4th</p>';
                     } else if (match.canPlaySingles && match.eitherCount >= 2) {
                         fallbackText = '<p style="color: #666; font-size: 13px; margin: 8px 0 4px 0; font-style: italic;">Will play singles if no more join</p>';
-                    } else if (match.eitherCount === 1) {
+                    } else if (match.eitherCount === 1 && match.players.length === 1) {
+                        // Only show this if the 1 Either player is alone (not mixed with Doubles Only)
                         fallbackText = '<p style="color: #666; font-size: 13px; margin: 8px 0 4px 0; font-style: italic;">Can play singles if 1 more joins</p>';
                     }
 
