@@ -3642,8 +3642,13 @@
                     message += `Doubles (forming): ${players.join(', ')}\n`;
                     message += `${neededText}\n`;
 
+                    // Add fallback info
                     if (match.canRotate) {
                         message += `Can rotate if no 4th\n`;
+                    } else if (match.canPlaySingles && match.eitherCount >= 2) {
+                        message += `Will play singles if no more join\n`;
+                    } else if (match.eitherCount === 1) {
+                        message += `Can play singles if 1 more joins\n`;
                     }
 
                     // Add time window if available
@@ -3990,6 +3995,10 @@
             if (remainingDoublesPool.length > 0) {
                 const needed = 4 - remainingDoublesPool.length;
 
+                // Count "Either" players who can play singles as fallback
+                const eitherPlayers = remainingDoublesPool.filter(p => p.playStyle === 'both' || !p.playStyle);
+                const eitherCount = eitherPlayers.length;
+
                 // Check if all are "Either" and allow rotation (for 3 players)
                 const allEither = remainingDoublesPool.every(p => p.playStyle === 'both' || !p.playStyle);
                 const allAllowRotation = remainingDoublesPool.every(p => p.allowRotation !== false);
@@ -3998,11 +4007,20 @@
                     canPlayTogetherWithTime(remainingDoublesPool[0], remainingDoublesPool[2]) &&
                     canPlayTogetherWithTime(remainingDoublesPool[1], remainingDoublesPool[2]);
 
+                // Check if 2+ Either players can play singles together (time overlap, no exclusions)
+                let canPlaySingles = false;
+                if (eitherCount >= 2) {
+                    // Check if first two Either players can play together
+                    canPlaySingles = canPlayTogetherWithTime(eitherPlayers[0], eitherPlayers[1]);
+                }
+
                 matches.push({
                     type: 'doubles-forming',
                     players: remainingDoublesPool,
                     needed: needed,
-                    canRotate: remainingDoublesPool.length === 3 && allEither && allAllowRotation && canAllPlayTogether
+                    canRotate: remainingDoublesPool.length === 3 && allEither && allAllowRotation && canAllPlayTogether,
+                    eitherCount: eitherCount,
+                    canPlaySingles: canPlaySingles
                 });
             }
 
@@ -4193,7 +4211,16 @@
                     const matchKey = getMatchKey('doubles-forming', 1);
                     const existingNote = matchNotes[matchKey] || '';
                     const neededText = match.needed === 1 ? 'Need 1 more' : `Need ${match.needed} more`;
-                    const rotateText = match.canRotate ? '<p style="color: #666; font-size: 13px; margin: 8px 0 4px 0; font-style: italic;">Can rotate if no 4th</p>' : '';
+
+                    // Build fallback text based on situation
+                    let fallbackText = '';
+                    if (match.canRotate) {
+                        fallbackText = '<p style="color: #666; font-size: 13px; margin: 8px 0 4px 0; font-style: italic;">Can rotate if no 4th</p>';
+                    } else if (match.canPlaySingles && match.eitherCount >= 2) {
+                        fallbackText = '<p style="color: #666; font-size: 13px; margin: 8px 0 4px 0; font-style: italic;">Will play singles if no more join</p>';
+                    } else if (match.eitherCount === 1) {
+                        fallbackText = '<p style="color: #666; font-size: 13px; margin: 8px 0 4px 0; font-style: italic;">Can play singles if 1 more joins</p>';
+                    }
 
                     html += `
                         <div class="match-group doubles-group" style="border-style: dashed;">
@@ -4205,7 +4232,7 @@
                                     return `<li>• ${p.name}${guestTag}${timeTag} <span class="preference-badge ${p.playStyle || 'both'}">${getPreferenceLabel(p.playStyle || 'both')}</span></li>`;
                                 }).join('')}
                             </ul>
-                            ${rotateText}
+                            ${fallbackText}
                             <div class="match-notes">
                                 <input type="text"
                                     placeholder="📝 Add note (court, time, etc.)"
