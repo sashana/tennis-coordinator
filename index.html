@@ -4164,6 +4164,12 @@
                     singlesCount++;
                     const matchKey = getMatchKey('singles', singlesCount);
                     const existingNote = matchNotes[matchKey] || '';
+
+                    // Check if this is a "provisional" singles - both flexible and at least one open to rotation
+                    const bothFlexible = match.players.every(p => (p.playStyle || 'both') === 'both');
+                    const anyOpenToRotation = match.players.some(p => p.allowRotation === true);
+                    const isProvisional = bothFlexible && anyOpenToRotation;
+
                     html += `
                         <div class="match-group singles-group">
                             <h3>Singles Match${singlesCount > 1 ? ' ' + singlesCount : ''}</h3>
@@ -4174,6 +4180,7 @@
                                     return `<li>• ${p.name}${guestTag}${timeTag} <span class="preference-badge ${p.playStyle || 'both'}">${getPreferenceLabel(p.playStyle || 'both')}</span></li>`;
                                 }).join('')}
                             </ul>
+                            ${isProvisional ? '<p style="color: #666; font-size: 13px; margin: 8px 0 4px 0; font-style: italic;">Open to more players</p>' : ''}
                             <div class="match-notes">
                                 <input type="text"
                                     placeholder="📝 Add note (court, time, etc.)"
