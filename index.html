@@ -3636,13 +3636,47 @@
                         message += `📝 ${matchNotes[matchKey]}\n`;
                     }
                     message += '\n';
+                } else if (match.type === 'doubles-forming') {
+                    const players = match.players.map(p => p.name);
+                    const neededText = match.needed === 1 ? 'need 1 more' : `need ${match.needed} more`;
+                    message += `Doubles (forming): ${players.join(', ')}\n`;
+                    message += `${neededText}\n`;
+
+                    if (match.canRotate) {
+                        message += `Can rotate if no 4th\n`;
+                    }
+
+                    // Add time window if available
+                    const times = match.players
+                        .filter(p => p.timeRange)
+                        .map(p => formatTimeRange(p.timeRange.start, p.timeRange.end));
+                    if (times.length > 0) {
+                        message += `${times[0]}\n`;
+                    }
+
+                    // Add note if exists
+                    const matchKey = getMatchKey('doubles-forming', 1);
+                    if (matchNotes[matchKey]) {
+                        message += `📝 ${matchNotes[matchKey]}\n`;
+                    }
+                    message += '\n';
+                } else if (match.type === 'singles-forming') {
+                    const player = match.players[0];
+                    message += `Singles (forming): ${player.name}\n`;
+                    message += `need 1 more\n`;
+
+                    if (player.timeRange) {
+                        message += `${formatTimeRange(player.timeRange.start, player.timeRange.end)}\n`;
+                    }
+                    message += '\n';
                 }
             });
 
             // Add standby list if any (on same line)
-            const standbyMatch = matches.find(m => m.type === 'waiting');
-            if (standbyMatch && standbyMatch.players.length > 0) {
-                message += `Standby: ${standbyMatch.players.map(p => p.name).join(', ')}\n`;
+            const standbyMatches = matches.filter(m => m.type === 'waiting');
+            if (standbyMatches.length > 0) {
+                const standbyPlayers = standbyMatches.flatMap(m => m.players.map(p => p.name));
+                message += `Standby: ${standbyPlayers.join(', ')}\n`;
             }
 
             // Add weather if available - compact format
@@ -3892,67 +3926,35 @@
             const matches = [];
             const warnings = [];
             let remaining = checkins.map((c, idx) => ({ ...c, originalIndex: idx }));
-            
-            // Separate by play style
+
+            // Separate by play style and sort by timestamp (first-come, first-served)
+            remaining.sort((a, b) => a.timestamp - b.timestamp);
+
             const doublesOnly = remaining.filter(p => p.playStyle === 'doubles');
             const singlesOnly = remaining.filter(p => p.playStyle === 'singles');
-            const either = remaining.filter(p => p.playStyle === 'both');
-            
-            // Form doubles matches (NO preference filtering for doubles)
-            // Sort by timestamp (first-come, first-served)
+            const either = remaining.filter(p => p.playStyle === 'both' || !p.playStyle);
+
+            // === STEP 1: Form complete doubles matches ===
+            // Doubles pool: Doubles Only + Either players (sorted by timestamp)
             let doublesPool = [...doublesOnly, ...either].sort((a, b) => a.timestamp - b.timestamp);
-            const usedInDoubles = new Set();
-            
+
             while (doublesPool.length >= 4) {
-                // Just take first 4 players for doubles - no preference filtering
                 const group = doublesPool.slice(0, 4);
-                
                 matches.push({
                     type: 'doubles',
                     number: matches.filter(m => m.type === 'doubles').length + 1,
                     players: group
                 });
-                
-                // Mark these players as used in doubles
-                group.forEach(p => usedInDoubles.add(p.originalIndex));
-                
-                // Remove from pool
                 doublesPool.splice(0, 4);
             }
-            
-            // Form singles matches (WITH preference filtering AND time overlap)
-            // Only include: singles-only players + "either" players not used in doubles
-            let singlesPool = [
-                ...singlesOnly,
-                ...doublesPool.filter(p => p.playStyle === 'both')
-            ];
 
-            // Special case: if exactly 3 players in singles pool, try rotation first
-            if (singlesPool.length === 3) {
-                const canAll3Play =
-                    canPlayTogetherWithTime(singlesPool[0], singlesPool[1]) &&
-                    canPlayTogetherWithTime(singlesPool[0], singlesPool[2]) &&
-                    canPlayTogetherWithTime(singlesPool[1], singlesPool[2]);
-
-                // Check if all 3 are willing to play rotation
-                const allAllowRotation =
-                    (singlesPool[0].allowRotation !== false) &&
-                    (singlesPool[1].allowRotation !== false) &&
-                    (singlesPool[2].allowRotation !== false);
-
-                if (canAll3Play && allAllowRotation) {
-                    matches.push({
-                        type: 'singles-or-practice',
-                        players: [...singlesPool]
-                    });
-                    singlesPool = []; // Clear the pool
-                }
-            }
+            // === STEP 2: Form singles matches from Singles Only players ===
+            let singlesPool = [...singlesOnly].sort((a, b) => a.timestamp - b.timestamp);
 
             while (singlesPool.length >= 2) {
                 let pair = null;
-                
-                // Try to find a valid pair respecting exclusions AND time overlap
+
+                // Find first valid pair respecting exclusions AND time overlap
                 for (let i = 0; i < singlesPool.length - 1; i++) {
                     for (let j = i + 1; j < singlesPool.length; j++) {
                         if (canPlayTogetherWithTime(singlesPool[i], singlesPool[j])) {
@@ -3962,100 +3964,59 @@
                     }
                     if (pair) break;
                 }
-                
+
                 if (pair) {
                     matches.push({
                         type: 'singles',
                         players: pair
                     });
-                    
-                    // Remove from pool
                     pair.forEach(p => {
                         const idx = singlesPool.findIndex(sp => sp.originalIndex === p.originalIndex);
                         if (idx > -1) singlesPool.splice(idx, 1);
                     });
                 } else {
-                    // No valid pairs possible due to exclusions or time conflicts
                     break;
                 }
             }
-            
-            // Handle remaining (only from singlesPool and doubles-only players in doublesPool)
-            const allRemaining = [
-                ...doublesPool.filter(p => p.playStyle === 'doubles'),
-                ...singlesPool
-            ];
-            
-            if (allRemaining.length === 3) {
-                // Check if all players can play rotation (not "Doubles Only")
-                const allCanPlayRotation = allRemaining.every(p => p.playStyle !== 'doubles');
 
-                // Check if they can all play together (preferences AND time)
-                const canAll3Play =
-                    canPlayTogetherWithTime(allRemaining[0], allRemaining[1]) &&
-                    canPlayTogetherWithTime(allRemaining[0], allRemaining[2]) &&
-                    canPlayTogetherWithTime(allRemaining[1], allRemaining[2]);
+            // === STEP 3: Handle remaining players ===
+            // Remaining doubles pool (Either + Doubles Only not in complete doubles)
+            // Remaining singles pool (Singles Only not in complete singles)
 
-                if (allCanPlayRotation && canAll3Play) {
-                    matches.push({
-                        type: 'singles-or-practice',
-                        players: allRemaining
-                    });
-                } else {
-                    // Can't all play together
-                    warnings.push(`3 remaining players have conflicts (preferences or time) - placed in waiting`);
-                    allRemaining.forEach(p => {
-                        matches.push({
-                            type: 'waiting',
-                            players: [p]
-                        });
-                    });
-                }
-            } else if (allRemaining.length === 2) {
-                // Check if both players can play singles (not "Doubles Only")
-                const bothCanPlaySingles = allRemaining.every(p => p.playStyle !== 'doubles');
+            const remainingDoublesPool = doublesPool; // 0-3 players wanting doubles
+            const remainingSinglesPool = singlesPool; // Singles Only players without a partner
 
-                if (bothCanPlaySingles && canPlayTogetherWithTime(allRemaining[0], allRemaining[1])) {
-                    matches.push({
-                        type: 'singles',
-                        players: allRemaining
-                    });
-                } else {
-                    // Can't pair them
-                    allRemaining.forEach(p => {
-                        matches.push({
-                            type: 'waiting',
-                            players: [p]
-                        });
-                    });
-                    
-                    // Determine conflict type for warning
-                    const prefConflict = !canPlayTogether(allRemaining[0].name, allRemaining[1].name);
-                    const timeConflict = !timesOverlap(allRemaining[0].timeRange, allRemaining[1].timeRange);
-                    
-                    if (prefConflict && timeConflict) {
-                        warnings.push(`${allRemaining[0].name} and ${allRemaining[1].name} cannot be paired (exclusion preference + time conflict)`);
-                    } else if (prefConflict) {
-                        warnings.push(`${allRemaining[0].name} and ${allRemaining[1].name} cannot be paired (exclusion preference)`);
-                    } else if (timeConflict) {
-                        warnings.push(`${allRemaining[0].name} and ${allRemaining[1].name} cannot be paired (time conflict)`);
-                    }
-                }
-            } else if (allRemaining.length === 1) {
+            // --- Handle doubles forming ---
+            if (remainingDoublesPool.length > 0) {
+                const needed = 4 - remainingDoublesPool.length;
+
+                // Check if all are "Either" and allow rotation (for 3 players)
+                const allEither = remainingDoublesPool.every(p => p.playStyle === 'both' || !p.playStyle);
+                const allAllowRotation = remainingDoublesPool.every(p => p.allowRotation !== false);
+                const canAllPlayTogether = remainingDoublesPool.length === 3 &&
+                    canPlayTogetherWithTime(remainingDoublesPool[0], remainingDoublesPool[1]) &&
+                    canPlayTogetherWithTime(remainingDoublesPool[0], remainingDoublesPool[2]) &&
+                    canPlayTogetherWithTime(remainingDoublesPool[1], remainingDoublesPool[2]);
+
                 matches.push({
-                    type: 'waiting',
-                    players: allRemaining
+                    type: 'doubles-forming',
+                    players: remainingDoublesPool,
+                    needed: needed,
+                    canRotate: remainingDoublesPool.length === 3 && allEither && allAllowRotation && canAllPlayTogether
                 });
-            } else if (allRemaining.length > 3) {
-                warnings.push(`${allRemaining.length} players could not be matched due to preference conflicts`);
-                allRemaining.forEach(p => {
+            }
+
+            // --- Handle singles forming ---
+            if (remainingSinglesPool.length > 0) {
+                remainingSinglesPool.forEach(p => {
                     matches.push({
-                        type: 'waiting',
-                        players: [p]
+                        type: 'singles-forming',
+                        players: [p],
+                        needed: 1
                     });
                 });
             }
-            
+
             return { matches, warnings };
         }
         
@@ -4226,6 +4187,46 @@
                                     onkeydown="handleNoteKeydown(event, '${matchKey}')"
                                     class="match-note-input">
                             </div>
+                        </div>
+                    `;
+                } else if (match.type === 'doubles-forming') {
+                    const matchKey = getMatchKey('doubles-forming', 1);
+                    const existingNote = matchNotes[matchKey] || '';
+                    const neededText = match.needed === 1 ? 'Need 1 more' : `Need ${match.needed} more`;
+                    const rotateText = match.canRotate ? '<p style="color: #666; font-size: 13px; margin: 8px 0 4px 0; font-style: italic;">Can rotate if no 4th</p>' : '';
+
+                    html += `
+                        <div class="match-group doubles-group" style="border-style: dashed;">
+                            <h3>Doubles (forming) - ${neededText}</h3>
+                            <ul>
+                                ${match.players.map(p => {
+                                    const guestTag = p.isGuest ? ` <span class="guest-indicator">(guest of ${p.addedBy})</span>` : '';
+                                    const timeTag = p.timeRange ? ` <span class="time-badge">${formatTimeRange(p.timeRange.start, p.timeRange.end)}</span>` : '';
+                                    return `<li>• ${p.name}${guestTag}${timeTag} <span class="preference-badge ${p.playStyle || 'both'}">${getPreferenceLabel(p.playStyle || 'both')}</span></li>`;
+                                }).join('')}
+                            </ul>
+                            ${rotateText}
+                            <div class="match-notes">
+                                <input type="text"
+                                    placeholder="📝 Add note (court, time, etc.)"
+                                    value="${existingNote.replace(/"/g, '&quot;')}"
+                                    oninput="saveMatchNoteDebounced('${matchKey}', this.value)"
+                                    onkeydown="handleNoteKeydown(event, '${matchKey}')"
+                                    class="match-note-input">
+                            </div>
+                        </div>
+                    `;
+                } else if (match.type === 'singles-forming') {
+                    html += `
+                        <div class="match-group singles-group" style="border-style: dashed;">
+                            <h3>Singles (forming) - Need 1 more</h3>
+                            <ul>
+                                ${match.players.map(p => {
+                                    const guestTag = p.isGuest ? ` <span class="guest-indicator">(guest of ${p.addedBy})</span>` : '';
+                                    const timeTag = p.timeRange ? ` <span class="time-badge">${formatTimeRange(p.timeRange.start, p.timeRange.end)}</span>` : '';
+                                    return `<li>• ${p.name}${guestTag}${timeTag} <span class="preference-badge ${p.playStyle || 'both'}">${getPreferenceLabel(p.playStyle || 'both')}</span></li>`;
+                                }).join('')}
+                            </ul>
                         </div>
                     `;
                 } else if (match.type === 'waiting') {

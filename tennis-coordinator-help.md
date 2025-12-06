@@ -386,7 +386,52 @@ John Smith                              [Remove]
 
 ---
 
-## 📊 Match Organization Examples
+## 📊 Match Formation Tables
+
+This group prioritizes **doubles formation**. "Either" players default toward doubles.
+
+### 1 Player
+
+| Preference | Display |
+|------------|---------|
+| Either | Doubles (forming) - Need 3 more |
+| Singles Only | Singles (forming) - Need 1 more |
+| Doubles Only | Doubles (forming) - Need 3 more |
+
+### 2 Players
+
+| Player A | Player B | Display |
+|----------|----------|---------|
+| Either | Either | Doubles (forming) - Need 2 more |
+| Either | Singles Only | Singles match |
+| Either | Doubles Only | Doubles (forming) - Need 2 more |
+| Singles Only | Singles Only | Singles match |
+| Singles Only | Doubles Only | Singles (forming) + Doubles (forming) separate |
+| Doubles Only | Doubles Only | Doubles (forming) - Need 2 more |
+
+### 3 Players
+
+| Preferences | Display |
+|-------------|---------|
+| All Either | Doubles (forming) - Need 1 more + "Can rotate if no 4th" |
+| 2 Either + 1 Singles Only | Doubles (forming) + Singles (forming) |
+| 2 Either + 1 Doubles Only | Doubles (forming) - Need 1 more |
+| 1 Either + 2 Singles Only | Singles (first 2) + Singles (forming) |
+| 1 Either + 2 Doubles Only | Doubles (forming) - Need 1 more |
+| All Singles Only | Singles (first 2) + Singles (forming) |
+| 2 Singles Only + 1 Doubles Only | Singles + Doubles (forming) |
+| 1 Singles Only + 2 Doubles Only | Doubles (forming) + Singles (forming) |
+| All Doubles Only | Doubles (forming) - Need 1 more |
+
+### 4+ Players
+
+| Scenario | Result |
+|----------|--------|
+| 4+ who can play doubles | Doubles match forms, remainder handled per above |
+
+---
+
+## 📋 Match Organization Examples
 
 ### Example 1: Perfect Doubles Day
 **8 Players, all select "Either"**
@@ -395,23 +440,38 @@ Result: 🎾 2 Doubles Matches
 ```
 
 ### Example 2: Mixed Preferences
-**6 Players: 4 "Either", 2 "Singles"**
+**6 Players: 4 "Either", 2 "Singles Only"**
 ```
 Result:
-🎾 1 Doubles Match (first 4)
-🏸 1 Singles Match (remaining 2)
+🎾 1 Doubles Match (first 4 Either)
+🏸 1 Singles Match (2 Singles Only)
 ```
 
-### Example 3: Not Enough for Doubles
-**5 Players: 3 "Doubles", 2 "Singles"**
+### Example 3: Doubles Forming
+**2 Players: 1 "Either", 1 "Doubles Only"**
 ```
 Result:
-⏸️ 3 in Waiting (need 4 for doubles)
-🏸 1 Singles Match (if times compatible)
+🎾 Doubles (forming) - Need 2 more
 ```
 
-### Example 4: Time Conflicts
-**4 Players, all "Singles"**
+### Example 4: Mixed Forming
+**2 Players: 1 "Singles Only", 1 "Doubles Only"**
+```
+Result:
+🏸 Singles (forming) - Need 1 more
+🎾 Doubles (forming) - Need 3 more
+```
+
+### Example 5: Three Either with Rotation
+**3 Players, all "Either", all allow rotation**
+```
+Result:
+🎾 Doubles (forming) - Need 1 more
+   Can rotate if no 4th
+```
+
+### Example 6: Time Conflicts
+**4 Players, all "Singles Only"**
 - 2 available 9-11 AM
 - 2 available 2-5 PM
 ```
@@ -419,19 +479,13 @@ Result: 🏸 2 Singles Matches
 (paired within same time windows)
 ```
 
-### Example 5: Exclusion Impact
-**2 Players, both "Singles"**
+### Example 7: Exclusion Impact
+**2 Players, both "Singles Only"**
 - Alice excludes Bob
 ```
-Result: ⏸️ Both in Waiting
-(cannot pair due to exclusion)
-```
-
-### Example 6: Rotation Group
-**3 Players, all "Either", all allow rotation**
-```
-Result: 🔄 Rotation Group
-(choose 1v1 or 1v2 format)
+Result:
+🏸 Singles (forming) - Alice needs 1 more
+🏸 Singles (forming) - Bob needs 1 more
 ```
 
 ---
