@@ -96,9 +96,17 @@ This document defines how players are organized into matches based on their pref
 - **Doubles (forming)** - Shows "Need X more" (1, 2, or 3)
 - **Singles (forming)** - Shows "Need 1 more"
 
+### Fallback Indicators for Doubles (forming)
+
+| Situation | Message |
+|-----------|---------|
+| 1 Either player | "Can play singles if 1 more joins" |
+| 2+ Either players (compatible times, no exclusions) | "Will play singles if no more join" |
+| 3 Either players (all allow rotation) | "Can rotate if no 4th" |
+| Only Doubles Only players | No fallback message |
+
 ### Provisional Indicators
 - **"Open to more players"** - Singles match where both players are "Either" and at least one allows rotation
-- **"Can rotate if no 4th"** - 3 "Either" players waiting for doubles, can fall back to rotation
 
 ---
 

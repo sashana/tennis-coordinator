@@ -429,6 +429,17 @@ This group prioritizes **doubles formation**. "Either" players default toward do
 |----------|--------|
 | 4+ who can play doubles | Doubles match forms, remainder handled per above |
 
+### Fallback Messages for Doubles (forming)
+
+When players are waiting for doubles to fill, the system shows helpful fallback options:
+
+| Situation | Message Shown |
+|-----------|---------------|
+| 1 Either player | "Can play singles if 1 more joins" |
+| 2+ Either players | "Will play singles if no more join" |
+| 3 Either players (all allow rotation) | "Can rotate if no 4th" |
+| Only Doubles Only players | No fallback (must wait for doubles) |
+
 ---
 
 ## 📋 Match Organization Examples
