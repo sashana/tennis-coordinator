@@ -3987,13 +3987,16 @@
             ];
             
             if (allRemaining.length === 3) {
+                // Check if all players can play rotation (not "Doubles Only")
+                const allCanPlayRotation = allRemaining.every(p => p.playStyle !== 'doubles');
+
                 // Check if they can all play together (preferences AND time)
-                const canAll3Play = allRemaining.length === 3 && 
+                const canAll3Play =
                     canPlayTogetherWithTime(allRemaining[0], allRemaining[1]) &&
                     canPlayTogetherWithTime(allRemaining[0], allRemaining[2]) &&
                     canPlayTogetherWithTime(allRemaining[1], allRemaining[2]);
-                
-                if (canAll3Play) {
+
+                if (allCanPlayRotation && canAll3Play) {
                     matches.push({
                         type: 'singles-or-practice',
                         players: allRemaining
@@ -4009,7 +4012,10 @@
                     });
                 }
             } else if (allRemaining.length === 2) {
-                if (canPlayTogetherWithTime(allRemaining[0], allRemaining[1])) {
+                // Check if both players can play singles (not "Doubles Only")
+                const bothCanPlaySingles = allRemaining.every(p => p.playStyle !== 'doubles');
+
+                if (bothCanPlaySingles && canPlayTogetherWithTime(allRemaining[0], allRemaining[1])) {
                     matches.push({
                         type: 'singles',
                         players: allRemaining
