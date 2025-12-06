@@ -16,6 +16,10 @@
     <meta name="apple-mobile-web-app-title" content="Tennis">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
+    <!-- Google Analytics 4 (loaded dynamically) -->
+    <script id="ga-script"></script>
+    <script id="ga-config"></script>
+
     <style>
         * {
             margin: 0;
@@ -1364,6 +1368,19 @@
                 <button class="close-btn" onclick="closeSiteAdmin()">×</button>
             </div>
 
+            <!-- Site Settings Section -->
+            <div style="border: 1px solid #ddd; padding: 16px; border-radius: 8px; margin-bottom: 20px; background: #f9f9f9;">
+                <h3 style="margin-top: 0; margin-bottom: 12px;">📊 Site Settings</h3>
+                <div style="display: flex; gap: 12px; align-items: end;">
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Google Analytics ID:</label>
+                        <input type="text" id="gaTrackingId" placeholder="e.g., G-XXXXXXXXXX" style="width: 100%;">
+                    </div>
+                    <button onclick="saveSiteSettings()" style="white-space: nowrap;">Save</button>
+                </div>
+                <small style="color: #666; margin-top: 4px; display: block;">Measurement ID from Google Analytics 4</small>
+            </div>
+
             <button onclick="showCreateGroupForm()" style="margin-bottom: 20px; background: #4CAF50;">➕ Create New Group</button>
 
             <div id="groupsTable" style="margin-bottom: 20px;">
@@ -1483,6 +1500,45 @@
         } catch (error) {
             console.error('Firebase initialization error:', error);
             alert('Firebase not configured. Please add your Firebase configuration.');
+        }
+
+        // Google Analytics 4 Initialization
+        let gaInitialized = false;
+
+        function initGoogleAnalytics(trackingId) {
+            if (!trackingId) return;
+
+            // Remove existing GA scripts if reinitializing
+            const existingScript = document.getElementById('ga-script');
+            const existingConfig = document.getElementById('ga-config');
+
+            // Load gtag.js
+            if (existingScript) {
+                existingScript.src = `https://www.googletagmanager.com/gtag/js?id=${trackingId}`;
+                existingScript.async = true;
+            }
+
+            // Initialize gtag
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            window.gtag = gtag;
+            gtag('js', new Date());
+            gtag('config', trackingId, {
+                page_title: currentGroupName || 'Tennis Coordinator',
+                page_location: window.location.href
+            });
+
+            gaInitialized = true;
+            console.log('Google Analytics initialized with ID:', trackingId);
+        }
+
+        function trackEvent(eventName, eventParams = {}) {
+            if (gaInitialized && window.gtag) {
+                // Add common parameters
+                eventParams.group_id = currentGroupId || 'none';
+                eventParams.group_name = currentGroupName || 'none';
+                window.gtag('event', eventName, eventParams);
+            }
         }
 
         // Current selected group (determined by URL path)
@@ -1612,6 +1668,13 @@
                     const groupsSnapshot2 = await firebaseRef.groups().once('value');
                     availableGroups = groupsSnapshot2.val() || {};
                     console.log('Groups after initialization:', availableGroups);
+                }
+
+                // Load site settings and initialize Google Analytics
+                const siteSettingsSnapshot = await firebaseRef.siteSettings().once('value');
+                const siteSettings = siteSettingsSnapshot.val() || {};
+                if (siteSettings.gaTrackingId) {
+                    initGoogleAnalytics(siteSettings.gaTrackingId);
                 }
 
                 return true;
@@ -2191,6 +2254,9 @@
                     notes: notes
                 });
 
+                // Track in Google Analytics
+                trackEvent('member_added');
+
             } catch (error) {
                 console.error('Error adding member:', error);
                 showToast('Error adding member', 'error');
@@ -2252,6 +2318,29 @@
             // Show site admin modal
             document.getElementById('siteAdminModal').classList.add('active');
             await renderGroupsTable();
+
+            // Load and populate site settings (including GA tracking ID)
+            document.getElementById('gaTrackingId').value = siteSettings.gaTrackingId || '';
+        }
+
+        async function saveSiteSettings() {
+            const gaTrackingId = document.getElementById('gaTrackingId').value.trim();
+
+            try {
+                await firebaseRef.siteSettings().update({
+                    gaTrackingId: gaTrackingId
+                });
+
+                // Reinitialize GA with new tracking ID
+                if (gaTrackingId) {
+                    initGoogleAnalytics(gaTrackingId);
+                }
+
+                showToast('Site settings saved');
+            } catch (error) {
+                console.error('Error saving site settings:', error);
+                showToast('Error saving settings', 'error');
+            }
         }
 
         function closeSiteAdmin() {
@@ -2996,6 +3085,9 @@
                 // Log activity for non-empty notes
                 if (note && note.trim()) {
                     logActivity('notes_saved', sessionUser || 'Unknown', { matchKey: matchKey });
+
+                    // Track in Google Analytics
+                    trackEvent('match_note_saved', { match_type: matchKey.split('-')[0] });
                 }
 
                 showToast('Note saved', 'success');
@@ -3334,6 +3426,13 @@
                 timeRange: checkinData.timeRange
             });
 
+            // Track in Google Analytics
+            trackEvent('check_in', {
+                play_style: checkinData.playStyle,
+                is_guest: isGuest,
+                has_time_range: !!(startTime || endTime)
+            });
+
             // Remember user's name for next time (if not a guest)
             if (!isGuest && currentGroupId) {
                 localStorage.setItem(`tennisUserName_${currentGroupId}`, name);
@@ -3391,6 +3490,11 @@
 
             // Log activity
             logActivity('removal', personName);
+
+            // Track in Google Analytics
+            trackEvent('check_in_removal', {
+                removed_self: isOwner
+            });
 
             saveAndRender();
 
@@ -3557,6 +3661,9 @@
             // Log activity
             logActivity('whatsapp_share', sessionUser || 'Unknown', { type: 'matches' });
 
+            // Track in Google Analytics
+            trackEvent('whatsapp_share', { share_type: 'matches' });
+
             // Open WhatsApp in new window/tab
             window.open(whatsappUrl, '_blank');
         }
@@ -3625,6 +3732,9 @@
             // Log activity
             logActivity('whatsapp_share', sessionUser || 'Unknown', { type: 'checkin', player: name });
 
+            // Track in Google Analytics
+            trackEvent('whatsapp_share', { share_type: 'checkin' });
+
             window.open(whatsappUrl, '_blank');
         }
 
@@ -3660,6 +3770,9 @@
 
             // Log activity
             logActivity('whatsapp_share', sessionUser || 'Unknown', { type: 'removal', player: name });
+
+            // Track in Google Analytics
+            trackEvent('whatsapp_share', { share_type: 'removal' });
 
             window.open(whatsappUrl, '_blank');
         }
@@ -4151,6 +4264,9 @@
 
                     // Apply feature flags to UI
                     applyFeatureFlags();
+
+                    // Track page view in Google Analytics
+                    trackEvent('group_loaded');
                 } else {
                     // Authentication failed - redirect to root
                     window.location.href = '/';
