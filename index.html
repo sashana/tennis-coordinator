@@ -1325,12 +1325,20 @@
                     placeholder="Member's full name"
                     style="margin-bottom: 8px;"
                 >
-                <input
-                    type="text"
-                    id="newMemberContactInput"
-                    placeholder="Contact (email or phone) - optional"
-                    style="margin-bottom: 8px;"
-                >
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input
+                        type="tel"
+                        id="newMemberPhoneInput"
+                        placeholder="Phone (optional)"
+                        style="flex: 1;"
+                    >
+                    <input
+                        type="email"
+                        id="newMemberEmailInput"
+                        placeholder="Email (optional)"
+                        style="flex: 1;"
+                    >
+                </div>
                 <textarea
                     id="newMemberNotesInput"
                     placeholder="Notes (skill level, how you know them, etc.) - optional"
@@ -1729,6 +1737,15 @@
         </div>
     </div>
 
+    <!-- Invite Prompt Modal -->
+    <div id="invitePromptModal" class="modal">
+        <div class="modal-content" style="max-width: 350px; text-align: center;">
+            <div id="invitePromptContent">
+                <!-- Content populated dynamically -->
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -1870,7 +1887,8 @@
             userPreferences: () => db.ref('userPreferences'),
             siteSettings: () => db.ref('siteSettings'),
             userNotificationPrefs: (groupId, userName) => db.ref(`groups/${groupId}/userNotifications/${normalizeName(userName)}/preferences`),
-            userNotifications: (groupId, userName) => db.ref(`groups/${groupId}/userNotifications/${normalizeName(userName)}/items`)
+            userNotifications: (groupId, userName) => db.ref(`groups/${groupId}/userNotifications/${normalizeName(userName)}/items`),
+            groupNotifications: (groupId) => db.ref(`groups/${groupId}/userNotifications`)
         };
 
         // Match notes cache (per date)
@@ -2766,13 +2784,15 @@
             document.getElementById('checkInFormFields').classList.remove('expanded');
             // Clear form fields
             document.getElementById('newMemberNameInput').value = '';
-            document.getElementById('newMemberContactInput').value = '';
+            document.getElementById('newMemberPhoneInput').value = '';
+            document.getElementById('newMemberEmailInput').value = '';
             document.getElementById('newMemberNotesInput').value = '';
         }
 
         async function submitNewMember() {
             const name = document.getElementById('newMemberNameInput').value.trim();
-            const contact = document.getElementById('newMemberContactInput').value.trim();
+            const phone = document.getElementById('newMemberPhoneInput').value.trim();
+            const email = document.getElementById('newMemberEmailInput').value.trim();
             const notes = document.getElementById('newMemberNotesInput').value.trim();
 
             if (!name) {
@@ -2803,7 +2823,8 @@
             memberDetails[name] = {
                 addedBy: sessionUser,
                 addedDate: Date.now(),
-                contact: contact || '',
+                phone: phone || '',
+                email: email || '',
                 notes: notes || ''
             };
 
@@ -2825,16 +2846,124 @@
                 // Log activity
                 logActivity('member_added', name, {
                     addedBy: sessionUser,
-                    contact: contact,
-                    notes: notes
+                    phone: phone,
+                    email: email
                 });
 
                 // Track in Google Analytics
                 trackEvent('member_added');
 
+                // Send notification to users with activity alerts enabled
+                notifyNewMemberAdded(name, sessionUser);
+
+                // If phone or email provided, prompt to invite
+                if (phone || email) {
+                    showInvitePrompt(name, phone, email);
+                }
+
             } catch (error) {
                 console.error('Error adding member:', error);
                 showToast('Error adding member', 'error');
+            }
+        }
+
+        // Show invite prompt after adding a new member
+        function showInvitePrompt(memberName, phone, email) {
+            const modal = document.getElementById('invitePromptModal');
+            const content = document.getElementById('invitePromptContent');
+
+            let buttons = '';
+            if (phone) {
+                buttons += `<button onclick="sendSmsInvite('${memberName}', '${phone}')" style="background: #25D366; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <span>📱</span> Send SMS
+                </button>`;
+            }
+            if (email) {
+                buttons += `<button onclick="sendEmailInvite('${memberName}', '${email}')" style="background: #4285F4; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <span>📧</span> Send Email
+                </button>`;
+            }
+
+            content.innerHTML = `
+                <h3 style="margin: 0 0 12px 0; font-size: 16px;">Invite ${memberName}?</h3>
+                <p style="margin: 0 0 16px 0; color: #666; font-size: 14px;">Send them an invite with the group link and PIN</p>
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                    ${buttons}
+                    <button onclick="closeInvitePrompt()" style="background: #e0e0e0; color: #333; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer;">
+                        Skip
+                    </button>
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+        }
+
+        function closeInvitePrompt() {
+            document.getElementById('invitePromptModal').style.display = 'none';
+        }
+
+        function getInviteMessage(memberName) {
+            const groupName = currentSettings?.groupName || 'our tennis group';
+            const groupUrl = window.location.href.split('?')[0] + '?group=' + currentGroupId;
+            const pin = currentSettings?.groupPin || '';
+
+            return `Hi ${memberName}! You've been added to ${groupName} tennis coordination.
+
+Check in for upcoming matches here:
+${groupUrl}
+
+PIN: ${pin}
+
+Just select your name and check in when you can play!`;
+        }
+
+        function sendSmsInvite(memberName, phone) {
+            const message = encodeURIComponent(getInviteMessage(memberName));
+            // Clean phone number - remove spaces, dashes, parentheses
+            const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+            window.open(`sms:${cleanPhone}?body=${message}`, '_blank');
+            closeInvitePrompt();
+            showToast('Opening SMS...', 'success');
+        }
+
+        function sendEmailInvite(memberName, email) {
+            const groupName = currentSettings?.groupName || 'Tennis Group';
+            const subject = encodeURIComponent(`You're invited to ${groupName}`);
+            const body = encodeURIComponent(getInviteMessage(memberName));
+            window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
+            closeInvitePrompt();
+            showToast('Opening email...', 'success');
+        }
+
+        // Notify users when a new member is added
+        async function notifyNewMemberAdded(memberName, addedBy) {
+            if (!currentGroupId) return;
+
+            const message = `👋 ${memberName} was added to the group by ${addedBy}`;
+
+            // Get all users with activity alerts enabled
+            try {
+                const snapshot = await firebaseRef.groupNotifications(currentGroupId).once('value');
+                const allUserNotifications = snapshot.val() || {};
+
+                for (const [normalizedName, userData] of Object.entries(allUserNotifications)) {
+                    const prefs = userData.preferences || {};
+                    if (prefs.activityAlerts) {
+                        // Don't notify the person who added the member
+                        if (normalizedName === normalizeName(addedBy)) continue;
+
+                        // Add notification
+                        const notifRef = firebaseRef.userNotifications(currentGroupId, normalizedName).push();
+                        await notifRef.set({
+                            message: message,
+                            timestamp: Date.now(),
+                            read: false,
+                            type: 'member_added'
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error sending new member notifications:', error);
             }
         }
 
@@ -3183,10 +3312,22 @@
                         month: 'short',
                         day: 'numeric'
                     });
+                    // Support both old format (contact) and new format (phone/email)
+                    let contactHtml = '';
+                    if (details.phone) {
+                        contactHtml += `<div>📱 ${details.phone}</div>`;
+                    }
+                    if (details.email) {
+                        contactHtml += `<div>📧 ${details.email}</div>`;
+                    }
+                    // Fallback for old format
+                    if (!details.phone && !details.email && details.contact) {
+                        contactHtml = `<div>Contact: ${details.contact}</div>`;
+                    }
                     detailsHtml = `
                         <div style="font-size: 12px; color: #666; margin-top: 4px; padding-left: 12px; border-left: 3px solid #4CAF50;">
                             <div>Added by: <strong>${details.addedBy}</strong> on ${addedDate}</div>
-                            ${details.contact ? `<div>Contact: ${details.contact}</div>` : ''}
+                            ${contactHtml}
                             ${details.notes ? `<div>Notes: ${details.notes}</div>` : ''}
                         </div>
                     `;
@@ -3226,7 +3367,8 @@
                 memberDetails[name] = {
                     addedBy: sessionUser,
                     addedDate: Date.now(),
-                    contact: '',
+                    phone: '',
+                    email: '',
                     notes: 'Added via admin settings'
                 };
             }

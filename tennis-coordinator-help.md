@@ -171,25 +171,60 @@ Click ⚙️ **Preferences** button next to your name in check-in list
 
 ---
 
-## 👤 Your Session & Changing User
+## 👤 Your Session & User Menu
 
-### Session User Button
-After selecting your name, you'll see **"[Your Name] ▼"** in the top right corner next to the settings icon.
+### User Menu
+After selecting your name, you'll see **"[Your Name] ▼"** in the top right corner. Click to access:
 
-**What it shows:**
-- Your currently logged-in identity
-- Persists across page refreshes
-- Used to determine permissions (who can remove check-ins)
+| Option | Description |
+|--------|-------------|
+| 🔔 **Notifications** | Set up activity alerts and match notifications |
+| 📋 **Activity History** | View check-ins, removals, and changes for the day |
+| ⚙️ **Admin Settings** | Manage members, PINs, and group settings |
+| ❓ **User Guide** | Open this help document |
+| 🔄 **Change User** | Switch to a different user |
 
 ### Changing Your User
 If you accidentally selected the wrong name:
 
 1. Click **"[Your Name] ▼"** button (top right)
-2. Confirm you want to change
-3. Select correct name from dropdown
-4. New name appears in button
+2. Select **"🔄 Change User"**
+3. Confirm you want to change
+4. Select correct name from dropdown
 
 **Note:** This clears your session and permissions. You'll need to select your name again.
+
+---
+
+## 🔔 Notifications
+
+### Notification Preferences
+Access via **User Menu → 🔔 Notifications** to configure your alerts:
+
+| Setting | Description |
+|---------|-------------|
+| **Activity Alerts** | Get notified when someone checks in for a date |
+| **Match Confirmations** | Get notified when matches are finalized |
+
+Toggle each setting on/off based on your preferences. Settings are saved per user.
+
+### Viewing Notifications
+Click the **🔔 bell icon** in the top right to see your notifications:
+
+- **Red badge** shows count of unread notifications
+- Notifications include details like:
+  - Who checked in
+  - Play style (Singles/Doubles/Either)
+  - Time range if specified
+  - Who added the check-in (if different from player)
+- Click **"Mark All Read"** to clear the badge
+- Click **"Clear All"** to remove all notifications
+
+### Example Notifications
+```
+🎾 Bob checked in for Dec 7 [Doubles, 2:00 PM - 4:00 PM]
+🎾 Alice checked in for Dec 8 [Either] (added by Greg)
+```
 
 ---
 
@@ -247,7 +282,7 @@ John Smith                              [Remove]
 
 ## ⚙️ Admin Settings
 
-**Access:** Click ⚙️ icon (top right) → Enter admin PIN
+**Access:** Click **User Menu → ⚙️ Admin Settings** → Enter admin PIN
 
 ### Core Members
 - 👀 **View all members** and who added them
@@ -273,7 +308,7 @@ John Smith                              [Remove]
 - Can be changed by admin
 
 ### Activity History
-- 📋 Click activity icon (top right) to view recent actions
+- 📋 Access via **User Menu → 📋 Activity History**
 - Shows check-ins, removals, and who performed them
 - Helps track changes throughout the day
 
@@ -752,6 +787,13 @@ Contact group admin via WhatsApp
     /activity/
       /2025-11-29/
         - [activity log entries]
+    /userNotifications/
+      /[normalized-username]/
+        /preferences/
+          - activityAlerts: true/false
+          - matchConfirmations: true/false
+        /items/
+          - [notification objects with message, timestamp, read status]
     /settings/
       - groupName: ""
       - coreMembers: []
@@ -794,14 +836,18 @@ Contact group admin via WhatsApp
 
 ---
 
-**Version:** 2.5 (Multi-Group Firebase)
+**Version:** 2.6 (Notifications & User Menu)
 **Last Updated:** December 2024
 **Repository:** https://github.com/sashana/tennis-coordinator
 
 **Recent Updates:**
+- In-app notification system with activity alerts and match confirmations
+- User dropdown menu consolidating all options (Notifications, Activity History, Admin Settings, User Guide, Change User)
+- Notification preferences per user with toggle controls
+- Notification details include play style, time range, and "added by" info
+- Unit test suite for matching logic (41 tests)
+- Safari compatibility fix for welcome modal after PIN entry
 - Session user management with changeable identity
 - Activity history tracking
 - Admin-only day reset functionality
 - Improved WhatsApp message formatting
-- Multi-group support with unique URLs
-- Sparse array handling for accurate check-in counts
