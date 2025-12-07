@@ -2921,7 +2921,22 @@ Just select your name and check in when you can play!`;
             const message = encodeURIComponent(getInviteMessage(memberName));
             // Clean phone number - remove spaces, dashes, parentheses
             const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
-            window.open(`sms:${cleanPhone}?body=${message}`, '_blank');
+
+            // Platform-specific SMS URL format:
+            // iOS: sms:number&body=message (uses & separator)
+            // Android/others: sms:number?body=message (uses ? separator)
+            const userAgent = navigator.userAgent || '';
+            const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
+            const smsUrl = isIOS
+                ? `sms:${cleanPhone}&body=${message}`
+                : `sms:${cleanPhone}?body=${message}`;
+
+            // Use location.href for protocol handlers (works on mobile)
+            // Create a temporary link for desktop fallback
+            const link = document.createElement('a');
+            link.href = smsUrl;
+            link.click();
+
             closeInvitePrompt();
             showToast('Opening SMS...', 'success');
         }
@@ -2930,7 +2945,12 @@ Just select your name and check in when you can play!`;
             const groupName = currentSettings?.groupName || 'Tennis Group';
             const subject = encodeURIComponent(`You're invited to ${groupName}`);
             const body = encodeURIComponent(getInviteMessage(memberName));
-            window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
+
+            // Use a temporary link element for better cross-platform support
+            const link = document.createElement('a');
+            link.href = `mailto:${email}?subject=${subject}&body=${body}`;
+            link.click();
+
             closeInvitePrompt();
             showToast('Opening email...', 'success');
         }
