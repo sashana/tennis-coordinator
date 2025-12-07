@@ -403,7 +403,7 @@ This group prioritizes **doubles formation**. "Either" players default toward do
 | Player A | Player B | Display |
 |----------|----------|---------|
 | Either | Either | Doubles (forming) - Need 2 more |
-| Either | Singles Only | Singles match |
+| Either | Singles Only | Doubles (forming) + Singles (forming) |
 | Either | Doubles Only | Doubles (forming) - Need 2 more |
 | Singles Only | Singles Only | Singles match |
 | Singles Only | Doubles Only | Singles (forming) + Doubles (forming) separate |
@@ -435,8 +435,9 @@ When players are waiting for doubles to fill, the system shows helpful fallback 
 
 | Situation | Message Shown |
 |-----------|---------------|
-| 1 Either player | "Can play singles if 1 more joins" |
-| 2+ Either players | "Will play singles if no more join" |
+| 1 Either player alone | "Can play singles if 1 more joins" |
+| 1 Either + Doubles Only players | No fallback (only 1 can play singles) |
+| 2+ Either players (compatible times, no exclusions) | "Will play singles if no more join" |
 | 3 Either players (all allow rotation) | "Can rotate if no 4th" |
 | Only Doubles Only players | No fallback (must wait for doubles) |
 

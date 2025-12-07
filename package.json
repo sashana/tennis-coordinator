@@ -1,0 +1,25 @@
+{
+  "name": "tennis-coordinator",
+  "version": "1.0.0",
+  "description": "A Progressive Web App (PWA) for coordinating tennis matches, managing player check-ins, and organizing match groups with intelligent player matching.",
+  "main": "sw.js",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sashana/tennis-coordinator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sashana/tennis-coordinator/issues"
+  },
+  "homepage": "https://github.com/sashana/tennis-coordinator#readme",
+  "devDependencies": {
+    "vitest": "^4.0.15"
+  }
+}

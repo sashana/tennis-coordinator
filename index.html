@@ -74,7 +74,192 @@
         .settings-icon:active {
             transform: scale(0.95);
         }
-        
+
+        /* User menu dropdown */
+        .user-menu-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .user-menu-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 160px;
+            z-index: 100;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .user-menu-dropdown.active {
+            display: block;
+        }
+
+        .user-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .user-menu-item:hover {
+            background: #f5f5f5;
+        }
+
+        .user-menu-item:active {
+            background: #e8e8e8;
+        }
+
+        /* Notification bell */
+        .notification-bell {
+            position: relative;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #f44336;
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+
+        /* Notifications panel */
+        .notifications-panel {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .notification-item:hover {
+            background: #f9f9f9;
+        }
+
+        .notification-item.unread {
+            background: #e8f5e9;
+        }
+
+        .notification-item.unread:hover {
+            background: #c8e6c9;
+        }
+
+        .notification-message {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .notification-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: #999;
+        }
+
+        /* Toggle switch */
+        .toggle-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .toggle-container:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-label {
+            flex: 1;
+        }
+
+        .toggle-label-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .toggle-label-desc {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 28px;
+            flex-shrink: 0;
+            margin-left: 12px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 28px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #4CAF50;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
         .date-selector {
             margin-bottom: 16px;
         }
@@ -1075,12 +1260,33 @@
                 </small>
             </span>
             <div style="display: flex; gap: 8px; align-items: center;">
-                <button class="settings-icon" onclick="openActivityModal()" title="Activity History">📋</button>
-                <button class="settings-icon" onclick="window.open('tennis-coordinator-help.md', '_blank')" title="Help">❓</button>
-                <button class="settings-icon" onclick="openSettingsModal()" title="Admin Settings">⚙️</button>
-                <button id="sessionUserBtn" class="settings-icon" onclick="changeSessionUser()" title="Click to change user" style="display: none; padding: 6px 10px; width: auto; font-size: 14px;">
-                    <span id="sessionUserIcon"><span id="sessionUserNameBtn"></span> ▼</span>
+                <button class="settings-icon notification-bell" id="notificationBellBtn" onclick="openNotificationsModal()" title="Notifications" style="display: none;">
+                    🔔
+                    <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
                 </button>
+                <div class="user-menu-container" id="userMenuContainer" style="display: none;">
+                    <button id="sessionUserBtn" class="settings-icon" onclick="toggleUserMenu()" title="User menu" style="padding: 6px 10px; width: auto; font-size: 14px;">
+                        <span id="sessionUserIcon"><span id="sessionUserNameBtn"></span> ▼</span>
+                    </button>
+                    <div class="user-menu-dropdown" id="userMenuDropdown">
+                        <button class="user-menu-item" onclick="openNotificationPrefsModal()">
+                            <span>🔔</span> Notifications
+                        </button>
+                        <button class="user-menu-item" onclick="openActivityModalFromMenu()">
+                            <span>📋</span> Activity History
+                        </button>
+                        <button class="user-menu-item" onclick="openSettingsModalFromMenu()">
+                            <span>⚙️</span> Admin Settings
+                        </button>
+                        <button class="user-menu-item" onclick="openHelpFromMenu()">
+                            <span>❓</span> User Guide
+                        </button>
+                        <div style="border-top: 1px solid #e0e0e0; margin: 4px 0;"></div>
+                        <button class="user-menu-item" onclick="confirmChangeUser()">
+                            <span>🔄</span> Change User
+                        </button>
+                    </div>
+                </div>
             </div>
         </h1>
         
@@ -1474,6 +1680,55 @@
         </div>
     </div>
 
+    <!-- Notification Preferences Modal -->
+    <div id="notificationPrefsModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <h2 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
+                🔔 Notifications
+                <button onclick="closeNotificationPrefsModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+            </h2>
+            <p style="color: #666; margin-bottom: 16px; font-size: 14px;">Choose what you want to be notified about</p>
+
+            <div class="toggle-container">
+                <div class="toggle-label">
+                    <div class="toggle-label-title">Activity alerts</div>
+                    <div class="toggle-label-desc">When someone checks in</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="notifActivityAlerts" onchange="saveNotificationPrefs()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-container">
+                <div class="toggle-label">
+                    <div class="toggle-label-title">Match confirmations</div>
+                    <div class="toggle-label-desc">When you're placed in a match</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="notifMatchConfirmations" onchange="saveNotificationPrefs()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List Modal -->
+    <div id="notificationsModal" class="modal">
+        <div class="modal-content" style="max-width: 400px; padding: 0;">
+            <div style="padding: 16px 20px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 18px;">Notifications</h2>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <button onclick="clearAllNotifications()" style="background: none; border: none; color: #4CAF50; font-size: 14px; cursor: pointer; font-weight: 500;">Clear all</button>
+                    <button onclick="closeNotificationsModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+                </div>
+            </div>
+            <div class="notifications-panel" id="notificationsList">
+                <div class="notification-empty">No notifications yet</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -1613,7 +1868,9 @@
             activityAll: (groupId) => db.ref(`groups/${groupId}/activity`),
             matchNotes: (groupId, date) => db.ref(`groups/${groupId}/matchNotes/${date}`),
             userPreferences: () => db.ref('userPreferences'),
-            siteSettings: () => db.ref('siteSettings')
+            siteSettings: () => db.ref('siteSettings'),
+            userNotificationPrefs: (groupId, userName) => db.ref(`groups/${groupId}/userNotifications/${normalizeName(userName)}/preferences`),
+            userNotifications: (groupId, userName) => db.ref(`groups/${groupId}/userNotifications/${normalizeName(userName)}/items`)
         };
 
         // Match notes cache (per date)
@@ -2127,15 +2384,345 @@
         }
 
         function updateSessionUserDisplay() {
-            const button = document.getElementById('sessionUserBtn');
+            const container = document.getElementById('userMenuContainer');
             const nameDisplay = document.getElementById('sessionUserNameBtn');
+            const bellBtn = document.getElementById('notificationBellBtn');
 
             if (sessionUser) {
                 nameDisplay.textContent = sessionUser;
-                button.style.display = 'block';
+                container.style.display = 'inline-block';
+                bellBtn.style.display = 'flex';
+                // Load notification prefs and items
+                loadNotificationPrefs();
+                loadNotifications();
             } else {
-                button.style.display = 'none';
+                container.style.display = 'none';
+                bellBtn.style.display = 'none';
             }
+        }
+
+        // User menu functions
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userMenuDropdown');
+            dropdown.classList.toggle('active');
+
+            // Close dropdown when clicking outside
+            if (dropdown.classList.contains('active')) {
+                setTimeout(() => {
+                    document.addEventListener('click', closeUserMenuOnClickOutside);
+                }, 0);
+            }
+        }
+
+        function closeUserMenuOnClickOutside(e) {
+            const container = document.getElementById('userMenuContainer');
+            if (!container.contains(e.target)) {
+                document.getElementById('userMenuDropdown').classList.remove('active');
+                document.removeEventListener('click', closeUserMenuOnClickOutside);
+            }
+        }
+
+        function confirmChangeUser() {
+            document.getElementById('userMenuDropdown').classList.remove('active');
+            if (confirm('Change logged-in user? This will clear your current session.')) {
+                sessionUser = '';
+                localStorage.removeItem(`tennisSessionUser_${currentGroupId}`);
+                selectedName = '';
+                document.getElementById('nameSelect').value = '';
+                document.getElementById('checkInFormFields').classList.remove('expanded');
+                updateSessionUserDisplay();
+                showToast('Please select your name again', 'info');
+            }
+        }
+
+        function openActivityModalFromMenu() {
+            document.getElementById('userMenuDropdown').classList.remove('active');
+            openActivityModal();
+        }
+
+        function openSettingsModalFromMenu() {
+            document.getElementById('userMenuDropdown').classList.remove('active');
+            openSettingsModal();
+        }
+
+        function openHelpFromMenu() {
+            document.getElementById('userMenuDropdown').classList.remove('active');
+            window.open('tennis-coordinator-help.md', '_blank');
+        }
+
+        // Notification preferences
+        let userNotificationPrefs = {
+            activityAlerts: false,
+            matchConfirmations: false
+        };
+        let userNotifications = [];
+
+        async function loadNotificationPrefs() {
+            if (!sessionUser || !currentGroupId) return;
+
+            try {
+                const snapshot = await firebaseRef.userNotificationPrefs(currentGroupId, sessionUser).once('value');
+                const prefs = snapshot.val();
+                if (prefs) {
+                    userNotificationPrefs = prefs;
+                    document.getElementById('notifActivityAlerts').checked = prefs.activityAlerts || false;
+                    document.getElementById('notifMatchConfirmations').checked = prefs.matchConfirmations || false;
+                }
+            } catch (error) {
+                console.error('Error loading notification prefs:', error);
+            }
+        }
+
+        async function saveNotificationPrefs() {
+            if (!sessionUser || !currentGroupId) return;
+
+            userNotificationPrefs = {
+                activityAlerts: document.getElementById('notifActivityAlerts').checked,
+                matchConfirmations: document.getElementById('notifMatchConfirmations').checked
+            };
+
+            try {
+                await firebaseRef.userNotificationPrefs(currentGroupId, sessionUser).set(userNotificationPrefs);
+                showToast('Notification preferences saved', 'success');
+            } catch (error) {
+                console.error('Error saving notification prefs:', error);
+                showToast('Failed to save preferences', 'error');
+            }
+        }
+
+        function openNotificationPrefsModal() {
+            document.getElementById('userMenuDropdown').classList.remove('active');
+            document.getElementById('notifActivityAlerts').checked = userNotificationPrefs.activityAlerts || false;
+            document.getElementById('notifMatchConfirmations').checked = userNotificationPrefs.matchConfirmations || false;
+            document.getElementById('notificationPrefsModal').classList.add('active');
+        }
+
+        function closeNotificationPrefsModal() {
+            document.getElementById('notificationPrefsModal').classList.remove('active');
+        }
+
+        // Notifications list
+        async function loadNotifications() {
+            if (!sessionUser || !currentGroupId) return;
+
+            try {
+                const snapshot = await firebaseRef.userNotifications(currentGroupId, sessionUser)
+                    .orderByChild('timestamp')
+                    .limitToLast(50)
+                    .once('value');
+
+                const items = snapshot.val();
+                userNotifications = items ? Object.entries(items).map(([id, data]) => ({ id, ...data })).reverse() : [];
+                renderNotifications();
+                updateNotificationBadge();
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        }
+
+        function renderNotifications() {
+            const container = document.getElementById('notificationsList');
+
+            if (userNotifications.length === 0) {
+                container.innerHTML = '<div class="notification-empty">No notifications yet</div>';
+                return;
+            }
+
+            container.innerHTML = userNotifications.map(notif => {
+                const timeAgo = getTimeAgo(notif.timestamp);
+                const unreadClass = notif.read ? '' : 'unread';
+                return `
+                    <div class="notification-item ${unreadClass}" onclick="markNotificationRead('${notif.id}')">
+                        <div class="notification-message">${notif.message}</div>
+                        <div class="notification-time">${timeAgo}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getTimeAgo(timestamp) {
+            const now = Date.now();
+            const diff = now - timestamp;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            return `${days} day${days > 1 ? 's' : ''} ago`;
+        }
+
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notificationBadge');
+            const unreadCount = userNotifications.filter(n => !n.read).length;
+
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        async function markNotificationRead(notifId) {
+            if (!sessionUser || !currentGroupId) return;
+
+            try {
+                await firebaseRef.userNotifications(currentGroupId, sessionUser).child(notifId).update({ read: true });
+                const notif = userNotifications.find(n => n.id === notifId);
+                if (notif) notif.read = true;
+                renderNotifications();
+                updateNotificationBadge();
+            } catch (error) {
+                console.error('Error marking notification read:', error);
+            }
+        }
+
+        async function clearAllNotifications() {
+            if (!sessionUser || !currentGroupId) return;
+
+            try {
+                await firebaseRef.userNotifications(currentGroupId, sessionUser).remove();
+                userNotifications = [];
+                renderNotifications();
+                updateNotificationBadge();
+                showToast('Notifications cleared', 'success');
+            } catch (error) {
+                console.error('Error clearing notifications:', error);
+                showToast('Failed to clear notifications', 'error');
+            }
+        }
+
+        function openNotificationsModal() {
+            loadNotifications();
+            document.getElementById('notificationsModal').classList.add('active');
+        }
+
+        function closeNotificationsModal() {
+            document.getElementById('notificationsModal').classList.remove('active');
+        }
+
+        // Create notification for a user
+        async function createNotification(targetUserName, type, message, extraData = {}) {
+            if (!currentGroupId) return;
+
+            // Check if user has this notification type enabled
+            try {
+                const prefsSnapshot = await firebaseRef.userNotificationPrefs(currentGroupId, targetUserName).once('value');
+                const prefs = prefsSnapshot.val() || {};
+
+                // Check if notification type is enabled
+                if (type === 'checkin' && !prefs.activityAlerts) return;
+                if (type === 'match_formed' && !prefs.matchConfirmations) return;
+
+                // Create the notification
+                const notification = {
+                    type,
+                    message,
+                    timestamp: Date.now(),
+                    read: false,
+                    ...extraData
+                };
+
+                await firebaseRef.userNotifications(currentGroupId, targetUserName).push(notification);
+            } catch (error) {
+                console.error('Error creating notification:', error);
+            }
+        }
+
+        // Notify all users who have activity alerts enabled (except the person who checked in)
+        async function notifyActivityAlert(checkinPlayerName, date, checkinData = {}) {
+            if (!currentGroupId) return;
+
+            const formattedDate = formatDateForNotification(date);
+
+            // Build details string
+            let details = [];
+            if (checkinData.playStyle) {
+                const styleLabel = checkinData.playStyle === 'singles' ? 'Singles' :
+                                   checkinData.playStyle === 'doubles' ? 'Doubles' : 'Either';
+                details.push(styleLabel);
+            }
+            if (checkinData.timeRange) {
+                const timeStr = formatTimeRange(checkinData.timeRange.start, checkinData.timeRange.end);
+                if (timeStr) details.push(timeStr);
+            }
+
+            // Show who added the check-in if different from the player
+            let addedByStr = '';
+            if (checkinData.addedBy && normalizeName(checkinData.addedBy) !== normalizeName(checkinPlayerName)) {
+                addedByStr = ` (added by ${checkinData.addedBy})`;
+            }
+
+            const detailsStr = details.length > 0 ? ` [${details.join(', ')}]` : '';
+            const message = `🎾 ${checkinPlayerName} checked in for ${formattedDate}${detailsStr}${addedByStr}`;
+
+            // Get all users with notification prefs
+            try {
+                const snapshot = await db.ref(`groups/${currentGroupId}/userNotifications`).once('value');
+                const allUserNotifs = snapshot.val() || {};
+
+                for (const [userName, userData] of Object.entries(allUserNotifs)) {
+                    // Don't notify the person who checked in
+                    if (normalizeName(userName) === normalizeName(checkinPlayerName)) continue;
+
+                    const prefs = userData.preferences || {};
+                    if (prefs.activityAlerts) {
+                        await createNotification(userName, 'checkin', message, { date, player: checkinPlayerName });
+                    }
+                }
+            } catch (error) {
+                console.error('Error sending activity alerts:', error);
+            }
+        }
+
+        function formatDateForNotification(dateStr) {
+            const date = new Date(dateStr + 'T12:00:00');
+            return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        }
+
+        // Track previous match state to detect new match formations
+        let previousMatchState = {};
+
+        async function checkAndNotifyMatchFormations(date) {
+            const checkins = allCheckins[date] || [];
+            if (checkins.length === 0) return;
+
+            const { matches } = organizeMatches(checkins);
+            const currentState = {};
+
+            // Build current state of complete matches
+            matches.forEach(match => {
+                if (match.type === 'doubles' || match.type === 'singles') {
+                    const playerNames = match.players.map(p => normalizeName(p.name)).sort().join(',');
+                    currentState[playerNames] = {
+                        type: match.type,
+                        players: match.players.map(p => p.name)
+                    };
+                }
+            });
+
+            const prevState = previousMatchState[date] || {};
+
+            // Find new matches (in current but not in previous)
+            for (const [key, matchData] of Object.entries(currentState)) {
+                if (!prevState[key]) {
+                    // This is a new complete match - notify all players
+                    const formattedDate = formatDateForNotification(date);
+                    const otherPlayers = matchData.players;
+                    const matchType = matchData.type === 'doubles' ? 'Doubles' : 'Singles';
+
+                    for (const playerName of matchData.players) {
+                        const teammates = otherPlayers.filter(p => normalizeName(p) !== normalizeName(playerName));
+                        const message = `✅ You're in ${matchType} for ${formattedDate} with ${teammates.join(', ')}`;
+                        await createNotification(playerName, 'match_formed', message, { date, matchType });
+                    }
+                }
+            }
+
+            // Update previous state
+            previousMatchState[date] = currentState;
         }
 
         function showWelcomeModal() {
@@ -2171,18 +2758,6 @@
             populateNameDropdown();
 
             showToast(`Welcome, ${name}!`, 'success');
-        }
-
-        function changeSessionUser() {
-            if (confirm('Change logged-in user? This will clear your current session.')) {
-                sessionUser = '';
-                localStorage.removeItem(`tennisSessionUser_${currentGroupId}`);
-                selectedName = '';
-                document.getElementById('nameSelect').value = '';
-                document.getElementById('checkInFormFields').classList.remove('expanded');
-                updateSessionUserDisplay();
-                showToast('Please select your name again', 'info');
-            }
         }
 
         function cancelNewMember() {
@@ -2574,6 +3149,14 @@
             coreMembers = groupSettings.members || [];
             groupPin = groupSettings.groupPin || '';
             adminPin = groupSettings.adminPin || '';
+
+            // Load session user from localStorage (must happen before welcome modal check)
+            const savedSessionUser = localStorage.getItem(`tennisSessionUser_${groupId}`);
+            if (savedSessionUser) {
+                sessionUser = savedSessionUser;
+                console.log('Loaded session user in selectGroup:', sessionUser);
+                updateSessionUserDisplay();
+            }
 
             updateGroupDisplay();
             await loadFirebaseData(currentGroupId);
@@ -3432,6 +4015,12 @@
                 is_guest: isGuest,
                 has_time_range: !!(startTime || endTime)
             });
+
+            // Send activity notifications to users who have them enabled
+            notifyActivityAlert(name, selectedDate, checkinData);
+
+            // Check if any new matches were formed and notify players
+            setTimeout(() => checkAndNotifyMatchFormations(selectedDate), 500);
 
             // Remember user's name for next time (if not a guest)
             if (!isGuest && currentGroupId) {

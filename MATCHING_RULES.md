@@ -57,7 +57,7 @@ This document defines how players are organized into matches based on their pref
 | Player A | Player B | Display |
 |----------|----------|---------|
 | Either | Either | Doubles (forming) - "Need 2 more" |
-| Either | Singles Only | Singles |
+| Either | Singles Only | Doubles (forming) "Need 3 more" + Singles (forming) "Need 1 more" |
 | Either | Doubles Only | Doubles (forming) - "Need 2 more" |
 | Singles Only | Singles Only | Singles |
 | Singles Only | Doubles Only | Singles (forming) "Need 1 more" + Doubles (forming) "Need 3 more" |
@@ -100,7 +100,8 @@ This document defines how players are organized into matches based on their pref
 
 | Situation | Message |
 |-----------|---------|
-| 1 Either player | "Can play singles if 1 more joins" |
+| 1 Either player alone | "Can play singles if 1 more joins" |
+| 1 Either + Doubles Only players | No fallback message (only 1 can play singles) |
 | 2+ Either players (compatible times, no exclusions) | "Will play singles if no more join" |
 | 3 Either players (all allow rotation) | "Can rotate if no 4th" |
 | Only Doubles Only players | No fallback message |
