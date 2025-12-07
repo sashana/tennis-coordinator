@@ -1746,6 +1746,37 @@
         </div>
     </div>
 
+    <!-- Edit Member Modal -->
+    <div id="editMemberModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <h2 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
+                Edit Member
+                <button onclick="closeEditMemberModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+            </h2>
+            <p style="font-weight: 500; margin-bottom: 16px;" id="editMemberName"></p>
+
+            <div style="margin-bottom: 12px;">
+                <label style="font-size: 12px; color: #666; display: block; margin-bottom: 4px;">Phone</label>
+                <input type="tel" id="editMemberPhone" placeholder="Phone number" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 12px;">
+                <label style="font-size: 12px; color: #666; display: block; margin-bottom: 4px;">Email</label>
+                <input type="email" id="editMemberEmail" placeholder="Email address" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label style="font-size: 12px; color: #666; display: block; margin-bottom: 4px;">Notes</label>
+                <textarea id="editMemberNotes" placeholder="Notes (skill level, etc.)" rows="2" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; resize: vertical; box-sizing: border-box;"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <button onclick="closeEditMemberModal()" style="flex: 1; padding: 12px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 14px; cursor: pointer;">Cancel</button>
+                <button onclick="saveEditMember()" style="flex: 2; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer;">Save</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -3325,6 +3356,8 @@ Just select your name and check in when you can play!`;
             list.innerHTML = sortedMembers.map((name) => {
                 const details = memberDetails[name];
                 let detailsHtml = '';
+                const escapedName = name.replace(/'/g, "\\'");
+                const hasContact = details && (details.phone || details.email);
 
                 if (details) {
                     const addedDate = new Date(details.addedDate).toLocaleDateString('en-US', {
@@ -3353,16 +3386,93 @@ Just select your name and check in when you can play!`;
                     `;
                 }
 
+                // Action buttons row
+                const actionButtons = `
+                    <div style="display: flex; gap: 6px; margin-top: 8px;">
+                        <button onclick="editMemberContact('${escapedName}')" style="font-size: 12px; padding: 4px 8px; background: #f0f0f0; color: #333;">✏️ Edit</button>
+                        ${hasContact ? `<button onclick="inviteMemberFromAdmin('${escapedName}')" style="font-size: 12px; padding: 4px 8px; background: #4CAF50; color: white;">📨 Invite</button>` : ''}
+                    </div>
+                `;
+
                 return `
                     <div class="member-item" style="flex-direction: column; align-items: flex-start;">
                         <div style="display: flex; justify-content: space-between; width: 100%;">
                             <span>${name}</span>
-                            <button onclick="removeCoreMember('${name.replace(/'/g, "\\'")}')">Remove</button>
+                            <button onclick="removeCoreMember('${escapedName}')">Remove</button>
                         </div>
                         ${detailsHtml}
+                        ${actionButtons}
                     </div>
                 `;
             }).join('');
+        }
+
+        // Edit member contact info
+        function editMemberContact(memberName) {
+            const details = memberDetails[memberName] || {};
+            const currentPhone = details.phone || '';
+            const currentEmail = details.email || '';
+            const currentNotes = details.notes || '';
+
+            // Show edit modal
+            const modal = document.getElementById('editMemberModal');
+            document.getElementById('editMemberName').textContent = memberName;
+            document.getElementById('editMemberPhone').value = currentPhone;
+            document.getElementById('editMemberEmail').value = currentEmail;
+            document.getElementById('editMemberNotes').value = currentNotes;
+            modal.dataset.memberName = memberName;
+            modal.style.display = 'flex';
+        }
+
+        function closeEditMemberModal() {
+            document.getElementById('editMemberModal').style.display = 'none';
+        }
+
+        async function saveEditMember() {
+            const modal = document.getElementById('editMemberModal');
+            const memberName = modal.dataset.memberName;
+            const phone = document.getElementById('editMemberPhone').value.trim();
+            const email = document.getElementById('editMemberEmail').value.trim();
+            const notes = document.getElementById('editMemberNotes').value.trim();
+
+            if (!memberDetails[memberName]) {
+                memberDetails[memberName] = {
+                    addedBy: sessionUser || 'Unknown',
+                    addedDate: Date.now()
+                };
+            }
+
+            memberDetails[memberName].phone = phone;
+            memberDetails[memberName].email = email;
+            memberDetails[memberName].notes = notes;
+
+            // Save to Firebase
+            try {
+                await firebaseRef.settings(currentGroupId).update({
+                    memberDetails: memberDetails
+                });
+                showToast('Member updated', 'success');
+                closeEditMemberModal();
+                renderMemberList();
+            } catch (error) {
+                console.error('Error updating member:', error);
+                showToast('Error updating member', 'error');
+            }
+        }
+
+        // Invite member from admin interface
+        function inviteMemberFromAdmin(memberName) {
+            const details = memberDetails[memberName];
+            if (!details) return;
+
+            const phone = details.phone || '';
+            const email = details.email || '';
+
+            if (phone || email) {
+                showInvitePrompt(memberName, phone, email);
+            } else {
+                showToast('No contact info for this member', 'error');
+            }
         }
         
         function addCoreMember() {
