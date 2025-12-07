@@ -2902,17 +2902,21 @@
         function showInvitePrompt(memberName, phone, email) {
             const modal = document.getElementById('invitePromptModal');
             const content = document.getElementById('invitePromptContent');
+            const inviteMessage = getInviteMessage(memberName);
+            const groupName = currentSettings?.groupName || 'Tennis Group';
 
             let buttons = '';
             if (phone) {
-                buttons += `<button onclick="sendSmsInvite('${memberName}', '${phone}')" style="background: #25D366; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                const smsUrl = getSmsUrl(phone, inviteMessage);
+                buttons += `<a href="${smsUrl}" onclick="setTimeout(closeInvitePrompt, 100)" style="background: #25D366; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
                     <span>📱</span> Send SMS
-                </button>`;
+                </a>`;
             }
             if (email) {
-                buttons += `<button onclick="sendEmailInvite('${memberName}', '${email}')" style="background: #4285F4; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                const emailUrl = getEmailUrl(email, `You're invited to ${groupName}`, inviteMessage);
+                buttons += `<a href="${emailUrl}" onclick="setTimeout(closeInvitePrompt, 100)" style="background: #4285F4; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
                     <span>📧</span> Send Email
-                </button>`;
+                </a>`;
             }
 
             content.innerHTML = `
@@ -2948,42 +2952,37 @@ PIN: ${pin}
 Just select your name and check in when you can play!`;
         }
 
-        function sendSmsInvite(memberName, phone) {
-            const message = encodeURIComponent(getInviteMessage(memberName));
+        function getSmsUrl(phone, message) {
             // Clean phone number - remove spaces, dashes, parentheses
             const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
-
             // Platform-specific SMS URL format:
             // iOS: sms:number&body=message (uses & separator)
             // Android/others: sms:number?body=message (uses ? separator)
             const userAgent = navigator.userAgent || '';
             const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
-            const smsUrl = isIOS
-                ? `sms:${cleanPhone}&body=${message}`
-                : `sms:${cleanPhone}?body=${message}`;
+            return isIOS
+                ? `sms:${cleanPhone}&body=${encodeURIComponent(message)}`
+                : `sms:${cleanPhone}?body=${encodeURIComponent(message)}`;
+        }
 
-            // Use location.href for protocol handlers (works on mobile)
-            // Create a temporary link for desktop fallback
-            const link = document.createElement('a');
-            link.href = smsUrl;
-            link.click();
+        function getEmailUrl(email, subject, body) {
+            return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        }
 
-            closeInvitePrompt();
-            showToast('Opening SMS...', 'success');
+        function sendSmsInvite(memberName, phone) {
+            const message = getInviteMessage(memberName);
+            const smsUrl = getSmsUrl(phone, message);
+            window.location.href = smsUrl;
+            setTimeout(() => closeInvitePrompt(), 100);
         }
 
         function sendEmailInvite(memberName, email) {
             const groupName = currentSettings?.groupName || 'Tennis Group';
-            const subject = encodeURIComponent(`You're invited to ${groupName}`);
-            const body = encodeURIComponent(getInviteMessage(memberName));
-
-            // Use a temporary link element for better cross-platform support
-            const link = document.createElement('a');
-            link.href = `mailto:${email}?subject=${subject}&body=${body}`;
-            link.click();
-
-            closeInvitePrompt();
-            showToast('Opening email...', 'success');
+            const subject = `You're invited to ${groupName}`;
+            const body = getInviteMessage(memberName);
+            const emailUrl = getEmailUrl(email, subject, body);
+            window.location.href = emailUrl;
+            setTimeout(() => closeInvitePrompt(), 100);
         }
 
         // Notify users when a new member is added
