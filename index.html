@@ -3570,7 +3570,7 @@ Just select your name and check in when you can play!`;
             renderMemberList();
         }
         
-        function removeCoreMember(name) {
+        async function removeCoreMember(name) {
             if (confirm(`Remove ${name} from core members?`)) {
                 const index = coreMembers.indexOf(name);
                 if (index > -1) {
@@ -3581,6 +3581,14 @@ Just select your name and check in when you can play!`;
                     delete memberDetails[name];
                 }
                 renderMemberList();
+
+                // Log to activity history
+                logActivity('member_removed', name, {
+                    removedBy: sessionUser
+                });
+
+                // Track in Google Analytics
+                trackEvent('member_removed');
             }
         }
         
@@ -4139,6 +4147,9 @@ Just select your name and check in when you can play!`;
                             if (activity.notes) actionDescription += `Notes: ${activity.notes}`;
                             actionDescription += '</div>';
                         }
+                    } else if (activity.action === 'member_removed') {
+                        icon = '🚫';
+                        actionDescription = `<strong>${activity.by}</strong> removed <strong>${activity.player}</strong> from members`;
                     } else if (activity.action === 'whatsapp_share') {
                         icon = '📤';
                         const shareType = activity.type === 'matches' ? 'matches' :
