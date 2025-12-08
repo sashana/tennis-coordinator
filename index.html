@@ -2903,7 +2903,6 @@
             const modal = document.getElementById('invitePromptModal');
             const content = document.getElementById('invitePromptContent');
             const inviteMessage = getInviteMessage(memberName);
-            const groupName = currentSettings?.groupName || 'Tennis Group';
 
             // Check if Web Share API is available (mobile devices)
             const canShare = navigator.share !== undefined;
@@ -2939,11 +2938,11 @@
         // Share using Web Share API (mobile)
         async function shareInvite(memberName, phone, email) {
             const inviteMessage = getInviteMessage(memberName);
-            const groupName = currentSettings?.groupName || 'Tennis Group';
+            const gName = currentGroupName || 'Tennis Group';
 
             try {
                 await navigator.share({
-                    title: `Join ${groupName}`,
+                    title: `Join ${gName}`,
                     text: inviteMessage
                 });
                 closeInvitePrompt();
@@ -2985,11 +2984,11 @@
         }
 
         function getInviteMessage(memberName) {
-            const groupName = currentSettings?.groupName || 'our tennis group';
+            const gName = currentGroupName || 'our tennis group';
             const groupUrl = window.location.href.split('?')[0] + '?group=' + currentGroupId;
-            const pin = currentSettings?.groupPin || '';
+            const pin = groupPin || '';
 
-            return `Hi ${memberName}! You've been added to ${groupName} tennis coordination.
+            return `Hi ${memberName}! You've been added to ${gName} tennis coordination.
 
 Check in for upcoming matches here:
 ${groupUrl}
