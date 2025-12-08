@@ -2903,40 +2903,58 @@
             const modal = document.getElementById('invitePromptModal');
             const content = document.getElementById('invitePromptContent');
             const inviteMessage = getInviteMessage(memberName);
+            const escapedName = memberName.replace(/'/g, "\\'");
 
             // Check if Web Share API is available (mobile devices)
             const canShare = navigator.share !== undefined;
 
             let buttons = '';
 
-            // Add Share button if available (works great on mobile)
+            // If phone provided, show direct SMS button with number pre-filled
+            if (phone) {
+                const smsUrl = getSmsUrl(phone, inviteMessage);
+                buttons += `<a href="${smsUrl}" onclick="setTimeout(closeInvitePrompt, 500)" style="background: #25D366; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                    <span>📱</span> Text ${phone}
+                </a>`;
+            }
+
+            // If email provided, show direct Email button with address pre-filled
+            if (email) {
+                const gName = currentGroupName || 'Tennis Group';
+                const emailUrl = getEmailUrl(email, `You're invited to ${gName}`, inviteMessage);
+                buttons += `<a href="${emailUrl}" onclick="setTimeout(closeInvitePrompt, 500)" style="background: #4285F4; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                    <span>📧</span> Email
+                </a>`;
+            }
+
+            // Add Share button if available (works great on mobile) - for other apps
             if (canShare) {
-                buttons += `<button onclick="shareInvite('${memberName.replace(/'/g, "\\'")}', '${(phone || '').replace(/'/g, "\\'")}', '${(email || '').replace(/'/g, "\\'")}')" style="background: #9C27B0; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-                    <span>📤</span> Share
+                buttons += `<button onclick="shareInvite('${escapedName}')" style="background: #9C27B0; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                    <span>📤</span> Other
                 </button>`;
             }
 
-            // Copy to clipboard button (always available)
-            buttons += `<button onclick="copyInviteMessage('${memberName.replace(/'/g, "\\'")}')" style="background: #607D8B; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-                <span>📋</span> Copy Message
+            // Copy to clipboard button (always available as fallback)
+            buttons += `<button onclick="copyInviteMessage('${escapedName}')" style="background: #607D8B; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                <span>📋</span> Copy
             </button>`;
 
             content.innerHTML = `
                 <h3 style="margin: 0 0 12px 0; font-size: 16px;">Invite ${memberName}?</h3>
                 <p style="margin: 0 0 16px 0; color: #666; font-size: 14px;">Send them an invite with the group link and PIN</p>
-                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                     ${buttons}
-                    <button onclick="closeInvitePrompt()" style="background: #e0e0e0; color: #333; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer;">
-                        Skip
-                    </button>
                 </div>
+                <button onclick="closeInvitePrompt()" style="margin-top: 12px; background: none; border: none; color: #999; font-size: 14px; cursor: pointer;">
+                    Skip
+                </button>
             `;
 
             modal.style.display = 'flex';
         }
 
         // Share using Web Share API (mobile)
-        async function shareInvite(memberName, phone, email) {
+        async function shareInvite(memberName) {
             const inviteMessage = getInviteMessage(memberName);
             const gName = currentGroupName || 'Tennis Group';
 
