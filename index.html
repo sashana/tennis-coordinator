@@ -2905,19 +2905,22 @@
             const inviteMessage = getInviteMessage(memberName);
             const groupName = currentSettings?.groupName || 'Tennis Group';
 
+            // Check if Web Share API is available (mobile devices)
+            const canShare = navigator.share !== undefined;
+
             let buttons = '';
-            if (phone) {
-                const smsUrl = getSmsUrl(phone, inviteMessage);
-                buttons += `<a href="${smsUrl}" onclick="setTimeout(closeInvitePrompt, 100)" style="background: #25D366; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
-                    <span>📱</span> Send SMS
-                </a>`;
+
+            // Add Share button if available (works great on mobile)
+            if (canShare) {
+                buttons += `<button onclick="shareInvite('${memberName.replace(/'/g, "\\'")}', '${(phone || '').replace(/'/g, "\\'")}', '${(email || '').replace(/'/g, "\\'")}')" style="background: #9C27B0; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                    <span>📤</span> Share
+                </button>`;
             }
-            if (email) {
-                const emailUrl = getEmailUrl(email, `You're invited to ${groupName}`, inviteMessage);
-                buttons += `<a href="${emailUrl}" onclick="setTimeout(closeInvitePrompt, 100)" style="background: #4285F4; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
-                    <span>📧</span> Send Email
-                </a>`;
-            }
+
+            // Copy to clipboard button (always available)
+            buttons += `<button onclick="copyInviteMessage('${memberName.replace(/'/g, "\\'")}')" style="background: #607D8B; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                <span>📋</span> Copy Message
+            </button>`;
 
             content.innerHTML = `
                 <h3 style="margin: 0 0 12px 0; font-size: 16px;">Invite ${memberName}?</h3>
@@ -2931,6 +2934,50 @@
             `;
 
             modal.style.display = 'flex';
+        }
+
+        // Share using Web Share API (mobile)
+        async function shareInvite(memberName, phone, email) {
+            const inviteMessage = getInviteMessage(memberName);
+            const groupName = currentSettings?.groupName || 'Tennis Group';
+
+            try {
+                await navigator.share({
+                    title: `Join ${groupName}`,
+                    text: inviteMessage
+                });
+                closeInvitePrompt();
+                showToast('Shared successfully!', 'success');
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Share failed:', err);
+                    // Fallback to copy
+                    copyInviteMessage(memberName);
+                }
+            }
+        }
+
+        // Copy invite message to clipboard
+        async function copyInviteMessage(memberName) {
+            const inviteMessage = getInviteMessage(memberName);
+
+            try {
+                await navigator.clipboard.writeText(inviteMessage);
+                closeInvitePrompt();
+                showToast('Message copied! Paste in SMS or email.', 'success');
+            } catch (err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = inviteMessage;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-9999px';
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                closeInvitePrompt();
+                showToast('Message copied! Paste in SMS or email.', 'success');
+            }
         }
 
         function closeInvitePrompt() {
