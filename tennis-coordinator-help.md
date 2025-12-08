@@ -178,11 +178,12 @@ After selecting your name, you'll see **"[Your Name] ▼"** in the top right cor
 
 | Option | Description |
 |--------|-------------|
-| 🔔 **Notifications** | Set up activity alerts and match notifications |
 | 📋 **Activity History** | View check-ins, removals, and changes for the day |
 | ⚙️ **Admin Settings** | Manage members, PINs, and group settings |
 | ❓ **User Guide** | Open this help document |
 | 🔄 **Change User** | Switch to a different user |
+
+**Note:** Notifications are accessed via the 🔔 bell icon in the header (separate from the menu).
 
 ### Changing Your User
 If you accidentally selected the wrong name:
@@ -198,32 +199,54 @@ If you accidentally selected the wrong name:
 
 ## 🔔 Notifications
 
-### Notification Preferences
-Access via **User Menu → 🔔 Notifications** to configure your alerts:
+### Accessing Notifications
+Click the **🔔 bell icon** in the top right header to open the Notifications panel.
+
+- **Red badge** shows count of unread notifications
+- Click **"Clear all"** to remove all notifications
+
+### Notification Settings
+Inside the Notifications panel, click **"⚙️ Settings"** to expand the settings section:
 
 | Setting | Description |
 |---------|-------------|
-| **Activity Alerts** | Get notified when someone checks in for a date |
-| **Match Confirmations** | Get notified when matches are finalized |
+| **Activity Alerts** | Get notified when someone checks in or removes themselves |
+| **Match Confirmations** | Get notified when you're placed in a match |
 
 Toggle each setting on/off based on your preferences. Settings are saved per user.
 
-### Viewing Notifications
-Click the **🔔 bell icon** in the top right to see your notifications:
+### Muting Members
+If you want to stop receiving alerts from specific members:
 
-- **Red badge** shows count of unread notifications
-- Notifications include details like:
-  - Who checked in
-  - Play style (Singles/Doubles/Either)
-  - Time range if specified
-  - Who added the check-in (if different from player)
-- Click **"Mark All Read"** to clear the badge
-- Click **"Clear All"** to remove all notifications
+1. Open Notifications (click 🔔 bell icon)
+2. Expand **"⚙️ Settings"** section
+3. In the **"Muted members"** area, click **"+ Add"**
+4. Select the member you want to mute
+5. Click **"Mute"**
+
+**What muting does:**
+- You won't receive activity alerts when that member checks in or removes themselves
+- Muted members appear as chips with an × to remove
+- Click × next to a name to unmute them
+- Muting is private - no one else can see who you've muted
+
+**Note:** Muting only affects activity alerts. You'll still see muted members in the check-in list and match organization.
+
+### Notification Types
+
+**Activity Alerts:**
+- 🎾 Check-ins: `"Bob checked in for Dec 7 [Doubles, 2:00 PM - 4:00 PM]"`
+- 👋 Removals: `"Alice is no longer available for Dec 8"`
+
+**Match Confirmations:**
+- ✅ Match formed: `"You're in Doubles for Dec 7 with Bob, Alice, Charlie"`
 
 ### Example Notifications
 ```
 🎾 Bob checked in for Dec 7 [Doubles, 2:00 PM - 4:00 PM]
 🎾 Alice checked in for Dec 8 [Either] (added by Greg)
+👋 Charlie is no longer available for Dec 9
+✅ You're in Singles for Dec 7 with Bob
 ```
 
 ---
@@ -792,6 +815,7 @@ Contact group admin via WhatsApp
         /preferences/
           - activityAlerts: true/false
           - matchConfirmations: true/false
+          - mutedMembers: ["Name1", "Name2", ...]
         /items/
           - [notification objects with message, timestamp, read status]
     /settings/
@@ -836,16 +860,20 @@ Contact group admin via WhatsApp
 
 ---
 
-**Version:** 2.6 (Notifications & User Menu)
+**Version:** 2.7 (Muted Members & Removal Notifications)
 **Last Updated:** December 2024
 **Repository:** https://github.com/sashana/tennis-coordinator
 
 **Recent Updates:**
+- Mute members feature - stop receiving alerts from specific members
+- Removal notifications - get notified when someone removes themselves from a date
+- Combined notifications UI - settings now accessible via collapsible section in notifications panel
+- Bell icon moved to header (separate from user dropdown menu)
 - In-app notification system with activity alerts and match confirmations
-- User dropdown menu consolidating all options (Notifications, Activity History, Admin Settings, User Guide, Change User)
+- User dropdown menu (Activity History, Admin Settings, User Guide, Change User)
 - Notification preferences per user with toggle controls
 - Notification details include play style, time range, and "added by" info
-- Unit test suite for matching logic (41 tests)
+- Unit test suite (114 tests covering matching logic, member management, notifications)
 - Safari compatibility fix for welcome modal after PIN entry
 - Session user management with changeable identity
 - Activity history tracking
