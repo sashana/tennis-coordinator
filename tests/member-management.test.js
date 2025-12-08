@@ -548,3 +548,89 @@ describe('Check-in Notification Format', () => {
         expect(msg).toBe('🎾 Bob checked in for Dec 8 [Either]');
     });
 });
+
+// ============================================
+// Muted Members Tests
+// ============================================
+
+// Helper to check if a member is muted (mirrors the app logic)
+function isMemberMuted(memberName, userPrefs) {
+    const mutedMembers = userPrefs.mutedMembers || [];
+    return mutedMembers.some(m => normalizeName(m) === normalizeName(memberName));
+}
+
+describe('Muted Members', () => {
+    it('should return false when no muted members', () => {
+        const prefs = { activityAlerts: true };
+        expect(isMemberMuted('John', prefs)).toBe(false);
+    });
+
+    it('should return false when mutedMembers is empty array', () => {
+        const prefs = { activityAlerts: true, mutedMembers: [] };
+        expect(isMemberMuted('John', prefs)).toBe(false);
+    });
+
+    it('should return true when member is in muted list', () => {
+        const prefs = { activityAlerts: true, mutedMembers: ['John', 'Bob'] };
+        expect(isMemberMuted('John', prefs)).toBe(true);
+        expect(isMemberMuted('Bob', prefs)).toBe(true);
+    });
+
+    it('should return false when member is not in muted list', () => {
+        const prefs = { activityAlerts: true, mutedMembers: ['John', 'Bob'] };
+        expect(isMemberMuted('Alex', prefs)).toBe(false);
+    });
+
+    it('should handle case-insensitive comparison', () => {
+        const prefs = { mutedMembers: ['John Smith'] };
+        expect(isMemberMuted('john smith', prefs)).toBe(true);
+        expect(isMemberMuted('JOHN SMITH', prefs)).toBe(true);
+        expect(isMemberMuted('John Smith', prefs)).toBe(true);
+    });
+
+    it('should handle names with extra whitespace', () => {
+        const prefs = { mutedMembers: ['John Smith'] };
+        expect(isMemberMuted('  John   Smith  ', prefs)).toBe(true);
+    });
+});
+
+describe('Notification Filtering with Muted Members', () => {
+    // Combined check: should receive notification if enabled AND member not muted
+    function shouldReceiveActivityNotification(userName, prefs, actorName) {
+        // Don't notify the actor themselves
+        if (normalizeName(userName) === normalizeName(actorName)) return false;
+        // Check if activity alerts are enabled
+        if (!prefs.activityAlerts) return false;
+        // Check if actor is muted
+        if (isMemberMuted(actorName, prefs)) return false;
+        return true;
+    }
+
+    it('should receive notification when alerts enabled and member not muted', () => {
+        const prefs = { activityAlerts: true, mutedMembers: [] };
+        expect(shouldReceiveActivityNotification('Bob', prefs, 'John')).toBe(true);
+    });
+
+    it('should not receive notification when member is muted', () => {
+        const prefs = { activityAlerts: true, mutedMembers: ['John'] };
+        expect(shouldReceiveActivityNotification('Bob', prefs, 'John')).toBe(false);
+    });
+
+    it('should not receive notification when alerts disabled even if not muted', () => {
+        const prefs = { activityAlerts: false, mutedMembers: [] };
+        expect(shouldReceiveActivityNotification('Bob', prefs, 'John')).toBe(false);
+    });
+
+    it('should receive notification from non-muted member when other members are muted', () => {
+        const prefs = { activityAlerts: true, mutedMembers: ['Alice', 'Charlie'] };
+        expect(shouldReceiveActivityNotification('Bob', prefs, 'John')).toBe(true);
+        expect(shouldReceiveActivityNotification('Bob', prefs, 'Alice')).toBe(false);
+        expect(shouldReceiveActivityNotification('Bob', prefs, 'Charlie')).toBe(false);
+    });
+
+    it('should handle case-insensitive muted member comparison in notifications', () => {
+        const prefs = { activityAlerts: true, mutedMembers: ['John Smith'] };
+        expect(shouldReceiveActivityNotification('Bob', prefs, 'john smith')).toBe(false);
+        expect(shouldReceiveActivityNotification('Bob', prefs, 'JOHN SMITH')).toBe(false);
+    });
+});

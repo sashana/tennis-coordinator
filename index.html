@@ -1718,6 +1718,40 @@
                     <span class="toggle-slider"></span>
                 </label>
             </div>
+
+            <!-- Muted members section -->
+            <div id="mutedMembersSection" style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e0e0e0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div>
+                        <div style="font-weight: 500; font-size: 14px;">Muted members</div>
+                        <div style="font-size: 12px; color: #666;">You won't receive alerts from these members</div>
+                    </div>
+                    <button onclick="openMuteMemberPicker()" style="background: #f0f0f0; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer;">
+                        + Add
+                    </button>
+                </div>
+                <div id="mutedMembersList" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <!-- Muted members will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mute Member Picker Modal -->
+    <div id="muteMemberPickerModal" class="modal">
+        <div class="modal-content" style="max-width: 350px;">
+            <h2 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center; font-size: 16px;">
+                Mute Member
+                <button onclick="closeMuteMemberPicker()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+            </h2>
+            <p style="color: #666; font-size: 13px; margin-bottom: 12px;">Select a member to mute their activity alerts</p>
+            <select id="muteMemberSelect" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; margin-bottom: 12px;">
+                <option value="">Select a member...</option>
+            </select>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="closeMuteMemberPicker()" style="flex: 1; padding: 10px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 14px; cursor: pointer;">Cancel</button>
+                <button onclick="muteMember()" style="flex: 1; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer;">Mute</button>
+            </div>
         </div>
     </div>
 
@@ -2525,9 +2559,13 @@
         async function saveNotificationPrefs() {
             if (!sessionUser || !currentGroupId) return;
 
+            // Preserve mutedMembers when saving toggles
+            const currentMuted = userNotificationPrefs.mutedMembers || [];
+
             userNotificationPrefs = {
                 activityAlerts: document.getElementById('notifActivityAlerts').checked,
-                matchConfirmations: document.getElementById('notifMatchConfirmations').checked
+                matchConfirmations: document.getElementById('notifMatchConfirmations').checked,
+                mutedMembers: currentMuted
             };
 
             try {
@@ -2543,11 +2581,103 @@
             document.getElementById('userMenuDropdown').classList.remove('active');
             document.getElementById('notifActivityAlerts').checked = userNotificationPrefs.activityAlerts || false;
             document.getElementById('notifMatchConfirmations').checked = userNotificationPrefs.matchConfirmations || false;
+            renderMutedMembersList();
             document.getElementById('notificationPrefsModal').classList.add('active');
         }
 
         function closeNotificationPrefsModal() {
             document.getElementById('notificationPrefsModal').classList.remove('active');
+        }
+
+        // Muted members functionality
+        function renderMutedMembersList() {
+            const container = document.getElementById('mutedMembersList');
+            const mutedMembers = userNotificationPrefs.mutedMembers || [];
+
+            if (mutedMembers.length === 0) {
+                container.innerHTML = '<span style="color: #999; font-size: 13px;">No members muted</span>';
+                return;
+            }
+
+            container.innerHTML = mutedMembers.map(name => `
+                <div style="display: inline-flex; align-items: center; gap: 6px; background: #f5f5f5; padding: 4px 8px 4px 12px; border-radius: 16px; font-size: 13px;">
+                    <span>${name}</span>
+                    <button onclick="unmuteMember('${name.replace(/'/g, "\\'")}')" style="background: none; border: none; cursor: pointer; padding: 2px; color: #999; font-size: 16px; line-height: 1;">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        function openMuteMemberPicker() {
+            const select = document.getElementById('muteMemberSelect');
+            const mutedMembers = userNotificationPrefs.mutedMembers || [];
+
+            // Populate with members not already muted (and not self)
+            const availableMembers = coreMembers.filter(m =>
+                normalizeName(m) !== normalizeName(sessionUser) &&
+                !mutedMembers.some(muted => normalizeName(muted) === normalizeName(m))
+            );
+
+            select.innerHTML = '<option value="">Select a member...</option>' +
+                availableMembers.map(m => `<option value="${m}">${m}</option>`).join('');
+
+            document.getElementById('muteMemberPickerModal').style.display = 'flex';
+        }
+
+        function closeMuteMemberPicker() {
+            document.getElementById('muteMemberPickerModal').style.display = 'none';
+        }
+
+        async function muteMember() {
+            const select = document.getElementById('muteMemberSelect');
+            const memberName = select.value;
+
+            if (!memberName) {
+                showToast('Please select a member', 'error');
+                return;
+            }
+
+            const mutedMembers = userNotificationPrefs.mutedMembers || [];
+            if (!mutedMembers.includes(memberName)) {
+                mutedMembers.push(memberName);
+            }
+
+            userNotificationPrefs.mutedMembers = mutedMembers;
+
+            try {
+                await firebaseRef.userNotificationPrefs(currentGroupId, sessionUser).set(userNotificationPrefs);
+                renderMutedMembersList();
+                closeMuteMemberPicker();
+                showToast(`Muted ${memberName}`, 'success');
+            } catch (error) {
+                console.error('Error muting member:', error);
+                showToast('Failed to mute member', 'error');
+            }
+        }
+
+        async function unmuteMember(memberName) {
+            const mutedMembers = userNotificationPrefs.mutedMembers || [];
+            const index = mutedMembers.findIndex(m => normalizeName(m) === normalizeName(memberName));
+
+            if (index > -1) {
+                mutedMembers.splice(index, 1);
+            }
+
+            userNotificationPrefs.mutedMembers = mutedMembers;
+
+            try {
+                await firebaseRef.userNotificationPrefs(currentGroupId, sessionUser).set(userNotificationPrefs);
+                renderMutedMembersList();
+                showToast(`Unmuted ${memberName}`, 'success');
+            } catch (error) {
+                console.error('Error unmuting member:', error);
+                showToast('Failed to unmute member', 'error');
+            }
+        }
+
+        // Check if a member is muted for the current user
+        function isMemberMuted(memberName, userPrefs) {
+            const mutedMembers = userPrefs.mutedMembers || [];
+            return mutedMembers.some(m => normalizeName(m) === normalizeName(memberName));
         }
 
         // Notifications list
@@ -2718,6 +2848,9 @@
 
                     const prefs = userData.preferences || {};
                     if (prefs.activityAlerts) {
+                        // Check if this user has muted the checking-in player
+                        if (isMemberMuted(checkinPlayerName, prefs)) continue;
+
                         await createNotification(userName, 'checkin', message, { date, player: checkinPlayerName });
                     }
                 }
@@ -2758,6 +2891,9 @@
 
                     const prefs = userData.preferences || {};
                     if (prefs.activityAlerts) {
+                        // Check if this user has muted the removed player
+                        if (isMemberMuted(removedPlayerName, prefs)) continue;
+
                         await createNotification(userName, 'removal', message, { date, player: removedPlayerName });
                     }
                 }
