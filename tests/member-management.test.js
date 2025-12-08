@@ -634,3 +634,357 @@ describe('Notification Filtering with Muted Members', () => {
         expect(shouldReceiveActivityNotification('Bob', prefs, 'JOHN SMITH')).toBe(false);
     });
 });
+
+// ============================================
+// Activity Log Entry Tests
+// ============================================
+
+// Helper to format activity display (mirrors the app's loadActivityLog logic)
+function formatActivityDisplay(activity) {
+    let icon = '';
+    let actionDescription = '';
+
+    if (activity.action === 'check-in') {
+        icon = '✅';
+        actionDescription = `${activity.player} checked in`;
+        if (activity.by && activity.by !== activity.player) {
+            actionDescription += ` by ${activity.by}`;
+        }
+        if (activity.playStyle) {
+            actionDescription += ` (${activity.playStyle})`;
+        }
+    } else if (activity.action === 'removal') {
+        icon = '❌';
+        if (activity.by && activity.by !== activity.player) {
+            actionDescription = `${activity.by} removed ${activity.player}`;
+        } else {
+            actionDescription = `${activity.player} removed themselves`;
+        }
+    } else if (activity.action === 'member_added') {
+        icon = '👤';
+        actionDescription = `${activity.by} added ${activity.player} as member`;
+        if (activity.contact) {
+            actionDescription += ` (${activity.contact})`;
+        }
+    } else if (activity.action === 'member_removed') {
+        icon = '🚫';
+        actionDescription = `${activity.by} removed ${activity.player} from members`;
+    }
+
+    return { icon, actionDescription };
+}
+
+describe('Activity Log Entry Formatting', () => {
+    it('should format check-in activity correctly', () => {
+        const activity = {
+            action: 'check-in',
+            player: 'John',
+            by: 'John',
+            playStyle: 'doubles'
+        };
+        const result = formatActivityDisplay(activity);
+        expect(result.icon).toBe('✅');
+        expect(result.actionDescription).toContain('John checked in');
+        expect(result.actionDescription).toContain('doubles');
+    });
+
+    it('should format check-in by another user correctly', () => {
+        const activity = {
+            action: 'check-in',
+            player: 'John',
+            by: 'Alex',
+            playStyle: 'singles'
+        };
+        const result = formatActivityDisplay(activity);
+        expect(result.icon).toBe('✅');
+        expect(result.actionDescription).toContain('John checked in');
+        expect(result.actionDescription).toContain('by Alex');
+    });
+
+    it('should format self-removal correctly', () => {
+        const activity = {
+            action: 'removal',
+            player: 'John',
+            by: 'John'
+        };
+        const result = formatActivityDisplay(activity);
+        expect(result.icon).toBe('❌');
+        expect(result.actionDescription).toBe('John removed themselves');
+    });
+
+    it('should format removal by another user correctly', () => {
+        const activity = {
+            action: 'removal',
+            player: 'John',
+            by: 'Alex'
+        };
+        const result = formatActivityDisplay(activity);
+        expect(result.icon).toBe('❌');
+        expect(result.actionDescription).toBe('Alex removed John');
+    });
+
+    it('should format member_added activity correctly', () => {
+        const activity = {
+            action: 'member_added',
+            player: 'NewMember',
+            by: 'Alex'
+        };
+        const result = formatActivityDisplay(activity);
+        expect(result.icon).toBe('👤');
+        expect(result.actionDescription).toBe('Alex added NewMember as member');
+    });
+
+    it('should format member_added with contact info correctly', () => {
+        const activity = {
+            action: 'member_added',
+            player: 'NewMember',
+            by: 'Alex',
+            contact: '555-1234, new@email.com'
+        };
+        const result = formatActivityDisplay(activity);
+        expect(result.icon).toBe('👤');
+        expect(result.actionDescription).toContain('Alex added NewMember as member');
+        expect(result.actionDescription).toContain('555-1234, new@email.com');
+    });
+
+    it('should format member_removed activity correctly', () => {
+        const activity = {
+            action: 'member_removed',
+            player: 'OldMember',
+            by: 'Admin'
+        };
+        const result = formatActivityDisplay(activity);
+        expect(result.icon).toBe('🚫');
+        expect(result.actionDescription).toBe('Admin removed OldMember from members');
+    });
+});
+
+// ============================================
+// Activity Log Data Structure Tests
+// ============================================
+
+// Helper to create activity entry (mirrors the app logic)
+function createActivityEntry(action, playerName, details = {}, sessionUser = null) {
+    const entry = {
+        timestamp: Date.now(),
+        action: action,
+        player: playerName,
+        by: sessionUser || playerName,
+        ...details
+    };
+
+    // Remove undefined values
+    Object.keys(entry).forEach(key => {
+        if (entry[key] === undefined) {
+            delete entry[key];
+        }
+    });
+
+    return entry;
+}
+
+describe('Activity Entry Creation', () => {
+    it('should create check-in entry with correct fields', () => {
+        const entry = createActivityEntry('check-in', 'John', {
+            playStyle: 'doubles',
+            timeRange: { start: '2:00 PM', end: '4:00 PM' }
+        }, 'John');
+
+        expect(entry.action).toBe('check-in');
+        expect(entry.player).toBe('John');
+        expect(entry.by).toBe('John');
+        expect(entry.playStyle).toBe('doubles');
+        expect(entry.timeRange.start).toBe('2:00 PM');
+        expect(entry.timestamp).toBeDefined();
+    });
+
+    it('should create check-in entry when added by another user', () => {
+        const entry = createActivityEntry('check-in', 'John', {
+            playStyle: 'singles'
+        }, 'Alex');
+
+        expect(entry.player).toBe('John');
+        expect(entry.by).toBe('Alex');
+    });
+
+    it('should create removal entry correctly', () => {
+        const entry = createActivityEntry('removal', 'John', {}, 'John');
+
+        expect(entry.action).toBe('removal');
+        expect(entry.player).toBe('John');
+        expect(entry.by).toBe('John');
+    });
+
+    it('should create member_added entry with by field', () => {
+        const entry = createActivityEntry('member_added', 'NewMember', {
+            by: 'Alex',
+            contact: '555-1234'
+        }, 'Alex');
+
+        expect(entry.action).toBe('member_added');
+        expect(entry.player).toBe('NewMember');
+        expect(entry.by).toBe('Alex');
+        expect(entry.contact).toBe('555-1234');
+    });
+
+    it('should create member_removed entry with by field', () => {
+        const entry = createActivityEntry('member_removed', 'OldMember', {
+            by: 'Admin'
+        }, 'Admin');
+
+        expect(entry.action).toBe('member_removed');
+        expect(entry.player).toBe('OldMember');
+        expect(entry.by).toBe('Admin');
+    });
+
+    it('should remove undefined values from entry', () => {
+        const entry = createActivityEntry('check-in', 'John', {
+            playStyle: 'doubles',
+            notes: undefined
+        }, 'John');
+
+        expect(entry.notes).toBeUndefined();
+        expect('notes' in entry).toBe(false);
+    });
+});
+
+// ============================================
+// Notification Message Tests
+// ============================================
+
+// Helper to format notification messages (mirrors the app logic)
+function formatCheckinNotificationMessage(playerName, date, checkinData = {}) {
+    let details = [];
+
+    if (checkinData.playStyle) {
+        const styleLabel = checkinData.playStyle === 'singles' ? 'Singles' :
+                          checkinData.playStyle === 'doubles' ? 'Doubles' : 'Either';
+        details.push(styleLabel);
+    }
+
+    if (checkinData.timeStart || checkinData.timeEnd) {
+        const timeStr = [checkinData.timeStart, checkinData.timeEnd].filter(Boolean).join(' - ');
+        if (timeStr) details.push(timeStr);
+    }
+
+    let addedByStr = '';
+    if (checkinData.addedBy && normalizeName(checkinData.addedBy) !== normalizeName(playerName)) {
+        addedByStr = ` (added by ${checkinData.addedBy})`;
+    }
+
+    const detailsStr = details.length > 0 ? ` [${details.join(', ')}]` : '';
+    return `🎾 ${playerName} checked in for ${date}${detailsStr}${addedByStr}`;
+}
+
+function formatRemovalNotificationMessage(playerName, date, removedBy = null) {
+    let removedByStr = '';
+    if (removedBy && normalizeName(removedBy) !== normalizeName(playerName)) {
+        removedByStr = ` (by ${removedBy})`;
+    }
+    return `👋 ${playerName} is no longer available for ${date}${removedByStr}`;
+}
+
+function formatMemberAddedNotificationMessage(memberName, addedBy) {
+    return `👤 ${memberName} was added to the group by ${addedBy}`;
+}
+
+function formatMemberRemovedNotificationMessage(memberName, removedBy) {
+    return `🚫 ${memberName} was removed from the group by ${removedBy}`;
+}
+
+describe('Notification Message Formatting', () => {
+    it('should format basic check-in notification', () => {
+        const msg = formatCheckinNotificationMessage('John', 'Dec 7', {});
+        expect(msg).toBe('🎾 John checked in for Dec 7');
+    });
+
+    it('should format check-in notification with play style', () => {
+        const msg = formatCheckinNotificationMessage('John', 'Dec 7', { playStyle: 'doubles' });
+        expect(msg).toBe('🎾 John checked in for Dec 7 [Doubles]');
+    });
+
+    it('should format check-in notification with time range', () => {
+        const msg = formatCheckinNotificationMessage('John', 'Dec 7', {
+            timeStart: '2:00 PM',
+            timeEnd: '4:00 PM'
+        });
+        expect(msg).toBe('🎾 John checked in for Dec 7 [2:00 PM - 4:00 PM]');
+    });
+
+    it('should format check-in notification added by another user', () => {
+        const msg = formatCheckinNotificationMessage('John', 'Dec 7', { addedBy: 'Alex' });
+        expect(msg).toBe('🎾 John checked in for Dec 7 (added by Alex)');
+    });
+
+    it('should not show added by when same as player', () => {
+        const msg = formatCheckinNotificationMessage('John', 'Dec 7', { addedBy: 'John' });
+        expect(msg).toBe('🎾 John checked in for Dec 7');
+    });
+
+    it('should format self-removal notification', () => {
+        const msg = formatRemovalNotificationMessage('John', 'Dec 7');
+        expect(msg).toBe('👋 John is no longer available for Dec 7');
+    });
+
+    it('should format removal by another user notification', () => {
+        const msg = formatRemovalNotificationMessage('John', 'Dec 7', 'Alex');
+        expect(msg).toBe('👋 John is no longer available for Dec 7 (by Alex)');
+    });
+
+    it('should not show by when same as player', () => {
+        const msg = formatRemovalNotificationMessage('John', 'Dec 7', 'John');
+        expect(msg).toBe('👋 John is no longer available for Dec 7');
+    });
+
+    it('should format member added notification', () => {
+        const msg = formatMemberAddedNotificationMessage('NewMember', 'Alex');
+        expect(msg).toBe('👤 NewMember was added to the group by Alex');
+    });
+
+    it('should format member removed notification', () => {
+        const msg = formatMemberRemovedNotificationMessage('OldMember', 'Admin');
+        expect(msg).toBe('🚫 OldMember was removed from the group by Admin');
+    });
+});
+
+// ============================================
+// Notification Eligibility Extended Tests
+// ============================================
+
+describe('Extended Notification Eligibility', () => {
+    // Combined check for member notifications
+    function shouldReceiveMemberNotification(userName, prefs, actorName) {
+        // Check if activity alerts are enabled
+        if (!prefs.activityAlerts) return false;
+        // Don't notify the actor themselves
+        if (normalizeName(userName) === normalizeName(actorName)) return false;
+        // Check if actor is muted
+        if (isMemberMuted(actorName, prefs)) return false;
+        return true;
+    }
+
+    it('should receive member_added notification when enabled', () => {
+        const prefs = { activityAlerts: true, mutedMembers: [] };
+        expect(shouldReceiveMemberNotification('Bob', prefs, 'Alex')).toBe(true);
+    });
+
+    it('should not receive member_added notification when actor is muted', () => {
+        const prefs = { activityAlerts: true, mutedMembers: ['Alex'] };
+        expect(shouldReceiveMemberNotification('Bob', prefs, 'Alex')).toBe(false);
+    });
+
+    it('should not notify the person who performed the action', () => {
+        const prefs = { activityAlerts: true, mutedMembers: [] };
+        expect(shouldReceiveMemberNotification('Alex', prefs, 'Alex')).toBe(false);
+    });
+
+    it('should not receive notification when activity alerts disabled', () => {
+        const prefs = { activityAlerts: false, mutedMembers: [] };
+        expect(shouldReceiveMemberNotification('Bob', prefs, 'Alex')).toBe(false);
+    });
+
+    it('should handle undefined mutedMembers gracefully', () => {
+        const prefs = { activityAlerts: true };
+        expect(shouldReceiveMemberNotification('Bob', prefs, 'Alex')).toBe(true);
+    });
+});

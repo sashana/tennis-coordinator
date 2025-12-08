@@ -3183,10 +3183,10 @@
                 populateNameDropdown();
 
                 // Log activity
+                const contactInfo = [phone, email].filter(Boolean).join(', ');
                 logActivity('member_added', name, {
-                    addedBy: sessionUser,
-                    phone: phone,
-                    email: email
+                    by: sessionUser,
+                    contact: contactInfo || undefined
                 });
 
                 // Track in Google Analytics
@@ -3361,7 +3361,7 @@ Just select your name and check in when you can play!`;
         async function notifyNewMemberAdded(memberName, addedBy) {
             if (!currentGroupId) return;
 
-            const message = `👋 ${memberName} was added to the group by ${addedBy}`;
+            const message = `👤 ${memberName} was added to the group by ${addedBy}`;
 
             // Get all users with activity alerts enabled
             try {
@@ -3373,6 +3373,9 @@ Just select your name and check in when you can play!`;
                     if (prefs.activityAlerts) {
                         // Don't notify the person who added the member
                         if (normalizedName === normalizeName(addedBy)) continue;
+
+                        // Check if this member is muted (the person who added them)
+                        if (isMemberMuted(addedBy, prefs)) continue;
 
                         // Add notification
                         const notifRef = firebaseRef.userNotifications(currentGroupId, normalizedName).push();
@@ -3386,6 +3389,41 @@ Just select your name and check in when you can play!`;
                 }
             } catch (error) {
                 console.error('Error sending new member notifications:', error);
+            }
+        }
+
+        // Notify users when a member is removed from the group
+        async function notifyMemberRemoved(memberName, removedBy) {
+            if (!currentGroupId) return;
+
+            const message = `🚫 ${memberName} was removed from the group by ${removedBy}`;
+
+            // Get all users with activity alerts enabled
+            try {
+                const snapshot = await firebaseRef.groupNotifications(currentGroupId).once('value');
+                const allUserNotifications = snapshot.val() || {};
+
+                for (const [normalizedName, userData] of Object.entries(allUserNotifications)) {
+                    const prefs = userData.preferences || {};
+                    if (prefs.activityAlerts) {
+                        // Don't notify the person who removed the member
+                        if (normalizedName === normalizeName(removedBy)) continue;
+
+                        // Check if this member is muted
+                        if (isMemberMuted(memberName, prefs)) continue;
+
+                        // Add notification
+                        const notifRef = firebaseRef.userNotifications(currentGroupId, normalizedName).push();
+                        await notifRef.set({
+                            message: message,
+                            timestamp: Date.now(),
+                            read: false,
+                            type: 'member_removed'
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error sending member removed notifications:', error);
             }
         }
 
@@ -3892,8 +3930,11 @@ Just select your name and check in when you can play!`;
 
                 // Log to activity history
                 logActivity('member_removed', name, {
-                    removedBy: sessionUser
+                    by: sessionUser
                 });
+
+                // Notify users about member removal
+                notifyMemberRemoved(name, sessionUser);
 
                 // Track in Google Analytics
                 trackEvent('member_removed');
