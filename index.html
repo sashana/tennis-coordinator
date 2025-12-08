@@ -1700,7 +1700,7 @@
             <div class="toggle-container">
                 <div class="toggle-label">
                     <div class="toggle-label-title">Activity alerts</div>
-                    <div class="toggle-label-desc">When someone checks in</div>
+                    <div class="toggle-label-desc">When someone checks in or cancels</div>
                 </div>
                 <label class="toggle-switch">
                     <input type="checkbox" id="notifActivityAlerts" onchange="saveNotificationPrefs()">
@@ -2729,6 +2729,41 @@
         function formatDateForNotification(dateStr) {
             const date = new Date(dateStr + 'T12:00:00');
             return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        }
+
+        // Notify all users who have activity alerts enabled when someone removes themselves
+        async function notifyRemovalAlert(removedPlayerName, date, removedBy = null) {
+            if (!currentGroupId) return;
+
+            const formattedDate = formatDateForNotification(date);
+
+            // Show who removed if different from the player
+            let removedByStr = '';
+            if (removedBy && normalizeName(removedBy) !== normalizeName(removedPlayerName)) {
+                removedByStr = ` (by ${removedBy})`;
+            }
+
+            const message = `👋 ${removedPlayerName} is no longer available for ${formattedDate}${removedByStr}`;
+
+            // Get all users with notification prefs
+            try {
+                const snapshot = await db.ref(`groups/${currentGroupId}/userNotifications`).once('value');
+                const allUserNotifs = snapshot.val() || {};
+
+                for (const [userName, userData] of Object.entries(allUserNotifs)) {
+                    // Don't notify the person who was removed
+                    if (normalizeName(userName) === normalizeName(removedPlayerName)) continue;
+                    // Don't notify the person who did the removal (if different)
+                    if (removedBy && normalizeName(userName) === normalizeName(removedBy)) continue;
+
+                    const prefs = userData.preferences || {};
+                    if (prefs.activityAlerts) {
+                        await createNotification(userName, 'removal', message, { date, player: removedPlayerName });
+                    }
+                }
+            } catch (error) {
+                console.error('Error sending removal alerts:', error);
+            }
         }
 
         // Track previous match state to detect new match formations
@@ -4430,6 +4465,9 @@ Just select your name and check in when you can play!`;
             trackEvent('check_in_removal', {
                 removed_self: isOwner
             });
+
+            // Notify users with activity alerts
+            notifyRemovalAlert(personName, selectedDate, sessionUser);
 
             saveAndRender();
 
