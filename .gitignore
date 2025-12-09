@@ -1,9 +1,14 @@
 # Dependencies
 node_modules/
 
+# Build output
+dist/
+build/
+
 # Firebase backups (contain sensitive data)
 firebase-backups/
 firebase-backup-*.json
+firebase-rules-phase1.json
 
 # OS files
 .DS_Store
