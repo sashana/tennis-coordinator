@@ -60,13 +60,14 @@ export interface MemberDetailsMap {
 
 export interface CheckinData {
   name: string;
-  preference: PlayStyle;
+  playStyle?: PlayStyle;  // 'singles' | 'doubles' | 'both' (defaults to 'both')
   timestamp: number;
   timeRange?: TimeRange;
-  allowRotation: boolean;
+  allowRotation?: boolean;  // defaults to true
   addedBy?: string;
   isGuest?: boolean;
   guestOf?: string;
+  originalIndex?: number;  // Used during match organization
 }
 
 export interface CheckinsByDate {
@@ -159,30 +160,21 @@ export interface ActivityByDate {
 // Match Types
 // ============================================
 
-export type MatchType = 'doubles' | 'singles' | 'rotation' | 'forming' | 'waiting';
-
-export interface MatchPlayer {
-  name: string;
-  preference: PlayStyle;
-  timeRange?: TimeRange;
-  allowRotation: boolean;
-  timestamp: number;
-  isGuest?: boolean;
-  guestOf?: string;
-}
+export type MatchType = 'doubles' | 'singles' | 'doubles-forming' | 'singles-forming' | 'singles-or-practice';
 
 export interface Match {
   type: MatchType;
-  players: MatchPlayer[];
-  label?: string;
-  fallbackMessage?: string;
-  rotationType?: '1v1' | '1v2';
-  note?: string;
+  number?: number;  // For doubles matches: Doubles 1, Doubles 2, etc.
+  players: CheckinData[];
+  needed?: number;  // For forming matches: how many more players needed
+  canRotate?: boolean;  // For 3-player doubles-forming that can rotate
+  eitherCount?: number;  // Count of "Either" players in forming match
+  canPlaySingles?: boolean;  // Whether forming players can play singles
 }
 
-export interface OrganizedMatches {
+export interface OrganizeMatchesResult {
   matches: Match[];
-  waiting: MatchPlayer[];
+  warnings: string[];
 }
 
 // ============================================

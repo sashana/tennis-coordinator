@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Migration Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; margin-bottom: 20px; }
+        h2 { color: #4CAF50; margin: 20px 0 10px; font-size: 18px; }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .pass { background: #e8f5e9; color: #2e7d32; }
+        .fail { background: #ffebee; color: #c62828; }
+        .summary {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .summary.all-pass { background: #4CAF50; color: white; }
+        .summary.has-fail { background: #f44336; color: white; }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover { background: #45a049; }
+        .interactive {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .interactive input, .interactive select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .interactive pre {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        #loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TypeScript Migration Test</h1>
+        <p>This page tests the TypeScript modules to ensure they produce identical results to the original JavaScript.</p>
+        <div id="loading">Loading TypeScript modules...</div>
+        <div id="results" style="display: none;"></div>
+    </div>
+
+    <div class="container" id="interactive-section" style="display: none;">
+        <h2>Interactive Testing</h2>
+
+        <div class="interactive">
+            <h3>Test Match Organization</h3>
+            <p>Add players and see how they get organized into matches:</p>
+            <div id="player-inputs">
+                <div class="player-row">
+                    <input type="text" placeholder="Player name" class="player-name" value="Alice">
+                    <select class="player-pref">
+                        <option value="doubles">Doubles Only</option>
+                        <option value="singles">Singles Only</option>
+                        <option value="both" selected>Either</option>
+                    </select>
+                    <label><input type="checkbox" class="player-rotation" checked> Allow Rotation</label>
+                </div>
+            </div>
+            <button onclick="addPlayerRow()">+ Add Player</button>
+            <button onclick="runMatchTest()">Organize Matches</button>
+            <pre id="match-output">Click "Organize Matches" to see results</pre>
+        </div>
+
+        <div class="interactive">
+            <h3>Test Notification Eligibility</h3>
+            <input type="text" id="notif-user" placeholder="Your name" value="John">
+            <input type="text" id="notif-actor" placeholder="Actor name" value="Jane">
+            <label><input type="checkbox" id="notif-alerts" checked> Activity Alerts On</label>
+            <input type="text" id="notif-muted" placeholder="Muted members (comma-separated)" value="">
+            <button onclick="runNotificationTest()">Check Eligibility</button>
+            <pre id="notif-output">Click to check notification eligibility</pre>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import the TypeScript modules
+        let TC;
+
+        async function loadModules() {
+            try {
+                TC = await import('./dist/tennis-coordinator.mjs');
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('interactive-section').style.display = 'block';
+                runTests();
+
+                // Expose to window for interactive testing
+                window.TC = TC;
+            } catch (e) {
+                document.getElementById('loading').innerHTML = `
+                    <div style="color: #c62828;">
+                        <strong>Error loading modules:</strong><br>
+                        ${e.message}<br><br>
+                        Make sure you've run: <code>npx vite build</code>
+                    </div>
+                `;
+            }
+        }
+
+        function runTests() {
+            const results = [];
+            let passed = 0;
+            let failed = 0;
+
+            // Helper function tests
+            const helperTests = [
+                {
+                    name: 'normalizeName("  John   Doe  ")',
+                    fn: () => TC.normalizeName('  John   Doe  '),
+                    expected: 'john doe'
+                },
+                {
+                    name: 'normalizeName("ALICE")',
+                    fn: () => TC.normalizeName('ALICE'),
+                    expected: 'alice'
+                },
+                {
+                    name: 'getPreferenceLabel("singles")',
+                    fn: () => TC.getPreferenceLabel('singles'),
+                    expected: 'Singles Only'
+                },
+                {
+                    name: 'getPreferenceLabel("doubles")',
+                    fn: () => TC.getPreferenceLabel('doubles'),
+                    expected: 'Doubles Only'
+                },
+                {
+                    name: 'getPreferenceLabel("both")',
+                    fn: () => TC.getPreferenceLabel('both'),
+                    expected: 'Either'
+                },
+                {
+                    name: 'formatTimeRange("2:00 PM", "4:00 PM")',
+                    fn: () => TC.formatTimeRange('2:00 PM', '4:00 PM'),
+                    expected: '2:00 PM - 4:00 PM'
+                },
+                {
+                    name: 'formatTimeRange("10:00 AM", undefined)',
+                    fn: () => TC.formatTimeRange('10:00 AM', undefined),
+                    expected: 'From 10:00 AM'
+                },
+                {
+                    name: 'isSameName("John Doe", "john doe")',
+                    fn: () => TC.isSameName('John Doe', 'john doe'),
+                    expected: true
+                },
+                {
+                    name: 'isSameName("John", "Jane")',
+                    fn: () => TC.isSameName('John', 'Jane'),
+                    expected: false
+                },
+                {
+                    name: 'timeRangesOverlap({start:"2PM",end:"4PM"}, {start:"3PM",end:"5PM"})',
+                    fn: () => TC.timeRangesOverlap(
+                        {start:'2:00 PM', end:'4:00 PM'},
+                        {start:'3:00 PM', end:'5:00 PM'}
+                    ),
+                    expected: true
+                },
+                {
+                    name: 'timeRangesOverlap({start:"9AM",end:"11AM"}, {start:"2PM",end:"4PM"})',
+                    fn: () => TC.timeRangesOverlap(
+                        {start:'9:00 AM', end:'11:00 AM'},
+                        {start:'2:00 PM', end:'4:00 PM'}
+                    ),
+                    expected: false
+                },
+                {
+                    name: 'isValidEmail("test@example.com")',
+                    fn: () => TC.isValidEmail('test@example.com'),
+                    expected: true
+                },
+                {
+                    name: 'isValidEmail("invalid")',
+                    fn: () => TC.isValidEmail('invalid'),
+                    expected: false
+                },
+                {
+                    name: 'isValidPhone("555-123-4567")',
+                    fn: () => TC.isValidPhone('555-123-4567'),
+                    expected: true
+                },
+            ];
+
+            // Matching tests
+            const matchingTests = [
+                {
+                    name: 'organizeMatches([]) returns empty',
+                    fn: () => {
+                        const result = TC.organizeMatches([]);
+                        return result.matches.length === 0 && result.waiting.length === 0;
+                    },
+                    expected: true
+                },
+                {
+                    name: '4 doubles players form 1 doubles match',
+                    fn: () => {
+                        const checkins = [
+                            {name:'A', preference:'doubles', allowRotation:false, timestamp:1},
+                            {name:'B', preference:'doubles', allowRotation:false, timestamp:2},
+                            {name:'C', preference:'doubles', allowRotation:false, timestamp:3},
+                            {name:'D', preference:'doubles', allowRotation:false, timestamp:4}
+                        ];
+                        const result = TC.organizeMatches(checkins);
+                        return result.matches.length === 1 &&
+                               result.matches[0].type === 'doubles' &&
+                               result.matches[0].players.length === 4;
+                    },
+                    expected: true
+                },
+                {
+                    name: '2 singles players form 1 singles match',
+                    fn: () => {
+                        const checkins = [
+                            {name:'A', preference:'singles', allowRotation:false, timestamp:1},
+                            {name:'B', preference:'singles', allowRotation:false, timestamp:2}
+                        ];
+                        const result = TC.organizeMatches(checkins);
+                        return result.matches.length === 1 &&
+                               result.matches[0].type === 'singles' &&
+                               result.matches[0].players.length === 2;
+                    },
+                    expected: true
+                },
+                {
+                    name: '3 either players with rotation form rotation group',
+                    fn: () => {
+                        const checkins = [
+                            {name:'A', preference:'both', allowRotation:true, timestamp:1},
+                            {name:'B', preference:'both', allowRotation:true, timestamp:2},
+                            {name:'C', preference:'both', allowRotation:true, timestamp:3}
+                        ];
+                        const result = TC.organizeMatches(checkins);
+                        return result.matches.length === 1 &&
+                               result.matches[0].type === 'rotation' &&
+                               result.matches[0].players.length === 3;
+                    },
+                    expected: true
+                },
+                {
+                    name: '8 doubles players form 2 doubles matches',
+                    fn: () => {
+                        const checkins = Array.from({length: 8}, (_, i) => ({
+                            name: `P${i}`, preference: 'doubles', allowRotation: false, timestamp: i
+                        }));
+                        const result = TC.organizeMatches(checkins);
+                        const doublesCount = result.matches.filter(m => m.type === 'doubles').length;
+                        return doublesCount === 2;
+                    },
+                    expected: true
+                },
+                {
+                    name: 'isPlayerInMatch works correctly',
+                    fn: () => {
+                        const matches = [{
+                            type: 'doubles',
+                            players: [{name: 'Alice'}, {name: 'Bob'}, {name: 'Charlie'}, {name: 'Diana'}]
+                        }];
+                        return TC.isPlayerInMatch('Alice', matches) === true &&
+                               TC.isPlayerInMatch('Eve', matches) === false;
+                    },
+                    expected: true
+                },
+            ];
+
+            // Notification tests
+            const notificationTests = [
+                {
+                    name: 'isMemberMuted returns true for muted member',
+                    fn: () => TC.isMemberMuted('John', {mutedMembers: ['John']}),
+                    expected: true
+                },
+                {
+                    name: 'isMemberMuted returns false for non-muted member',
+                    fn: () => TC.isMemberMuted('Jane', {mutedMembers: ['John']}),
+                    expected: false
+                },
+                {
+                    name: 'isMemberMuted is case-insensitive',
+                    fn: () => TC.isMemberMuted('john', {mutedMembers: ['John']}),
+                    expected: true
+                },
+                {
+                    name: 'shouldReceiveActivityNotification - different user, alerts on',
+                    fn: () => TC.shouldReceiveActivityNotification(
+                        'John',
+                        {activityAlerts: true, mutedMembers: []},
+                        'Jane'
+                    ),
+                    expected: true
+                },
+                {
+                    name: 'shouldReceiveActivityNotification - same user',
+                    fn: () => TC.shouldReceiveActivityNotification(
+                        'John',
+                        {activityAlerts: true, mutedMembers: []},
+                        'John'
+                    ),
+                    expected: false
+                },
+                {
+                    name: 'shouldReceiveActivityNotification - alerts off',
+                    fn: () => TC.shouldReceiveActivityNotification(
+                        'John',
+                        {activityAlerts: false, mutedMembers: []},
+                        'Jane'
+                    ),
+                    expected: false
+                },
+                {
+                    name: 'shouldReceiveActivityNotification - actor muted',
+                    fn: () => TC.shouldReceiveActivityNotification(
+                        'John',
+                        {activityAlerts: true, mutedMembers: ['Jane']},
+                        'Jane'
+                    ),
+                    expected: false
+                },
+            ];
+
+            // Run all tests
+            function runTestGroup(tests, groupName) {
+                let html = `<h2>${groupName}</h2>`;
+                tests.forEach(test => {
+                    try {
+                        const result = test.fn();
+                        const pass = JSON.stringify(result) === JSON.stringify(test.expected);
+                        if (pass) passed++; else failed++;
+                        html += `<div class="test-result ${pass ? 'pass' : 'fail'}">
+                            ${pass ? '✓' : '✗'} ${test.name}
+                            ${!pass ? `<br>Expected: ${JSON.stringify(test.expected)}, Got: ${JSON.stringify(result)}` : ''}
+                        </div>`;
+                    } catch (e) {
+                        failed++;
+                        html += `<div class="test-result fail">
+                            ✗ ${test.name}<br>Error: ${e.message}
+                        </div>`;
+                    }
+                });
+                return html;
+            }
+
+            let html = runTestGroup(helperTests, 'Helper Functions');
+            html += runTestGroup(matchingTests, 'Match Organization');
+            html += runTestGroup(notificationTests, 'Notifications');
+
+            html += `<div class="summary ${failed === 0 ? 'all-pass' : 'has-fail'}">
+                ${failed === 0 ? '✓ All tests passed!' : `✗ ${failed} test(s) failed`}
+                (${passed} passed, ${failed} failed)
+            </div>`;
+
+            document.getElementById('results').innerHTML = html;
+        }
+
+        // Interactive testing functions
+        window.addPlayerRow = function() {
+            const container = document.getElementById('player-inputs');
+            const row = document.createElement('div');
+            row.className = 'player-row';
+            row.innerHTML = `
+                <input type="text" placeholder="Player name" class="player-name">
+                <select class="player-pref">
+                    <option value="doubles">Doubles Only</option>
+                    <option value="singles">Singles Only</option>
+                    <option value="both" selected>Either</option>
+                </select>
+                <label><input type="checkbox" class="player-rotation" checked> Allow Rotation</label>
+            `;
+            container.appendChild(row);
+        };
+
+        window.runMatchTest = function() {
+            const rows = document.querySelectorAll('.player-row');
+            const checkins = [];
+            let timestamp = 1;
+
+            rows.forEach(row => {
+                const name = row.querySelector('.player-name').value.trim();
+                if (name) {
+                    checkins.push({
+                        name,
+                        preference: row.querySelector('.player-pref').value,
+                        allowRotation: row.querySelector('.player-rotation').checked,
+                        timestamp: timestamp++
+                    });
+                }
+            });
+
+            const result = TC.organizeMatches(checkins);
+
+            let output = `Input: ${checkins.length} players\n`;
+            output += checkins.map(c => `  - ${c.name} (${TC.getPreferenceLabel(c.preference)}${c.allowRotation ? ', rotation OK' : ''})`).join('\n');
+            output += '\n\nResult:\n';
+
+            if (result.matches.length === 0) {
+                output += '  No matches formed\n';
+            } else {
+                result.matches.forEach((match, i) => {
+                    output += `  Match ${i+1}: ${match.type.toUpperCase()}\n`;
+                    output += `    Players: ${match.players.map(p => p.name).join(', ')}\n`;
+                    if (match.label) output += `    Label: ${match.label}\n`;
+                });
+            }
+
+            if (result.waiting.length > 0) {
+                output += `\nWaiting: ${result.waiting.map(p => p.name).join(', ')}`;
+            }
+
+            document.getElementById('match-output').textContent = output;
+        };
+
+        window.runNotificationTest = function() {
+            const userName = document.getElementById('notif-user').value;
+            const actorName = document.getElementById('notif-actor').value;
+            const alertsOn = document.getElementById('notif-alerts').checked;
+            const mutedStr = document.getElementById('notif-muted').value;
+            const mutedMembers = mutedStr ? mutedStr.split(',').map(s => s.trim()) : [];
+
+            const prefs = { activityAlerts: alertsOn, mutedMembers };
+            const shouldReceive = TC.shouldReceiveActivityNotification(userName, prefs, actorName);
+            const isMuted = TC.isMemberMuted(actorName, prefs);
+
+            let output = `User: ${userName}\n`;
+            output += `Actor: ${actorName}\n`;
+            output += `Activity Alerts: ${alertsOn ? 'ON' : 'OFF'}\n`;
+            output += `Muted Members: ${mutedMembers.length ? mutedMembers.join(', ') : '(none)'}\n\n`;
+            output += `Is ${actorName} muted? ${isMuted ? 'YES' : 'NO'}\n`;
+            output += `Should ${userName} receive notification? ${shouldReceive ? 'YES' : 'NO'}`;
+
+            document.getElementById('notif-output').textContent = output;
+        };
+
+        // Load modules on page load
+        loadModules();
+    </script>
+</body>
+</html>

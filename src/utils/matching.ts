@@ -2,318 +2,262 @@
  * Match organization logic
  *
  * This module handles the core matching algorithm that organizes
- * players into doubles, singles, and rotation matches.
+ * players into doubles, singles, and forming matches.
+ *
+ * Algorithm:
+ * 1. Form complete doubles matches (4 players each) from Doubles Only + Either players
+ * 2. Form singles matches from Singles Only players
+ * 3. Handle remaining players (doubles-forming, singles-forming)
  */
 
 import type {
   CheckinData,
   Match,
-  MatchPlayer,
-  OrganizedMatches,
+  OrganizeMatchesResult,
   UserPreferences,
+  TimeRange,
 } from '@/types';
-import { normalizeName, timeRangesOverlap } from './helpers';
+import { normalizeName } from './helpers';
 
 /**
- * Convert checkin data to match player format
+ * Get user preferences for a player
  */
-function checkinToPlayer(checkin: CheckinData): MatchPlayer {
-  return {
-    name: checkin.name,
-    preference: checkin.preference,
-    timeRange: checkin.timeRange,
-    allowRotation: checkin.allowRotation,
-    timestamp: checkin.timestamp,
-    isGuest: checkin.isGuest,
-    guestOf: checkin.guestOf,
-  };
+function getUserPrefs(
+  name: string,
+  userPreferences: UserPreferences
+): { include: string[]; exclude: string[] } {
+  return userPreferences[normalizeName(name)] || { include: [], exclude: [] };
 }
 
 /**
- * Check if two players can be matched (considering exclusions and time)
+ * Check if two players can play together based on exclusion preferences
  */
-function canMatch(
-  player1: MatchPlayer,
-  player2: MatchPlayer,
+function canPlayTogether(
+  name1: string,
+  name2: string,
   userPreferences: UserPreferences
 ): boolean {
-  const p1Prefs = userPreferences[normalizeName(player1.name)] || {
-    include: [],
-    exclude: [],
-  };
-  const p2Prefs = userPreferences[normalizeName(player2.name)] || {
-    include: [],
-    exclude: [],
+  const prefs1 = getUserPrefs(name1, userPreferences);
+  const prefs2 = getUserPrefs(name2, userPreferences);
+  const n1 = normalizeName(name1);
+  const n2 = normalizeName(name2);
+
+  return !prefs1.exclude.includes(n2) && !prefs2.exclude.includes(n1);
+}
+
+/**
+ * Check if two time ranges overlap
+ */
+export function timesOverlap(
+  time1: TimeRange | undefined,
+  time2: TimeRange | undefined
+): boolean {
+  // If either has no time restriction, they can play together
+  if (!time1 || !time2) return true;
+
+  // If both have no start/end times, they're flexible
+  if (!time1.start && !time1.end && !time2.start && !time2.end) return true;
+
+  // Convert times to minutes for easier comparison
+  const timeToMinutes = (timeStr: string | undefined): number | null => {
+    if (!timeStr) return null;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
   };
 
-  // Check exclusions
-  if (p1Prefs.exclude.includes(normalizeName(player2.name))) {
+  // Get time ranges in minutes
+  const t1Start = timeToMinutes(time1.start);
+  const t1End = timeToMinutes(time1.end);
+  const t2Start = timeToMinutes(time2.start);
+  const t2End = timeToMinutes(time2.end);
+
+  // Handle open-ended ranges
+  // "from X" means X to end of day
+  // "until X" means start of day to X
+  const START_OF_DAY = 6 * 60; // 6 AM
+  const END_OF_DAY = 21 * 60; // 9 PM
+
+  const range1Start = t1Start ?? START_OF_DAY;
+  const range1End = t1End ?? END_OF_DAY;
+  const range2Start = t2Start ?? START_OF_DAY;
+  const range2End = t2End ?? END_OF_DAY;
+
+  // Check if ranges overlap
+  // Ranges overlap if: start1 < end2 AND start2 < end1
+  return range1Start < range2End && range2Start < range1End;
+}
+
+/**
+ * Check if two players can play together based on both exclusions and time overlap
+ */
+export function canPlayTogetherWithTime(
+  player1: CheckinData,
+  player2: CheckinData,
+  userPreferences: UserPreferences
+): boolean {
+  // First check exclusion preferences
+  if (!canPlayTogether(player1.name, player2.name, userPreferences)) {
     return false;
   }
-  if (p2Prefs.exclude.includes(normalizeName(player1.name))) {
-    return false;
-  }
 
-  // Check time overlap
-  return timeRangesOverlap(player1.timeRange, player2.timeRange);
-}
-
-/**
- * Check if player can play doubles
- */
-function canPlayDoubles(player: MatchPlayer): boolean {
-  return player.preference === 'doubles' || player.preference === 'both';
-}
-
-/**
- * Check if player can play singles
- */
-function canPlaySingles(player: MatchPlayer): boolean {
-  return player.preference === 'singles' || player.preference === 'both';
-}
-
-/**
- * Check if all players in a group allow rotation
- */
-function allAllowRotation(players: MatchPlayer[]): boolean {
-  return players.every((p) => p.allowRotation);
-}
-
-/**
- * Form doubles matches from available players
- */
-function formDoublesMatches(
-  players: MatchPlayer[],
-  _userPreferences: UserPreferences
-): { matches: Match[]; remaining: MatchPlayer[] } {
-  const matches: Match[] = [];
-  const remaining = [...players];
-  const doublesPlayers = remaining.filter(canPlayDoubles);
-
-  // Sort by timestamp (first come, first served)
-  doublesPlayers.sort((a, b) => a.timestamp - b.timestamp);
-
-  while (doublesPlayers.length >= 4) {
-    // Take first 4 players who can play doubles
-    const matchPlayers = doublesPlayers.splice(0, 4);
-    matches.push({
-      type: 'doubles',
-      players: matchPlayers,
-      label: 'Doubles Match',
-    });
-
-    // Remove from remaining
-    for (const p of matchPlayers) {
-      const idx = remaining.findIndex(
-        (r) => normalizeName(r.name) === normalizeName(p.name)
-      );
-      if (idx !== -1) {
-        remaining.splice(idx, 1);
-      }
-    }
-  }
-
-  return { matches, remaining };
-}
-
-/**
- * Form singles matches from available players
- */
-function formSinglesMatches(
-  players: MatchPlayer[],
-  userPreferences: UserPreferences
-): { matches: Match[]; remaining: MatchPlayer[] } {
-  const matches: Match[] = [];
-  const remaining = [...players];
-  const singlesPlayers = remaining.filter(canPlaySingles);
-
-  // Sort by timestamp (first come, first served)
-  singlesPlayers.sort((a, b) => a.timestamp - b.timestamp);
-
-  const used = new Set<string>();
-
-  for (let i = 0; i < singlesPlayers.length; i++) {
-    const player1 = singlesPlayers[i];
-    if (used.has(normalizeName(player1.name))) continue;
-
-    for (let j = i + 1; j < singlesPlayers.length; j++) {
-      const player2 = singlesPlayers[j];
-      if (used.has(normalizeName(player2.name))) continue;
-
-      if (canMatch(player1, player2, userPreferences)) {
-        matches.push({
-          type: 'singles',
-          players: [player1, player2],
-          label: 'Singles Match',
-        });
-        used.add(normalizeName(player1.name));
-        used.add(normalizeName(player2.name));
-        break;
-      }
-    }
-  }
-
-  // Remove matched players from remaining
-  for (const name of used) {
-    const idx = remaining.findIndex(
-      (r) => normalizeName(r.name) === name
-    );
-    if (idx !== -1) {
-      remaining.splice(idx, 1);
-    }
-  }
-
-  return { matches, remaining };
-}
-
-/**
- * Form rotation group from remaining players
- */
-function formRotationGroup(
-  players: MatchPlayer[],
-  userPreferences: UserPreferences
-): Match | null {
-  if (players.length !== 3) return null;
-  if (!allAllowRotation(players)) return null;
-
-  // Check all can match with each other
-  for (let i = 0; i < players.length; i++) {
-    for (let j = i + 1; j < players.length; j++) {
-      if (!canMatch(players[i], players[j], userPreferences)) {
-        return null;
-      }
-    }
-  }
-
-  return {
-    type: 'rotation',
-    players,
-    label: '3-Player Rotation',
-    rotationType: '1v1',
-  };
-}
-
-/**
- * Create forming match placeholder
- */
-function createFormingMatch(
-  players: MatchPlayer[],
-  targetType: 'doubles' | 'singles'
-): Match {
-  const needed = targetType === 'doubles' ? 4 - players.length : 2 - players.length;
-
-  let fallbackMessage: string | undefined;
-
-  if (targetType === 'doubles' && players.length >= 2) {
-    const eitherPlayers = players.filter((p) => p.preference === 'both');
-    if (eitherPlayers.length >= 2) {
-      fallbackMessage = 'Will play singles if no more join';
-    } else if (players.length === 3 && players.every((p) => p.allowRotation)) {
-      fallbackMessage = 'Can rotate if no 4th';
-    }
-  }
-
-  return {
-    type: 'forming',
-    players,
-    label: `${targetType === 'doubles' ? 'Doubles' : 'Singles'} (forming) - Need ${needed} more`,
-    fallbackMessage,
-  };
+  // Then check time overlap
+  return timesOverlap(player1.timeRange, player2.timeRange);
 }
 
 /**
  * Main function to organize all matches
+ *
+ * @param checkins - Array of player check-ins
+ * @param userPreferences - Map of user preferences (include/exclude lists)
+ * @returns Object with matches array and warnings array
  */
 export function organizeMatches(
   checkins: CheckinData[],
   userPreferences: UserPreferences = {}
-): OrganizedMatches {
-  if (checkins.length === 0) {
-    return { matches: [], waiting: [] };
+): OrganizeMatchesResult {
+  const matches: Match[] = [];
+  const warnings: string[] = [];
+  let remaining = checkins.map((c, idx) => ({ ...c, originalIndex: idx }));
+
+  // Separate by play style and sort by timestamp (first-come, first-served)
+  remaining.sort((a, b) => a.timestamp - b.timestamp);
+
+  const doublesOnly = remaining.filter((p) => p.playStyle === 'doubles');
+  const singlesOnly = remaining.filter((p) => p.playStyle === 'singles');
+  const either = remaining.filter(
+    (p) => p.playStyle === 'both' || !p.playStyle
+  );
+
+  // === STEP 1: Form complete doubles matches ===
+  // Doubles pool: Doubles Only + Either players (sorted by timestamp)
+  let doublesPool = [...doublesOnly, ...either].sort(
+    (a, b) => a.timestamp - b.timestamp
+  );
+
+  while (doublesPool.length >= 4) {
+    const group = doublesPool.slice(0, 4);
+    matches.push({
+      type: 'doubles',
+      number: matches.filter((m) => m.type === 'doubles').length + 1,
+      players: group,
+    });
+    doublesPool.splice(0, 4);
   }
 
-  const players = checkins.map(checkinToPlayer);
-  const matches: Match[] = [];
-  let remaining = [...players];
+  // === STEP 2: Form singles matches from Singles Only players ===
+  let singlesPool = [...singlesOnly].sort((a, b) => a.timestamp - b.timestamp);
 
-  // Step 1: Form complete doubles matches
-  const doublesResult = formDoublesMatches(remaining, userPreferences);
-  matches.push(...doublesResult.matches);
-  remaining = doublesResult.remaining;
+  while (singlesPool.length >= 2) {
+    let pair: CheckinData[] | null = null;
 
-  // Step 2: Form singles matches from "Singles Only" players first
-  const singlesOnlyPlayers = remaining.filter(
-    (p) => p.preference === 'singles'
-  );
-  if (singlesOnlyPlayers.length >= 2) {
-    const singlesResult = formSinglesMatches(
-      singlesOnlyPlayers,
-      userPreferences
-    );
-    matches.push(...singlesResult.matches);
-    // Remove matched singles-only players from remaining
-    for (const match of singlesResult.matches) {
-      for (const player of match.players) {
-        const idx = remaining.findIndex(
-          (r) => normalizeName(r.name) === normalizeName(player.name)
-        );
-        if (idx !== -1) {
-          remaining.splice(idx, 1);
+    // Find first valid pair respecting exclusions AND time overlap
+    for (let i = 0; i < singlesPool.length - 1; i++) {
+      for (let j = i + 1; j < singlesPool.length; j++) {
+        if (
+          canPlayTogetherWithTime(singlesPool[i], singlesPool[j], userPreferences)
+        ) {
+          pair = [singlesPool[i], singlesPool[j]];
+          break;
         }
       }
+      if (pair) break;
+    }
+
+    if (pair) {
+      matches.push({
+        type: 'singles',
+        players: pair,
+      });
+      pair.forEach((p) => {
+        const idx = singlesPool.findIndex(
+          (sp) => sp.originalIndex === p.originalIndex
+        );
+        if (idx > -1) singlesPool.splice(idx, 1);
+      });
+    } else {
+      break;
     }
   }
 
-  // Step 3: Try to form rotation group if exactly 3 "Either" players remain
-  const eitherPlayers = remaining.filter((p) => p.preference === 'both');
-  if (remaining.length === 3 && eitherPlayers.length === 3) {
-    const rotation = formRotationGroup(remaining, userPreferences);
-    if (rotation) {
-      matches.push(rotation);
-      remaining = [];
-    }
-  }
+  // === STEP 3: Handle remaining players ===
+  // Remaining doubles pool (Either + Doubles Only not in complete doubles)
+  // Remaining singles pool (Singles Only not in complete singles)
 
-  // Step 4: Form additional singles matches from "Either" players
-  if (remaining.length >= 2) {
-    const singlesResult = formSinglesMatches(remaining, userPreferences);
-    matches.push(...singlesResult.matches);
-    remaining = singlesResult.remaining;
-  }
+  const remainingDoublesPool = doublesPool; // 0-3 players wanting doubles
+  const remainingSinglesPool = singlesPool; // Singles Only players without a partner
 
-  // Step 5: Handle remaining players
-  if (remaining.length > 0) {
-    const doublesFormingPlayers = remaining.filter(canPlayDoubles);
-    const singlesFormingPlayers = remaining.filter(
-      (p) => p.preference === 'singles'
+  // --- Handle doubles forming ---
+  if (remainingDoublesPool.length > 0) {
+    const needed = 4 - remainingDoublesPool.length;
+
+    // Count "Either" players who can play singles as fallback
+    const eitherPlayers = remainingDoublesPool.filter(
+      (p) => p.playStyle === 'both' || !p.playStyle
     );
+    const eitherCount = eitherPlayers.length;
 
-    if (doublesFormingPlayers.length > 0) {
-      matches.push(createFormingMatch(doublesFormingPlayers, 'doubles'));
-    }
-
-    if (singlesFormingPlayers.length > 0) {
-      // Only add separate singles forming if there are singles-only players not in doubles forming
-      const onlySinglesPlayers = singlesFormingPlayers.filter(
-        (p) => !doublesFormingPlayers.some(
-          (d) => normalizeName(d.name) === normalizeName(p.name)
-        )
+    // Check if all are "Either" and allow rotation (for 3 players)
+    const allEither = remainingDoublesPool.every(
+      (p) => p.playStyle === 'both' || !p.playStyle
+    );
+    const allAllowRotation = remainingDoublesPool.every(
+      (p) => p.allowRotation !== false
+    );
+    const canAllPlayTogether =
+      remainingDoublesPool.length === 3 &&
+      canPlayTogetherWithTime(
+        remainingDoublesPool[0],
+        remainingDoublesPool[1],
+        userPreferences
+      ) &&
+      canPlayTogetherWithTime(
+        remainingDoublesPool[0],
+        remainingDoublesPool[2],
+        userPreferences
+      ) &&
+      canPlayTogetherWithTime(
+        remainingDoublesPool[1],
+        remainingDoublesPool[2],
+        userPreferences
       );
-      if (onlySinglesPlayers.length > 0) {
-        matches.push(createFormingMatch(onlySinglesPlayers, 'singles'));
-      }
+
+    // Check if 2+ Either players can play singles together (time overlap, no exclusions)
+    let canPlaySingles = false;
+    if (eitherCount >= 2) {
+      // Check if first two Either players can play together
+      canPlaySingles = canPlayTogetherWithTime(
+        eitherPlayers[0],
+        eitherPlayers[1],
+        userPreferences
+      );
     }
+
+    matches.push({
+      type: 'doubles-forming',
+      players: remainingDoublesPool,
+      needed: needed,
+      canRotate:
+        remainingDoublesPool.length === 3 &&
+        allEither &&
+        allAllowRotation &&
+        canAllPlayTogether,
+      eitherCount: eitherCount,
+      canPlaySingles: canPlaySingles,
+    });
   }
 
-  // Convert remaining players who aren't in any match to waiting
-  const matchedNames = new Set(
-    matches.flatMap((m) => m.players.map((p) => normalizeName(p.name)))
-  );
-  const waiting = players.filter(
-    (p) => !matchedNames.has(normalizeName(p.name))
-  );
+  // --- Handle singles forming ---
+  if (remainingSinglesPool.length > 0) {
+    remainingSinglesPool.forEach((p) => {
+      matches.push({
+        type: 'singles-forming',
+        players: [p],
+        needed: 1,
+      });
+    });
+  }
 
-  return { matches, waiting };
+  return { matches, warnings };
 }
 
 /**
@@ -326,7 +270,7 @@ export function isPlayerInMatch(
   const normalized = normalizeName(playerName);
   return matches.some(
     (m) =>
-      (m.type === 'doubles' || m.type === 'singles' || m.type === 'rotation') &&
+      (m.type === 'doubles' || m.type === 'singles') &&
       m.players.some((p) => normalizeName(p.name) === normalized)
   );
 }
