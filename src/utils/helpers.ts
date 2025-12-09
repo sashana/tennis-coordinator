@@ -28,15 +28,29 @@ export function getPreferenceLabel(preference: PlayStyle): PlayStyleLabel {
 }
 
 /**
- * Format time range for display
+ * Convert 24h time to 12h format (e.g., "14:30" -> "2:30PM")
+ */
+function format12Hour(time24: string): string {
+  if (!time24) return '';
+  const [hours, minutes] = time24.split(':');
+  const h = parseInt(hours);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${minutes}${ampm}`;
+}
+
+/**
+ * Format time range for display (converts to 12h format)
  */
 export function formatTimeRange(start?: string, end?: string): string {
+  if (!start && !end) return '';
+
   if (start && end) {
-    return `${start} - ${end}`;
+    return `${format12Hour(start)}-${format12Hour(end)}`;
   } else if (start) {
-    return `From ${start}`;
+    return `from ${format12Hour(start)}`;
   } else if (end) {
-    return `Until ${end}`;
+    return `until ${format12Hour(end)}`;
   }
   return '';
 }
@@ -67,27 +81,27 @@ export function formatDateForNotification(dateStr: string): string {
 
 /**
  * Format timestamp for display
+ * Shows time only for today, date + time for other days
  */
 export function formatTime(timestamp: number): string {
   const date = new Date(timestamp);
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
+  const isToday = date.toDateString() === now.toDateString();
 
-  if (diffMins < 1) {
-    return 'Just now';
-  } else if (diffMins < 60) {
-    return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
-  } else if (diffHours < 24) {
-    return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+  const timeStr = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
+  if (isToday) {
+    return timeStr;
   } else {
-    return date.toLocaleDateString('en-US', {
+    // Show date for check-ins from previous days
+    const dateStr = date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
     });
+    return `${dateStr} ${timeStr}`;
   }
 }
 

@@ -1,7 +1,7 @@
 function i(s) {
   return s.toLowerCase().trim().replace(/\s+/g, " ");
 }
-function D(s) {
+function P(s) {
   switch (s) {
     case "singles":
       return "Singles Only";
@@ -13,10 +13,15 @@ function D(s) {
       return "Either";
   }
 }
-function C(s, e) {
-  return s && e ? `${s} - ${e}` : s ? `From ${s}` : e ? `Until ${e}` : "";
+function S(s) {
+  if (!s) return "";
+  const [t, e] = s.split(":"), n = parseInt(t), r = n >= 12 ? "PM" : "AM";
+  return `${n % 12 || 12}:${e}${r}`;
 }
-function I(s) {
+function C(s, t) {
+  return !s && !t ? "" : s && t ? `${S(s)}-${S(t)}` : s ? `from ${S(s)}` : t ? `until ${S(t)}` : "";
+}
+function x(s) {
   return (/* @__PURE__ */ new Date(s + "T12:00:00")).toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
@@ -30,82 +35,83 @@ function w(s) {
     day: "numeric"
   });
 }
-function x(s) {
-  const e = new Date(s), n = (/* @__PURE__ */ new Date()).getTime() - e.getTime(), r = Math.floor(n / 6e4), a = Math.floor(n / 36e5);
-  return r < 1 ? "Just now" : r < 60 ? `${r} minute${r === 1 ? "" : "s"} ago` : a < 24 ? `${a} hour${a === 1 ? "" : "s"} ago` : e.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
+function G(s) {
+  const t = new Date(s), e = /* @__PURE__ */ new Date(), n = t.toDateString() === e.toDateString(), r = t.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit"
   });
+  return n ? r : `${t.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric"
+  })} ${r}`;
 }
-function A() {
+function T() {
   return (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
 }
-function G(s) {
-  const e = /* @__PURE__ */ new Date();
-  return e.setDate(e.getDate() + s), e.toISOString().split("T")[0];
+function z(s) {
+  const t = /* @__PURE__ */ new Date();
+  return t.setDate(t.getDate() + s), t.toISOString().split("T")[0];
 }
-function z(s, e) {
-  return i(s) === i(e);
+function j(s, t) {
+  return i(s) === i(t);
 }
-function j(s, e) {
-  if (!s || !e || !s.start && !s.end || !e.start && !e.end)
+function B(s, t) {
+  if (!s || !t || !s.start && !s.end || !t.start && !t.end)
     return !0;
-  const t = (d) => {
+  const e = (d) => {
     const h = d.match(/(\d+):?(\d*)?\s*(AM|PM)?/i);
     if (!h) return 0;
     let u = parseInt(h[1]);
     const f = h[2] ? parseInt(h[2]) : 0, y = h[3]?.toUpperCase();
     return y === "PM" && u !== 12 && (u += 12), y === "AM" && u === 12 && (u = 0), u * 60 + f;
-  }, n = s.start ? t(s.start) : 0, r = s.end ? t(s.end) : 1440, a = e.start ? t(e.start) : 0, p = e.end ? t(e.end) : 1440;
+  }, n = s.start ? e(s.start) : 0, r = s.end ? e(s.end) : 1440, a = t.start ? e(t.start) : 0, p = t.end ? e(t.end) : 1440;
   return n < p && a < r;
 }
-function B(s) {
+function H(s) {
   return s.replace(/[\s\-\(\)]/g, "");
 }
-function H(s) {
+function V(s) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 }
-function V(s) {
+function W(s) {
   return s.replace(/\D/g, "").length >= 10;
 }
-function W(s) {
-  const e = document.createElement("div");
-  return e.textContent = s, e.innerHTML;
+function Y(s) {
+  const t = document.createElement("div");
+  return t.textContent = s, t.innerHTML;
 }
-function Y(s, e) {
-  let t = null;
+function K(s, t) {
+  let e = null;
   return function(...n) {
-    t && clearTimeout(t), t = setTimeout(() => {
+    e && clearTimeout(e), e = setTimeout(() => {
       s.apply(this, n);
-    }, e);
+    }, t);
   };
 }
-function K() {
+function q() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
-function N(s, e) {
-  return e[i(s)] || { include: [], exclude: [] };
+function M(s, t) {
+  return t[i(s)] || { include: [], exclude: [] };
 }
-function T(s, e, t) {
-  const n = N(s, t), r = N(e, t), a = i(s), p = i(e);
+function R(s, t, e) {
+  const n = M(s, e), r = M(t, e), a = i(s), p = i(t);
   return !n.exclude.includes(p) && !r.exclude.includes(a);
 }
-function R(s, e) {
-  if (!s || !e || !s.start && !s.end && !e.start && !e.end) return !0;
-  const t = (l) => {
+function E(s, t) {
+  if (!s || !t || !s.start && !s.end && !t.start && !t.end) return !0;
+  const e = (l) => {
     if (!l) return null;
     const [m, b] = l.split(":").map(Number);
     return m * 60 + b;
-  }, n = t(s.start), r = t(s.end), a = t(e.start), p = t(e.end), d = 360, h = 1260, u = n ?? d, f = r ?? h, y = a ?? d;
+  }, n = e(s.start), r = e(s.end), a = e(t.start), p = e(t.end), d = 360, h = 1260, u = n ?? d, f = r ?? h, y = a ?? d;
   return u < (p ?? h) && y < f;
 }
-function v(s, e, t) {
-  return T(s.name, e.name, t) ? R(s.timeRange, e.timeRange) : !1;
+function v(s, t, e) {
+  return R(s.name, t.name, e) ? E(s.timeRange, t.timeRange) : !1;
 }
-function q(s, e = {}) {
-  const t = [], n = [];
+function J(s, t = {}) {
+  const e = [], n = [];
   let r = s.map((o, l) => ({ ...o, originalIndex: l }));
   r.sort((o, l) => o.timestamp - l.timestamp);
   const a = r.filter((o) => o.playStyle === "doubles"), p = r.filter((o) => o.playStyle === "singles"), d = r.filter(
@@ -116,9 +122,9 @@ function q(s, e = {}) {
   );
   for (; h.length >= 4; ) {
     const o = h.slice(0, 4);
-    t.push({
+    e.push({
       type: "doubles",
-      number: t.filter((l) => l.type === "doubles").length + 1,
+      number: e.filter((l) => l.type === "doubles").length + 1,
       players: o
     }), h.splice(0, 4);
   }
@@ -127,14 +133,14 @@ function q(s, e = {}) {
     let o = null;
     for (let l = 0; l < u.length - 1; l++) {
       for (let m = l + 1; m < u.length; m++)
-        if (v(u[l], u[m], e)) {
+        if (v(u[l], u[m], t)) {
           o = [u[l], u[m]];
           break;
         }
       if (o) break;
     }
     if (o)
-      t.push({
+      e.push({
         type: "singles",
         players: o
       }), o.forEach((l) => {
@@ -152,211 +158,211 @@ function q(s, e = {}) {
       (g) => g.playStyle === "both" || !g.playStyle
     ), m = l.length, b = f.every(
       (g) => g.playStyle === "both" || !g.playStyle
-    ), P = f.every(
+    ), k = f.every(
       (g) => g.allowRotation !== !1
-    ), k = f.length === 3 && v(
+    ), A = f.length === 3 && v(
       f[0],
       f[1],
-      e
+      t
     ) && v(
       f[0],
       f[2],
-      e
+      t
     ) && v(
       f[1],
       f[2],
-      e
+      t
     );
-    let S = !1;
-    m >= 2 && (S = v(
+    let N = !1;
+    m >= 2 && (N = v(
       l[0],
       l[1],
-      e
-    )), t.push({
+      t
+    )), e.push({
       type: "doubles-forming",
       players: f,
       needed: o,
-      canRotate: f.length === 3 && b && P && k,
+      canRotate: f.length === 3 && b && k && A,
       eitherCount: m,
-      canPlaySingles: S
+      canPlaySingles: N
     });
   }
   return y.length > 0 && y.forEach((o) => {
-    t.push({
+    e.push({
       type: "singles-forming",
       players: [o],
       needed: 1
     });
-  }), { matches: t, warnings: n };
+  }), { matches: e, warnings: n };
 }
-function J(s, e) {
-  const t = i(s);
-  return e.some(
-    (n) => (n.type === "doubles" || n.type === "singles") && n.players.some((r) => i(r.name) === t)
+function Q(s, t) {
+  const e = i(s);
+  return t.some(
+    (n) => (n.type === "doubles" || n.type === "singles") && n.players.some((r) => i(r.name) === e)
   );
 }
-function Q(s, e) {
-  const t = i(s);
-  for (const n of e)
-    if (n.players.some((r) => i(r.name) === t))
+function X(s, t) {
+  const e = i(s);
+  for (const n of t)
+    if (n.players.some((r) => i(r.name) === e))
       return n.type;
   return null;
 }
-function E(s, e) {
-  return (e.mutedMembers || []).some(
+function L(s, t) {
+  return (t.mutedMembers || []).some(
     (n) => i(n) === i(s)
   );
 }
-function X(s, e, t) {
-  return !(!e.activityAlerts || i(s) === i(t) || E(t, e));
+function Z(s, t, e) {
+  return !(!t.activityAlerts || i(s) === i(e) || L(e, t));
 }
-function Z(s, e) {
-  return e.matchConfirmations === !0;
+function tt(s, t) {
+  return t.matchConfirmations === !0;
 }
-function ee(s, e, t = {}) {
-  const n = w(e), r = [];
-  if (t.playStyle && r.push(D(t.playStyle)), t.timeStart || t.timeEnd) {
-    const d = C(t.timeStart, t.timeEnd);
+function et(s, t, e = {}) {
+  const n = w(t), r = [];
+  if (e.playStyle && r.push(P(e.playStyle)), e.timeStart || e.timeEnd) {
+    const d = C(e.timeStart, e.timeEnd);
     d && r.push(d);
   }
   let a = "";
-  t.addedBy && i(t.addedBy) !== i(s) && (a = ` (added by ${t.addedBy})`);
+  e.addedBy && i(e.addedBy) !== i(s) && (a = ` (added by ${e.addedBy})`);
   const p = r.length > 0 ? ` [${r.join(", ")}]` : "";
   return `🎾 ${s} checked in for ${n}${p}${a}`;
 }
-function te(s, e, t) {
-  const n = w(e);
+function st(s, t, e) {
+  const n = w(t);
   let r = "";
-  return t && i(t) !== i(s) && (r = ` (by ${t})`), `👋 ${s} is no longer available for ${n}${r}`;
+  return e && i(e) !== i(s) && (r = ` (by ${e})`), `👋 ${s} is no longer available for ${n}${r}`;
 }
-function se(s, e, t, n) {
-  const r = w(e);
-  return `✅ You're in ${t === "doubles" ? "Doubles" : "Singles"} for ${r} with ${n.join(", ")}`;
+function nt(s, t, e, n) {
+  const r = w(t);
+  return `✅ You're in ${e === "doubles" ? "Doubles" : "Singles"} for ${r} with ${n.join(", ")}`;
 }
-function ne(s, e) {
-  return `👤 ${s} was added to the group by ${e}`;
+function rt(s, t) {
+  return `👤 ${s} was added to the group by ${t}`;
 }
-function re(s, e) {
-  return `🚫 ${s} was removed from the group by ${e}`;
+function it(s, t) {
+  return `🚫 ${s} was removed from the group by ${t}`;
 }
-function ie(s, e, t = {}) {
+function at(s, t, e = {}) {
   return {
-    message: e,
+    message: t,
     timestamp: Date.now(),
     read: !1,
     type: s,
-    ...t
+    ...e
   };
 }
-function ae(s, e, t, n = {}) {
+function ot(s, t, e, n = {}) {
   return {
     timestamp: Date.now(),
     action: s,
-    player: e,
-    by: t,
+    player: t,
+    by: e,
     ...n
   };
 }
-function oe(s) {
-  const e = new Date(s.timestamp).toLocaleTimeString("en-US", {
+function ct(s) {
+  const t = new Date(s.timestamp).toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit"
   });
   switch (s.action) {
     case "check-in": {
-      const t = [];
-      if (s.playStyle && t.push(D(s.playStyle)), s.timeRange) {
+      const e = [];
+      if (s.playStyle && e.push(P(s.playStyle)), s.timeRange) {
         const a = C(s.timeRange.start, s.timeRange.end);
-        a && t.push(a);
+        a && e.push(a);
       }
-      const n = t.length > 0 ? ` [${t.join(", ")}]` : "", r = i(s.by) !== i(s.player) ? ` (added by ${s.by})` : "";
-      return `${e} - ${s.player} checked in${n}${r}`;
+      const n = e.length > 0 ? ` [${e.join(", ")}]` : "", r = i(s.by) !== i(s.player) ? ` (added by ${s.by})` : "";
+      return `${t} - ${s.player} checked in${n}${r}`;
     }
     case "removal": {
-      const t = i(s.by) !== i(s.player) ? ` (by ${s.by})` : "";
-      return `${e} - ${s.player} removed${t}`;
+      const e = i(s.by) !== i(s.player) ? ` (by ${s.by})` : "";
+      return `${t} - ${s.player} removed${e}`;
     }
     case "member_added": {
-      const t = s.contact ? ` (${s.contact})` : "";
-      return `${e} - ${s.player}${t} added by ${s.by}`;
+      const e = s.contact ? ` (${s.contact})` : "";
+      return `${t} - ${s.player}${e} added by ${s.by}`;
     }
     case "member_removed":
-      return `${e} - ${s.player} removed by ${s.by}`;
+      return `${t} - ${s.player} removed by ${s.by}`;
     case "whatsapp_share": {
-      const t = s.type ? ` (${s.type})` : "";
-      return `${e} - ${s.by} shared to WhatsApp${t}`;
+      const e = s.type ? ` (${s.type})` : "";
+      return `${t} - ${s.by} shared to WhatsApp${e}`;
     }
     case "notes_saved": {
-      const t = s.matchKey ? ` for ${s.matchKey}` : "";
-      return `${e} - Notes saved${t} by ${s.by}`;
+      const e = s.matchKey ? ` for ${s.matchKey}` : "";
+      return `${t} - Notes saved${e} by ${s.by}`;
     }
     default:
-      return `${e} - ${s.action} by ${s.by}`;
+      return `${t} - ${s.action} by ${s.by}`;
   }
 }
-function ce(s, e) {
-  return !(e.player && i(s.player) !== i(e.player) || e.action && s.action !== e.action || e.by && i(s.by) !== i(e.by));
+function lt(s, t) {
+  return !(t.player && i(s.player) !== i(t.player) || t.action && s.action !== t.action || t.by && i(s.by) !== i(t.by));
 }
-function le(s, e = !1) {
+function ut(s, t = !1) {
   return [...s].sort(
-    (t, n) => e ? t.timestamp - n.timestamp : n.timestamp - t.timestamp
+    (e, n) => t ? e.timestamp - n.timestamp : n.timestamp - e.timestamp
   );
 }
-function ue(s) {
+function ft(s) {
   return s.reduce(
-    (e, t) => {
-      switch (t.action) {
+    (t, e) => {
+      switch (e.action) {
         case "check-in":
-          e.checkins++;
+          t.checkins++;
           break;
         case "removal":
-          e.removals++;
+          t.removals++;
           break;
         case "member_added":
         case "member_removed":
-          e.memberChanges++;
+          t.memberChanges++;
           break;
         case "whatsapp_share":
-          e.shares++;
+          t.shares++;
           break;
       }
-      return e;
+      return t;
     },
     { checkins: 0, removals: 0, memberChanges: 0, shares: 0 }
   );
 }
-function fe(s) {
-  const e = /* @__PURE__ */ new Set();
-  for (const t of s)
-    t.player && e.add(t.player);
-  return Array.from(e);
+function ht(s) {
+  const t = /* @__PURE__ */ new Set();
+  for (const e of s)
+    e.player && t.add(e.player);
+  return Array.from(t);
 }
 const c = {
   groups: () => "groups",
   group: (s) => `groups/${s}`,
   checkins: (s) => `groups/${s}/checkins`,
-  checkinsDate: (s, e) => `groups/${s}/checkins/${e}`,
+  checkinsDate: (s, t) => `groups/${s}/checkins/${t}`,
   settings: (s) => `groups/${s}/settings`,
-  activity: (s, e) => `groups/${s}/activity/${e}`,
+  activity: (s, t) => `groups/${s}/activity/${t}`,
   activityAll: (s) => `groups/${s}/activity`,
-  matchNotes: (s, e) => `groups/${s}/matchNotes/${e}`,
-  matchNote: (s, e, t) => `groups/${s}/matchNotes/${e}/${t}`,
+  matchNotes: (s, t) => `groups/${s}/matchNotes/${t}`,
+  matchNote: (s, t, e) => `groups/${s}/matchNotes/${t}/${e}`,
   userPreferences: () => "userPreferences",
   siteSettings: () => "siteSettings",
-  userNotificationPrefs: (s, e) => `groups/${s}/userNotifications/${i(e)}/preferences`,
-  userNotifications: (s, e) => `groups/${s}/userNotifications/${i(e)}/items`,
+  userNotificationPrefs: (s, t) => `groups/${s}/userNotifications/${i(t)}/preferences`,
+  userNotifications: (s, t) => `groups/${s}/userNotifications/${i(t)}/items`,
   groupNotifications: (s) => `groups/${s}/userNotifications`
 };
-class F {
+class O {
   db;
-  constructor(e) {
-    this.db = e;
+  constructor(t) {
+    this.db = t;
   }
   /**
    * Get a reference to a path
    */
-  ref(e) {
-    return this.db.ref(e);
+  ref(t) {
+    return this.db.ref(t);
   }
   // ============================================
   // Groups
@@ -364,17 +370,17 @@ class F {
   async loadAvailableGroups() {
     return (await this.ref(c.groups()).once("value")).val() || {};
   }
-  async saveGroup(e, t) {
-    await this.ref(c.group(e)).update(t);
+  async saveGroup(t, e) {
+    await this.ref(c.group(t)).update(e);
   }
-  async deleteGroup(e) {
-    await this.ref(c.group(e)).remove();
+  async deleteGroup(t) {
+    await this.ref(c.group(t)).remove();
   }
   // ============================================
   // Settings
   // ============================================
-  async loadSettings(e) {
-    const n = (await this.ref(c.settings(e)).once("value")).val();
+  async loadSettings(t) {
+    const n = (await this.ref(c.settings(t)).once("value")).val();
     return n ? {
       groupName: n.groupName || "Unknown Group",
       coreMembers: n.coreMembers || [],
@@ -388,29 +394,29 @@ class F {
       }
     } : null;
   }
-  async saveSettings(e, t) {
-    await this.ref(c.settings(e)).update(t);
+  async saveSettings(t, e) {
+    await this.ref(c.settings(t)).update(e);
   }
-  async updateMembers(e, t, n) {
-    await this.ref(c.settings(e)).update({
-      members: t,
+  async updateMembers(t, e, n) {
+    await this.ref(c.settings(t)).update({
+      members: e,
       memberDetails: n
     });
   }
   // ============================================
   // Check-ins
   // ============================================
-  async loadCheckins(e) {
-    return (await this.ref(c.checkins(e)).once("value")).val() || {};
+  async loadCheckins(t) {
+    return (await this.ref(c.checkins(t)).once("value")).val() || {};
   }
-  async loadCheckinsForDate(e, t) {
-    return (await this.ref(c.checkinsDate(e, t)).once("value")).val() || [];
+  async loadCheckinsForDate(t, e) {
+    return (await this.ref(c.checkinsDate(t, e)).once("value")).val() || [];
   }
-  async saveCheckinsForDate(e, t, n) {
-    await this.ref(c.checkinsDate(e, t)).set(n);
+  async saveCheckinsForDate(t, e, n) {
+    await this.ref(c.checkinsDate(t, e)).set(n);
   }
-  async verifyCheckinsForDate(e, t, n) {
-    return ((await this.ref(c.checkinsDate(e, t)).once("value")).val() || []).length === n;
+  async verifyCheckinsForDate(t, e, n) {
+    return ((await this.ref(c.checkinsDate(t, e)).once("value")).val() || []).length === n;
   }
   // ============================================
   // User Preferences
@@ -418,36 +424,36 @@ class F {
   async loadUserPreferences() {
     return (await this.ref(c.userPreferences()).once("value")).val() || {};
   }
-  async saveUserPreferences(e) {
-    await this.ref(c.userPreferences()).set(e);
+  async saveUserPreferences(t) {
+    await this.ref(c.userPreferences()).set(t);
   }
   // ============================================
   // Activity Log
   // ============================================
-  async loadActivityForDate(e, t) {
-    return (await this.ref(c.activity(e, t)).once("value")).val() || {};
+  async loadActivityForDate(t, e) {
+    return (await this.ref(c.activity(t, e)).once("value")).val() || {};
   }
-  async loadAllActivity(e) {
-    return (await this.ref(c.activityAll(e)).once("value")).val() || {};
+  async loadAllActivity(t) {
+    return (await this.ref(c.activityAll(t)).once("value")).val() || {};
   }
-  async logActivity(e, t, n) {
-    await this.ref(c.activity(e, t)).push().set(n);
+  async logActivity(t, e, n) {
+    await this.ref(c.activity(t, e)).push().set(n);
   }
   // ============================================
   // Match Notes
   // ============================================
-  async loadMatchNotes(e, t) {
-    return (await this.ref(c.matchNotes(e, t)).once("value")).val() || {};
+  async loadMatchNotes(t, e) {
+    return (await this.ref(c.matchNotes(t, e)).once("value")).val() || {};
   }
-  async saveMatchNote(e, t, n, r) {
-    await this.ref(c.matchNote(e, t, n)).set(r);
+  async saveMatchNote(t, e, n, r) {
+    await this.ref(c.matchNote(t, e, n)).set(r);
   }
   // ============================================
   // Notifications
   // ============================================
-  async loadNotificationPrefs(e, t) {
+  async loadNotificationPrefs(t, e) {
     const r = (await this.ref(
-      c.userNotificationPrefs(e, t)
+      c.userNotificationPrefs(t, e)
     ).once("value")).val();
     return {
       activityAlerts: r?.activityAlerts ?? !0,
@@ -455,30 +461,30 @@ class F {
       mutedMembers: r?.mutedMembers || []
     };
   }
-  async saveNotificationPrefs(e, t, n) {
-    await this.ref(c.userNotificationPrefs(e, t)).set(n);
+  async saveNotificationPrefs(t, e, n) {
+    await this.ref(c.userNotificationPrefs(t, e)).set(n);
   }
-  async loadNotifications(e, t) {
+  async loadNotifications(t, e) {
     return (await this.ref(
-      c.userNotifications(e, t)
+      c.userNotifications(t, e)
     ).once("value")).val() || {};
   }
-  async addNotification(e, t, n) {
-    await this.ref(c.userNotifications(e, t)).push().set(n);
+  async addNotification(t, e, n) {
+    await this.ref(c.userNotifications(t, e)).push().set(n);
   }
-  async markNotificationRead(e, t, n) {
+  async markNotificationRead(t, e, n) {
     await this.ref(
-      `${c.userNotifications(e, t)}/${n}/read`
+      `${c.userNotifications(t, e)}/${n}/read`
     ).set(!0);
   }
-  async markAllNotificationsRead(e, t) {
-    const n = await this.loadNotifications(e, t), r = {};
+  async markAllNotificationsRead(t, e) {
+    const n = await this.loadNotifications(t, e), r = {};
     for (const a of Object.keys(n))
       r[`${a}/read`] = !0;
-    Object.keys(r).length > 0 && await this.ref(c.userNotifications(e, t)).update(r);
+    Object.keys(r).length > 0 && await this.ref(c.userNotifications(t, e)).update(r);
   }
-  async clearNotifications(e, t) {
-    await this.ref(c.userNotifications(e, t)).remove();
+  async clearNotifications(t, e) {
+    await this.ref(c.userNotifications(t, e)).remove();
   }
   // ============================================
   // Site Settings
@@ -486,23 +492,23 @@ class F {
   async loadSiteSettings() {
     return (await this.ref(c.siteSettings()).once("value")).val() || {};
   }
-  async saveSiteSettings(e) {
-    await this.ref(c.siteSettings()).set(e);
+  async saveSiteSettings(t) {
+    await this.ref(c.siteSettings()).set(t);
   }
 }
-function he(s) {
-  return new F(s);
+function mt(s) {
+  return new O(s);
 }
-const O = {
+const F = {
   activityAlerts: !0,
   matchConfirmations: !0,
   mutedMembers: []
-}, L = {
+}, _ = {
   lat: 37.2358,
   lon: -121.9623,
   name: "Los Gatos, CA"
 };
-function M() {
+function D() {
   return {
     // Group state
     currentGroupId: null,
@@ -517,10 +523,10 @@ function M() {
     // Settings
     groupPin: "14675",
     adminPin: "3250",
-    weatherLocation: L,
+    weatherLocation: _,
     weatherCache: {},
     // UI state
-    selectedDate: A(),
+    selectedDate: T(),
     selectedPreference: "both",
     selectedName: "",
     isGuest: !1,
@@ -532,14 +538,14 @@ function M() {
     tempInclude: [],
     tempExclude: [],
     // Notification state
-    userNotificationPrefs: O
+    userNotificationPrefs: F
   };
 }
-class _ {
+class I {
   state;
   listeners;
-  constructor(e) {
-    this.state = { ...M(), ...e }, this.listeners = /* @__PURE__ */ new Map();
+  constructor(t) {
+    this.state = { ...D(), ...t }, this.listeners = /* @__PURE__ */ new Map();
   }
   /**
    * Get the current state
@@ -550,41 +556,41 @@ class _ {
   /**
    * Get a specific state value
    */
-  get(e) {
-    return this.state[e];
+  get(t) {
+    return this.state[t];
   }
   /**
    * Set a specific state value
    */
-  set(e, t) {
-    const n = this.state[e];
-    this.state[e] = t, this.notifyListeners(e, t, n);
+  set(t, e) {
+    const n = this.state[t];
+    this.state[t] = e, this.notifyListeners(t, e, n);
   }
   /**
    * Update multiple state values at once
    */
-  update(e) {
-    for (const [t, n] of Object.entries(e)) {
-      const r = t, a = this.state[r];
+  update(t) {
+    for (const [e, n] of Object.entries(t)) {
+      const r = e, a = this.state[r];
       this.state[r] = n, this.notifyListeners(r, n, a);
     }
   }
   /**
    * Subscribe to state changes for a specific key
    */
-  subscribe(e, t) {
-    return this.listeners.has(e) || this.listeners.set(e, /* @__PURE__ */ new Set()), this.listeners.get(e).add(t), () => {
-      this.listeners.get(e)?.delete(t);
+  subscribe(t, e) {
+    return this.listeners.has(t) || this.listeners.set(t, /* @__PURE__ */ new Set()), this.listeners.get(t).add(e), () => {
+      this.listeners.get(t)?.delete(e);
     };
   }
   /**
    * Notify listeners of a state change
    */
-  notifyListeners(e, t, n) {
-    const r = this.listeners.get(e);
+  notifyListeners(t, e, n) {
+    const r = this.listeners.get(t);
     if (r)
       for (const a of r)
-        a(t, n);
+        a(e, n);
   }
   // ============================================
   // Convenience methods for common operations
@@ -593,125 +599,125 @@ class _ {
    * Get check-ins for the selected date
    */
   getCheckinsForSelectedDate() {
-    const e = this.state.selectedDate;
-    return e ? this.state.allCheckins[e] || [] : [];
+    const t = this.state.selectedDate;
+    return t ? this.state.allCheckins[t] || [] : [];
   }
   /**
    * Get check-ins for a specific date
    */
-  getCheckinsForDate(e) {
-    return this.state.allCheckins[e] || [];
+  getCheckinsForDate(t) {
+    return this.state.allCheckins[t] || [];
   }
   /**
    * Add a check-in for the selected date
    */
-  addCheckin(e) {
-    const t = this.state.selectedDate;
-    if (!t) return;
-    const n = this.state.allCheckins[t] || [], r = {
+  addCheckin(t) {
+    const e = this.state.selectedDate;
+    if (!e) return;
+    const n = this.state.allCheckins[e] || [], r = {
       ...this.state.allCheckins,
-      [t]: [...n, e]
+      [e]: [...n, t]
     };
     this.set("allCheckins", r);
   }
   /**
    * Remove a check-in by index for the selected date
    */
-  removeCheckin(e) {
-    const t = this.state.selectedDate;
-    if (!t) return null;
-    const n = this.state.allCheckins[t] || [];
-    if (e < 0 || e >= n.length) return null;
-    const r = n[e], a = {
+  removeCheckin(t) {
+    const e = this.state.selectedDate;
+    if (!e) return null;
+    const n = this.state.allCheckins[e] || [];
+    if (t < 0 || t >= n.length) return null;
+    const r = n[t], a = {
       ...this.state.allCheckins,
-      [t]: n.filter((p, d) => d !== e)
+      [e]: n.filter((p, d) => d !== t)
     };
     return this.set("allCheckins", a), r;
   }
   /**
    * Update check-ins for a specific date
    */
-  setCheckinsForDate(e, t) {
+  setCheckinsForDate(t, e) {
     const n = {
       ...this.state.allCheckins,
-      [e]: t
+      [t]: e
     };
     this.set("allCheckins", n);
   }
   /**
    * Get user preference for a normalized name
    */
-  getUserPreference(e) {
-    const t = i(e);
-    return this.state.userPreferences[t] || { include: [], exclude: [] };
+  getUserPreference(t) {
+    const e = i(t);
+    return this.state.userPreferences[e] || { include: [], exclude: [] };
   }
   /**
    * Set user preference
    */
-  setUserPreference(e, t) {
-    const n = i(e), r = {
+  setUserPreference(t, e) {
+    const n = i(t), r = {
       ...this.state.userPreferences,
-      [n]: t
+      [n]: e
     };
     this.set("userPreferences", r);
   }
   /**
    * Check if a member is in core members
    */
-  isCoreMember(e) {
-    const t = i(e);
+  isCoreMember(t) {
+    const e = i(t);
     return this.state.coreMembers.some(
-      (n) => i(n) === t
+      (n) => i(n) === e
     );
   }
   /**
    * Add a core member
    */
-  addCoreMember(e) {
-    this.isCoreMember(e) || this.set("coreMembers", [...this.state.coreMembers, e]);
+  addCoreMember(t) {
+    this.isCoreMember(t) || this.set("coreMembers", [...this.state.coreMembers, t]);
   }
   /**
    * Remove a core member
    */
-  removeCoreMember(e) {
-    const t = i(e);
+  removeCoreMember(t) {
+    const e = i(t);
     this.set(
       "coreMembers",
-      this.state.coreMembers.filter((n) => i(n) !== t)
+      this.state.coreMembers.filter((n) => i(n) !== e)
     );
   }
   /**
    * Get match note for a match key
    */
-  getMatchNote(e) {
-    return this.state.matchNotes[e] || "";
+  getMatchNote(t) {
+    return this.state.matchNotes[t] || "";
   }
   /**
    * Set match note
    */
-  setMatchNote(e, t) {
+  setMatchNote(t, e) {
     const n = {
       ...this.state.matchNotes,
-      [e]: t
+      [t]: e
     };
     this.set("matchNotes", n);
   }
   /**
    * Check if a member is muted
    */
-  isMemberMuted(e) {
-    const t = this.state.userNotificationPrefs.mutedMembers || [], n = i(e);
-    return t.some((r) => i(r) === n);
+  isMemberMuted(t) {
+    const e = this.state.userNotificationPrefs.mutedMembers || [], n = i(t);
+    return e.some((r) => i(r) === n);
   }
   /**
    * Toggle muted status for a member
    */
-  toggleMutedMember(e) {
-    const t = this.state.userNotificationPrefs.mutedMembers || [], n = i(e);
+  toggleMutedMember(t) {
+    const e = this.state.userNotificationPrefs.mutedMembers || [], n = i(t);
     let r;
-    this.isMemberMuted(e) ? r = t.filter(
+    this.isMemberMuted(t) ? r = e.filter(
       (a) => i(a) !== n
-    ) : r = [...t, e], this.set("userNotificationPrefs", {
+    ) : r = [...e, t], this.set("userNotificationPrefs", {
       ...this.state.userNotificationPrefs,
       mutedMembers: r
     });
@@ -720,7 +726,7 @@ class _ {
    * Reset state to initial values
    */
   reset() {
-    this.state = M();
+    this.state = D();
   }
   /**
    * Reset state for a new group
@@ -736,58 +742,58 @@ class _ {
   }
 }
 function U(s) {
-  return new _(s);
+  return new I(s);
 }
 let $ = null;
-function me() {
+function dt() {
   return $ || ($ = U()), $;
 }
-function de() {
+function pt() {
   $ = null;
 }
 export {
-  _ as AppStore,
-  F as FirebaseService,
+  I as AppStore,
+  O as FirebaseService,
   v as canPlayTogetherWithTime,
-  B as cleanPhoneNumber,
-  ae as createActivityEntry,
+  H as cleanPhoneNumber,
+  ot as createActivityEntry,
   U as createAppStore,
-  he as createFirebaseService,
-  M as createInitialState,
-  ie as createNotificationData,
-  Y as debounce,
-  W as escapeHtml,
+  mt as createFirebaseService,
+  D as createInitialState,
+  at as createNotificationData,
+  K as debounce,
+  Y as escapeHtml,
   c as firebasePaths,
-  oe as formatActivityDisplay,
-  ee as formatCheckinNotification,
-  I as formatDate,
+  ct as formatActivityDisplay,
+  et as formatCheckinNotification,
+  x as formatDate,
   w as formatDateForNotification,
-  se as formatMatchFormedNotification,
-  ne as formatMemberAddedNotification,
-  re as formatMemberRemovedNotification,
-  te as formatRemovalNotification,
-  x as formatTime,
+  nt as formatMatchFormedNotification,
+  rt as formatMemberAddedNotification,
+  it as formatMemberRemovedNotification,
+  st as formatRemovalNotification,
+  G as formatTime,
   C as formatTimeRange,
-  K as generateId,
-  ue as getActivitySummary,
-  G as getDateOffset,
-  me as getDefaultStore,
-  Q as getPlayerMatchType,
-  D as getPreferenceLabel,
-  A as getTodayDate,
-  fe as getUniquePlayers,
-  E as isMemberMuted,
-  J as isPlayerInMatch,
-  z as isSameName,
-  H as isValidEmail,
-  V as isValidPhone,
-  ce as matchesActivityFilter,
+  q as generateId,
+  ft as getActivitySummary,
+  z as getDateOffset,
+  dt as getDefaultStore,
+  X as getPlayerMatchType,
+  P as getPreferenceLabel,
+  T as getTodayDate,
+  ht as getUniquePlayers,
+  L as isMemberMuted,
+  Q as isPlayerInMatch,
+  j as isSameName,
+  V as isValidEmail,
+  W as isValidPhone,
+  lt as matchesActivityFilter,
   i as normalizeName,
-  q as organizeMatches,
-  de as resetDefaultStore,
-  X as shouldReceiveActivityNotification,
-  Z as shouldReceiveMatchNotification,
-  le as sortActivitiesByTime,
-  j as timeRangesOverlap,
-  R as timesOverlap
+  J as organizeMatches,
+  pt as resetDefaultStore,
+  Z as shouldReceiveActivityNotification,
+  tt as shouldReceiveMatchNotification,
+  ut as sortActivitiesByTime,
+  B as timeRangesOverlap,
+  E as timesOverlap
 };

@@ -3006,7 +3006,12 @@
             }
         }
 
+        // formatDateForNotification - uses TypeScript module
         function formatDateForNotification(dateStr) {
+            if (TC.formatDateForNotification) {
+                return TC.formatDateForNotification(dateStr);
+            }
+            // Fallback
             const date = new Date(dateStr + 'T12:00:00');
             return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
         }
@@ -4222,25 +4227,16 @@ Just select your name and check in when you can play!`;
             }
         }
 
+        // formatTimeRange - uses TypeScript module
         function formatTimeRange(start, end) {
-            if (!start && !end) return '';
-            
-            const format12Hour = (time24) => {
-                if (!time24) return '';
-                const [hours, minutes] = time24.split(':');
-                const h = parseInt(hours);
-                const ampm = h >= 12 ? 'PM' : 'AM';
-                const h12 = h % 12 || 12;
-                return `${h12}:${minutes}${ampm}`;
-            };
-            
-            if (start && end) {
-                return `${format12Hour(start)}-${format12Hour(end)}`;
-            } else if (start) {
-                return `from ${format12Hour(start)}`;
-            } else if (end) {
-                return `until ${format12Hour(end)}`;
+            if (TC.formatTimeRange) {
+                return TC.formatTimeRange(start, end);
             }
+            // Fallback
+            if (!start && !end) return '';
+            if (start && end) return `${start}-${end}`;
+            if (start) return `from ${start}`;
+            if (end) return `until ${end}`;
             return '';
         }
         
@@ -5137,26 +5133,16 @@ Just select your name and check in when you can play!`;
             }
         }
         
+        // formatTime - uses TypeScript module
         function formatTime(timestamp) {
-            const date = new Date(timestamp);
-            const now = new Date();
-            const isToday = date.toDateString() === now.toDateString();
-
-            const timeStr = date.toLocaleTimeString('en-US', {
+            if (TC.formatTime) {
+                return TC.formatTime(timestamp);
+            }
+            // Fallback
+            return new Date(timestamp).toLocaleTimeString('en-US', {
                 hour: 'numeric',
                 minute: '2-digit'
             });
-
-            if (isToday) {
-                return timeStr;
-            } else {
-                // Show date for check-ins from previous days
-                const dateStr = date.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric'
-                });
-                return `${dateStr} ${timeStr}`;
-            }
         }
         
         // getPreferenceLabel - keeping local version (returns "Singles" not "Singles Only")
