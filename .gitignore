@@ -1,8 +1,8 @@
 # Dependencies
 node_modules/
 
-# Build output
-dist/
+# Build output (keeping dist/ for Firebase deployment)
+# dist/
 build/
 
 # Firebase backups (contain sensitive data)
