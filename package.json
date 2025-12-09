@@ -20,6 +20,9 @@
   },
   "homepage": "https://github.com/sashana/tennis-coordinator#readme",
   "devDependencies": {
+    "@types/node": "^24.10.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.7",
     "vitest": "^4.0.15"
   }
 }
