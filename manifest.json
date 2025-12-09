@@ -2,7 +2,6 @@
   "name": "Tennis Coordinator",
   "short_name": "Tennis",
   "description": "Tennis match coordination and check-in system",
-  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4CAF50",
@@ -22,7 +21,7 @@
     },
     {
       "src": "apple-touch-icon.png",
-      "sizes": "180x180",
+      "sizes": "120x180",
       "type": "image/png",
       "purpose": "any"
     }

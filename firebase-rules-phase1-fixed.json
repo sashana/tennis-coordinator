@@ -34,7 +34,10 @@
         "userNotifications": {
           "$userId": {
             ".read": true,
-            ".write": true
+            ".write": true,
+            "items": {
+              ".indexOn": ["timestamp"]
+            }
           }
         },
 
