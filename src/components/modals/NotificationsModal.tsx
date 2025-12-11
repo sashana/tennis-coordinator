@@ -110,7 +110,7 @@ async function markAsRead(notifId: string) {
 
   try {
     const db = getDatabase();
-    await db.ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/notifications/${notifId}/read`).set(true);
+    await db.ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/items/${notifId}/read`).set(true);
   } catch (error) {
     console.error('Error marking notification as read:', error);
   }
@@ -501,7 +501,7 @@ async function clearNotification(notifId: string) {
 
   try {
     const db = getDatabase();
-    await db.ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/notifications/${notifId}`).remove();
+    await db.ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/items/${notifId}`).remove();
   } catch (error) {
     console.error('Error clearing notification:', error);
   }
