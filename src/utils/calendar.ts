@@ -87,19 +87,32 @@ export function generateICSContent(params: CalendarEventParams): string {
   return icsContent.join('\r\n');
 }
 
-// Download ICS file
+// Detect if running on mobile
+function isMobile(): boolean {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
+// Download ICS file - uses data URI on mobile for better calendar app integration
 export function downloadICSFile(params: CalendarEventParams, filename?: string): void {
   const content = generateICSContent(params);
-  const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
 
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename || `tennis-${params.date}.ics`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  if (isMobile()) {
+    // On mobile, use data URI which triggers calendar app on iOS/Android
+    const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(content);
+    window.location.href = dataUri;
+  } else {
+    // On desktop, use blob download
+    const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename || `tennis-${params.date}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
 }
 
 // Helper to build calendar event from match data
