@@ -92,16 +92,57 @@ function isMobile(): boolean {
   return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 }
 
-// Download ICS file - uses data URI on mobile for better calendar app integration
-export function downloadICSFile(params: CalendarEventParams, filename?: string): void {
-  const content = generateICSContent(params);
+// Generate Google Calendar URL
+function generateGoogleCalendarUrl(params: CalendarEventParams): string {
+  const { date, title, description, location, startTime, endTime } = params;
 
-  if (isMobile()) {
-    // On mobile, use data URI which triggers calendar app on iOS/Android
-    const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(content);
-    window.location.href = dataUri;
+  // Format dates for Google Calendar (YYYYMMDDTHHMMSS or YYYYMMDD for all-day)
+  let dates: string;
+  if (startTime && endTime) {
+    const start = `${date.replace(/-/g, '')}T${startTime.replace(':', '')}00`;
+    const end = `${date.replace(/-/g, '')}T${endTime.replace(':', '')}00`;
+    dates = `${start}/${end}`;
+  } else if (startTime) {
+    // Start time only - assume 2 hour duration
+    const [hours, mins] = startTime.split(':').map(Number);
+    const endHours = (hours + 2) % 24;
+    const endTimeStr = `${endHours.toString().padStart(2, '0')}${mins.toString().padStart(2, '0')}00`;
+    const start = `${date.replace(/-/g, '')}T${startTime.replace(':', '')}00`;
+    const end = `${date.replace(/-/g, '')}T${endTimeStr}`;
+    dates = `${start}/${end}`;
   } else {
-    // On desktop, use blob download
+    // All-day event
+    const dateStr = date.replace(/-/g, '');
+    const nextDate = new Date(date + 'T00:00:00');
+    nextDate.setDate(nextDate.getDate() + 1);
+    const nextDateStr = nextDate.toISOString().split('T')[0].replace(/-/g, '');
+    dates = `${dateStr}/${nextDateStr}`;
+  }
+
+  const baseUrl = 'https://calendar.google.com/calendar/render';
+  const queryParams = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: title,
+    dates: dates,
+    details: description,
+  });
+
+  if (location) {
+    queryParams.set('location', location);
+  }
+
+  return `${baseUrl}?${queryParams.toString()}`;
+}
+
+// Add to calendar - uses Google Calendar on mobile, ICS download on desktop
+export function downloadICSFile(params: CalendarEventParams, filename?: string): void {
+  if (isMobile()) {
+    // On mobile, open Google Calendar which works reliably
+    const googleUrl = generateGoogleCalendarUrl(params);
+    window.open(googleUrl, '_blank');
+  } else {
+    // On desktop, use ICS file download
+    const content = generateICSContent(params);
     const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
 
