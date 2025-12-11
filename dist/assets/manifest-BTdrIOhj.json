@@ -1,0 +1,29 @@
+{
+  "name": "Tennis Coordinator",
+  "short_name": "Tennis",
+  "description": "Tennis match coordination and check-in system",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4CAF50",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "128x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "341x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "120x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

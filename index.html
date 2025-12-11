@@ -2784,7 +2784,12 @@
             }).join('');
         }
 
+        // getTimeAgo - uses TypeScript module
         function getTimeAgo(timestamp) {
+            if (TC.getTimeAgo) {
+                return TC.getTimeAgo(timestamp);
+            }
+            // Fallback
             const now = Date.now();
             const diff = now - timestamp;
             const minutes = Math.floor(diff / 60000);
@@ -5007,8 +5012,12 @@ Just select your name and check in when you can play!`;
             window.open(whatsappUrl, '_blank');
         }
 
-        // Personal Check-in WhatsApp Share
+        // getOrdinalSuffix - uses TypeScript module
         function getOrdinalSuffix(day) {
+            if (TC.getOrdinalSuffix) {
+                return TC.getOrdinalSuffix(day);
+            }
+            // Fallback
             if (day > 3 && day < 21) return 'th';
             switch (day % 10) {
                 case 1: return 'st';

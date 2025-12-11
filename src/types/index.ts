@@ -160,7 +160,7 @@ export interface ActivityByDate {
 // Match Types
 // ============================================
 
-export type MatchType = 'doubles' | 'singles' | 'doubles-forming' | 'singles-forming' | 'singles-or-practice';
+export type MatchType = 'doubles' | 'singles' | 'doubles-forming' | 'singles-forming' | 'singles-or-practice' | 'waiting';
 
 export interface Match {
   type: MatchType;

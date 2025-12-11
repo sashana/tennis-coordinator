@@ -1,37 +1,45 @@
-import { defineConfig } from 'vite';
+import { defineConfig, Plugin } from 'vite';
 import { resolve } from 'path';
+import { rename } from 'fs/promises';
+import preact from '@preact/preset-vite';
+
+// Plugin to rename new-index.html to index.html after build
+function renameIndexHtml(): Plugin {
+  return {
+    name: 'rename-index-html',
+    closeBundle: async () => {
+      try {
+        await rename('dist/new-index.html', 'dist/index.html');
+      } catch {
+        // File may not exist in dev mode
+      }
+    },
+  };
+}
 
 export default defineConfig({
   root: '.',
   base: './',
+  plugins: [preact(), renameIndexHtml()],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
+      'react': 'preact/compat',
+      'react-dom': 'preact/compat',
     },
   },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    lib: {
-      // Build as library for now - can be used to validate TypeScript modules
-      entry: resolve(__dirname, 'src/index.ts'),
-      name: 'TennisCoordinator',
-      fileName: 'tennis-coordinator',
-      formats: ['es', 'umd'],
-    },
     rollupOptions: {
-      // Externalize Firebase - it will be loaded separately
-      external: ['firebase/app', 'firebase/database'],
-      output: {
-        globals: {
-          'firebase/app': 'firebase',
-          'firebase/database': 'firebase.database',
-        },
+      input: {
+        index: resolve(__dirname, 'new-index.html'),
+        app: resolve(__dirname, 'app.html'),
       },
     },
   },
   server: {
     port: 3000,
-    open: true,
+    open: '/app.html',
   },
 });

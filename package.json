@@ -4,6 +4,9 @@
   "description": "A Progressive Web App (PWA) for coordinating tennis matches, managing player check-ins, and organizing match groups with intelligent player matching.",
   "main": "sw.js",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -20,9 +23,16 @@
   },
   "homepage": "https://github.com/sashana/tennis-coordinator#readme",
   "devDependencies": {
+    "@preact/preset-vite": "^2.10.2",
     "@types/node": "^24.10.2",
+    "jsdom": "^27.3.0",
     "typescript": "^5.9.3",
     "vite": "^7.2.7",
     "vitest": "^4.0.15"
+  },
+  "dependencies": {
+    "@preact/signals": "^2.5.1",
+    "preact": "^10.28.0",
+    "preact-router": "^4.1.2"
   }
 }

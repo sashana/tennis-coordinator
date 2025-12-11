@@ -17,6 +17,12 @@ This document captures UI/UX improvement opportunities for Tennis Coordinator, f
 
 | Date | Improvement | Impact |
 |------|-------------|--------|
+| 2025-12-09 | Horizontal scrollable date selector with past dates | Users can now view historical check-ins (14 days back + 14 days forward) |
+| 2025-12-09 | Auto-scroll to today on load | Date selector centers on today automatically |
+| 2025-12-09 | Click outside to close dropdown | User menu closes when clicking elsewhere |
+| 2025-12-09 | Shorter menu labels (History, Admin) | Cleaner, more concise UI |
+| 2025-12-09 | Notification bell emoji 🔔 | Better visibility than SVG icons |
+| 2025-12-09 | Consistent icon button styling | Uniform look for all action buttons |
 | 2025-11-30 | Highlight current user in check-ins | Makes it clear who you are when checking in multiple people |
 | 2025-11-30 | Hide admin functionality from main UI | Less intimidating interface for regular users |
 | 2025-11-30 | Hide exclude list feature | Simplified for tight-knit groups (preserved for future templates) |

@@ -1,7 +1,7 @@
 # Tennis Coordinator - Product Scope
 
-**Version:** 0.6.0
-**Last Updated:** 2025-12-04
+**Version:** 0.8.0
+**Last Updated:** 2025-12-10
 **Status:** Active Development
 
 ---
@@ -10,6 +10,8 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.8.0 | 2025-12-10 | Added UC-T9 Multi-Game Sharing, UC-T10 Group Story & Rules, UC-T11 Member Management Modal, UC-T12 Watched Members (notifications); UI improvements (mobile-friendly share bar, notification settings) |
+| 0.7.0 | 2025-12-10 | Added UC-A4 Group Insights, UC-A5 Activity Deletion, UC-A6 Admin Member View; UI improvements (unified dropdown styling, login history tracking) |
 | 0.6.0 | 2025-12-04 | Added UC-T7 Match Notes, UC-T8 Weather Integration; Updated UC-T5 with WhatsApp/notes activity logging; UI reorder (matches first, collapsible check-ins) |
 | 0.5.0 | 2025-12-03 | Added UC-T6 Community Member Management; Updated UC-T5 to completed status |
 | 0.4.0 | 2025-12-01 | Added UC-T5 Activity History use case |
@@ -163,6 +165,34 @@ Admin can view activity across all dates via "Show all dates" toggle.
 
 **Status:** Implemented - Weather displayed for group location; configurable per group in admin settings; shows conditions and temperature
 
+#### UC-T9: Multi-Game Sharing ✅
+**As a** member
+**I want to** share multiple game statuses across dates at once
+**So that** I can quickly coordinate with others about upcoming matches
+
+**Status:** Implemented - My Games tab has Share button; selection mode allows multi-select; generates formatted message with Ready/Need Players sections; share via native share, WhatsApp, SMS, or copy to clipboard
+
+#### UC-T10: Group Story & Rules ✅
+**As a** group admin
+**I want to** set a group story and rules/tips
+**So that** new members understand our group's culture and expectations
+
+**Status:** Implemented - Admin Settings has Group Story (free text) and Rules & Tips (one per line); displayed in Help tab under "About [Group Name]"
+
+#### UC-T11: Member Management Modal ✅
+**As a** group admin
+**I want to** manage members from a dedicated modal
+**So that** I can easily add, edit, and view member details
+
+**Status:** Implemented - Admin Settings has "Manage Members" button; modal shows sortable member list with phone, email, notes, and who added them; can add new members and view details
+
+#### UC-T12: Watched Members ✅
+**As a** member
+**I want to** receive notifications only for players I care about
+**So that** I don't get overwhelmed with alerts for every check-in
+
+**Status:** Implemented - Notification Settings has "Watched Members" section; alerts only generated for watched members; backward compatible with previous "Muted Members" approach
+
 ---
 
 ### Larger/Mixed-Familiarity Group Use Cases
@@ -251,6 +281,31 @@ Admin can view activity across all dates via "Show all dates" toggle.
 **So that** different tennis communities can use the platform
 
 **Status:** Not implemented - Currently requires manual setup per group
+
+#### UC-A4: Group Insights ✅
+**As a** group admin
+**I want to** see analytics about group activity
+**So that** I understand engagement patterns and can make informed decisions
+
+**Status:** Implemented - Profile page shows "Insights" section for admins with:
+- Recent activity summary (last 7 days)
+- Active players count
+- Total check-ins and play style distribution
+- Activity by day chart
+
+#### UC-A5: Activity History Cleanup ✅
+**As a** group admin
+**I want to** remove test or erroneous activity entries
+**So that** the history stays clean and accurate
+
+**Status:** Implemented - Each activity entry in Activity History modal has delete button (trash icon); confirmation required before deletion
+
+#### UC-A6: View Member Games ✅
+**As a** group admin
+**I want to** view another member's upcoming games
+**So that** I can help coordinate or troubleshoot for members
+
+**Status:** Implemented - My Games tab shows dropdown for admins to select and view any member's scheduled matches
 
 ---
 

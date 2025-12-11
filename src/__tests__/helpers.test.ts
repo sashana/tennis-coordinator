@@ -9,6 +9,9 @@ import {
   getDateOffset,
   isSameName,
   getPreferenceLabel,
+  isValidEmail,
+  isValidPhone,
+  cleanPhoneNumber,
 } from '../utils/helpers';
 import { isMemberMuted } from '../utils/notifications';
 
@@ -195,5 +198,53 @@ describe('getPreferenceLabel', () => {
 
   it('defaults to Either for unknown values', () => {
     expect(getPreferenceLabel(undefined as unknown as 'both')).toBe('Either');
+  });
+});
+
+describe('isValidEmail', () => {
+  it('returns true for valid email formats', () => {
+    expect(isValidEmail('test@example.com')).toBe(true);
+    expect(isValidEmail('user.name@domain.co.uk')).toBe(true);
+    expect(isValidEmail('user+tag@email.org')).toBe(true);
+    expect(isValidEmail('firstname.lastname@company.com')).toBe(true);
+  });
+
+  it('returns false for invalid email formats', () => {
+    expect(isValidEmail('')).toBe(false);
+    expect(isValidEmail('notanemail')).toBe(false);
+    expect(isValidEmail('missing@domain')).toBe(false);
+    expect(isValidEmail('@nodomain.com')).toBe(false);
+    expect(isValidEmail('user@.com')).toBe(false);
+    expect(isValidEmail('user name@domain.com')).toBe(false);
+  });
+});
+
+describe('isValidPhone', () => {
+  it('returns true for valid phone numbers (10+ digits)', () => {
+    expect(isValidPhone('5551234567')).toBe(true);
+    expect(isValidPhone('555-123-4567')).toBe(true);
+    expect(isValidPhone('(555) 123-4567')).toBe(true);
+    expect(isValidPhone('+1 555 123 4567')).toBe(true);
+    expect(isValidPhone('555.123.4567')).toBe(true);
+  });
+
+  it('returns false for invalid phone numbers', () => {
+    expect(isValidPhone('')).toBe(false);
+    expect(isValidPhone('123')).toBe(false);
+    expect(isValidPhone('123456789')).toBe(false); // Only 9 digits
+    expect(isValidPhone('abcdefghij')).toBe(false);
+  });
+});
+
+describe('cleanPhoneNumber', () => {
+  it('removes formatting characters', () => {
+    expect(cleanPhoneNumber('555-123-4567')).toBe('5551234567');
+    expect(cleanPhoneNumber('(555) 123-4567')).toBe('5551234567');
+    expect(cleanPhoneNumber('555 123 4567')).toBe('5551234567');
+    expect(cleanPhoneNumber('+1 (555) 123-4567')).toBe('+15551234567');
+  });
+
+  it('preserves plus sign for international', () => {
+    expect(cleanPhoneNumber('+15551234567')).toBe('+15551234567');
   });
 });

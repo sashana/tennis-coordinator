@@ -106,20 +106,29 @@ export function formatTime(timestamp: number): string {
 }
 
 /**
- * Get today's date as YYYY-MM-DD string
+ * Format a Date object as YYYY-MM-DD string in local timezone
  */
-export function getTodayDate(): string {
-  const today = new Date();
-  return today.toISOString().split('T')[0];
+export function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 /**
- * Get date string for a specific day offset from today
+ * Get today's date as YYYY-MM-DD string in local timezone
+ */
+export function getTodayDate(): string {
+  return formatLocalDate(new Date());
+}
+
+/**
+ * Get date string for a specific day offset from today in local timezone
  */
 export function getDateOffset(daysOffset: number): string {
   const date = new Date();
   date.setDate(date.getDate() + daysOffset);
-  return date.toISOString().split('T')[0];
+  return formatLocalDate(date);
 }
 
 /**
@@ -214,6 +223,26 @@ export function debounce<T extends (...args: unknown[]) => void>(
     timeout = setTimeout(() => {
       func.apply(this, args);
     }, wait);
+  };
+}
+
+/**
+ * Throttle function
+ */
+export function throttle<T extends (...args: unknown[]) => void>(
+  func: T,
+  limit: number
+): (...args: Parameters<T>) => void {
+  let inThrottle = false;
+
+  return function (this: unknown, ...args: Parameters<T>) {
+    if (!inThrottle) {
+      func.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => {
+        inThrottle = false;
+      }, limit);
+    }
   };
 }
 

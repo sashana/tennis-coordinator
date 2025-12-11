@@ -8,6 +8,14 @@ A Progressive Web App (PWA) for coordinating tennis matches, managing player che
 
 ## Features
 
+### Mobile-First Tab Navigation
+- **Bottom tab bar**: iOS-style navigation with 5 tabs
+- **Check-in tab**: Date selection and player check-in
+- **My Matches tab**: View organized match groups and match notes
+- **Alerts tab**: Notification center with badge counts
+- **Help tab**: Quick reference for app usage
+- **Profile tab**: User settings, admin login, and profile management
+
 ### Player Check-In System
 - **14-day rolling calendar** for date selection
 - **Player name selection** from member list or add guests
@@ -39,12 +47,34 @@ A Progressive Web App (PWA) for coordinating tennis matches, managing player che
 - **Isolated data**: Each group has separate players and check-ins
 - **Unlimited groups**: Create as many groups as needed
 
+### User Profile Management
+- **Profile editing**: Update your display name, phone, and email
+- **Self-service name changes**: Rename yourself without admin help
+- **Contact information**: Optional phone and email for coordination
+- **Admin login access**: Quick access to admin functions from profile
+- **Session persistence**: Remembers your identity across visits
+
+### My Games Tab
+- **Upcoming games overview**: See all your scheduled matches across dates
+- **Match status indicators**: Green for ready, yellow for forming
+- **Quick navigation**: Tap any game to jump to that day's check-in
+- **Multi-game sharing**: Select multiple games and share status via WhatsApp, SMS, or copy
+- **Invite players**: Quick share for forming matches that need players
+
+### Notification System
+- **Activity alerts**: Get notified when players check in or out
+- **Watched members**: Focus notifications on players you care about
+- **In-app notifications**: Badge counts and notification center
+- **Click to navigate**: Tap notifications to jump to that date
+
 ### Group Admin Dashboard
 - **PIN-protected access** via settings
-- **Member management**: Add, edit, and delete group members
+- **Member management modal**: Add, edit, and view member details with contact info
+- **Group story and rules**: Configure group description and rules/tips shown in Help tab
+- **Activity history**: View all check-ins, removals, and changes with delete option
+- **Group insights**: Analytics on player activity and engagement trends
 - **Admin PIN configuration**: Change admin access PIN
 - **Weather location**: Set custom location for weather forecast
-- **Clean interface**: Easy-to-use member table with actions
 
 ### Site Admin System
 - **Accessible at** `/admin` with master PIN
@@ -88,12 +118,15 @@ A Progressive Web App (PWA) for coordinating tennis matches, managing player che
 
 ## Tech Stack
 
-- **Frontend**: HTML5, CSS3, Vanilla JavaScript (ES6+)
+- **Frontend**: Preact with TypeScript
+- **State Management**: @preact/signals for reactive state
+- **Build Tool**: Vite for fast development and optimized builds
 - **Backend**: Firebase Realtime Database
-- **Hosting**: GitHub Pages
+- **Hosting**: Firebase Hosting
+- **Testing**: Vitest with 718 unit tests
 - **Domain**: Custom domain via CNAME
 - **PWA**: Service Worker + Web App Manifest
-- **Architecture**: Single-page application (SPA)
+- **Architecture**: Component-based SPA with bottom tab navigation
 
 ---
 
@@ -172,12 +205,45 @@ A Progressive Web App (PWA) for coordinating tennis matches, managing player che
 ### File Structure
 ```
 tennis-coordinator/
-├── index.html          # Main application (HTML/CSS/JS)
-├── manifest.json       # PWA manifest
-├── sw.js              # Service worker
-├── 404.html           # GitHub Pages SPA routing
-├── CNAME              # Custom domain configuration
-└── README.md          # This file
+├── src/
+│   ├── components/       # Preact components
+│   │   ├── App.tsx       # Main app component
+│   │   ├── layout/       # Header, BottomTabBar
+│   │   ├── tabs/         # Tab content components
+│   │   ├── modals/       # Modal dialogs
+│   │   └── ui/           # Reusable UI components
+│   ├── hooks/            # Custom hooks (useFirebase, etc.)
+│   ├── utils/            # Utility functions
+│   ├── types/            # TypeScript type definitions
+│   ├── config/           # Firebase configuration
+│   └── __tests__/        # Unit tests
+├── public/               # Static assets
+├── dist/                 # Build output
+├── index.html            # Entry point
+├── vite.config.ts        # Vite configuration
+├── tsconfig.json         # TypeScript configuration
+└── package.json          # Dependencies and scripts
+```
+
+### Development Commands
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Run tests
+npm test
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Deploy to Firebase
+firebase deploy --only hosting
 ```
 
 ---

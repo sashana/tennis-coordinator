@@ -8,7 +8,7 @@
 ### First-Time Setup
 1. **Enter PIN** → Ask admin for group PIN
 2. **Select Your Name** → Choose from dropdown (creates your session)
-3. **Select Date** → Choose from next 14 days
+3. **Select Date** → Scroll horizontally to choose date (past or future)
 4. **Check In** → Follow steps below
 5. **View Matches** → See organized games automatically
 
@@ -178,12 +178,12 @@ After selecting your name, you'll see **"[Your Name] ▼"** in the top right cor
 
 | Option | Description |
 |--------|-------------|
-| 📋 **Activity History** | View check-ins, removals, and changes for the day |
-| ⚙️ **Admin Settings** | Manage members, PINs, and group settings |
+| 📋 **History** | View check-ins, removals, and changes for the day |
+| ⚙️ **Admin** | Manage members, PINs, and group settings |
 | ❓ **User Guide** | Open this help document |
 | 🔄 **Change User** | Switch to a different user |
 
-**Note:** Notifications are accessed via the 🔔 bell icon in the header (separate from the menu).
+**Note:** Notifications are accessed via the 🔔 bell icon in the header (separate from the menu). Click anywhere outside the menu to close it.
 
 ### Changing Your User
 If you accidentally selected the wrong name:
@@ -305,7 +305,7 @@ John Smith                              [Remove]
 
 ## ⚙️ Admin Settings
 
-**Access:** Click **User Menu → ⚙️ Admin Settings** → Enter admin PIN
+**Access:** Click **User Menu → ⚙️ Admin** → Enter admin PIN
 
 ### Core Members
 - 👀 **View all members** and who added them
@@ -331,7 +331,7 @@ John Smith                              [Remove]
 - Can be changed by admin
 
 ### Activity History
-- 📋 Access via **User Menu → 📋 Activity History**
+- 📋 Access via **User Menu → 📋 History**
 - Shows check-ins, removals, and who performed them
 - Helps track changes throughout the day
 
@@ -698,9 +698,10 @@ Contact group admin via WhatsApp
 ## Calendar System
 
 **Date Range:**
-- Shows next 14 days from today
-- Past dates hidden automatically
-- Updates daily at midnight
+- Shows 14 days in the past and 14 days ahead (29 days total)
+- Horizontally scrollable - swipe/scroll left for past dates, right for future
+- Auto-scrolls to center "Today" on page load
+- Past dates appear slightly faded
 - Today selected by default
 
 **Check-in Data:**
@@ -860,17 +861,23 @@ Contact group admin via WhatsApp
 
 ---
 
-**Version:** 2.7 (Muted Members & Removal Notifications)
+**Version:** 2.8 (UI Improvements & Historical Data)
 **Last Updated:** December 2024
 **Repository:** https://github.com/sashana/tennis-coordinator
 
 **Recent Updates:**
+- Date selector now shows past 14 days + future 14 days (scrollable, auto-centers on today)
+- Past dates appear faded for visual distinction
+- Shorter menu labels: "History" and "Admin" for cleaner UI
+- Click outside user dropdown to close it
+- Notification bell now uses 🔔 emoji for better visibility
+- Consistent icon styling across all action buttons
 - Mute members feature - stop receiving alerts from specific members
 - Removal notifications - get notified when someone removes themselves from a date
 - Combined notifications UI - settings now accessible via collapsible section in notifications panel
 - Bell icon moved to header (separate from user dropdown menu)
 - In-app notification system with activity alerts and match confirmations
-- User dropdown menu (Activity History, Admin Settings, User Guide, Change User)
+- User dropdown menu (History, Admin, User Guide, Change User)
 - Notification preferences per user with toggle controls
 - Notification details include play style, time range, and "added by" info
 - Unit test suite (114 tests covering matching logic, member management, notifications)
