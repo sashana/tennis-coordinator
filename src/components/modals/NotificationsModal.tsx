@@ -83,7 +83,7 @@ function subscribeToNotifications() {
 
   try {
     const db = getDatabase();
-    const notifsRef = db.ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/notifications`);
+    const notifsRef = db.ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/items`);
 
     const callback = notifsRef.on('value', (snapshot) => {
       const data = snapshot.val() || {};
@@ -123,7 +123,7 @@ async function clearAllNotifications() {
 
   try {
     const db = getDatabase();
-    await db.ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/notifications`).remove();
+    await db.ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/items`).remove();
     showToast('Notifications cleared', 'info');
   } catch (error) {
     console.error('Error clearing notifications:', error);
@@ -522,7 +522,7 @@ async function markAllAsRead() {
       }
     });
     if (Object.keys(updates).length > 0) {
-      await db.ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/notifications`).update(updates);
+      await db.ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/items`).update(updates);
     }
   } catch (error) {
     console.error('Error marking all as read:', error);

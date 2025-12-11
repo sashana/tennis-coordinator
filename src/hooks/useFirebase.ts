@@ -377,7 +377,7 @@ async function notifyRemovalAlert(
         if (unwatchedMembers.includes(playerName) || unwatchedMembers.includes(removedBy)) continue;
 
         // Add notification
-        const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizedName}/notifications`).push();
+        const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizedName}/items`).push();
         await notifRef.set({
           message,
           timestamp: Date.now(),
@@ -469,7 +469,7 @@ async function notifyCheckinAlert(
 
         // Add notification
         console.log(`[notifyCheckinAlert] Sending notification to ${normalizedName}`);
-        const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizedName}/notifications`).push();
+        const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizedName}/items`).push();
         await notifRef.set({
           message,
           timestamp: Date.now(),
@@ -526,7 +526,7 @@ async function notifyNoteAlert(
         if (unwatchedMembers.includes(by)) continue;
 
         // Add notification
-        const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizedName}/notifications`).push();
+        const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizedName}/items`).push();
         await notifRef.set({
           message,
           timestamp: Date.now(),
