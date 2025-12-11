@@ -3,6 +3,7 @@ import { currentCheckins, sessionUser, currentGroupId, memberDetails, selectedDa
 import { removeCheckin, updateCheckin, canRemoveCheckin } from '../../hooks/useFirebase';
 import { formatTime, formatTimeRange, formatDate } from '../../utils/helpers';
 import { Modal } from '../ui/Modal';
+import { showSharePrompt, sharePromptData } from '../pages/MainApp';
 
 function normalizeName(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '');
@@ -61,12 +62,27 @@ async function confirmRemove() {
   const index = removeIndex.value;
   if (index === null) return;
 
+  // Store data before clearing
+  const personName = removeName.value;
+  const isOwner = removeIsOwner.value;
+  const date = removeDate.value;
+
   // Clear the index first so the guard doesn't affect us after await
   removeIndex.value = null;
 
   await removeCheckin(index, sessionUser.value);
-  // Move to done step instead of closing
-  removeStep.value = 'done';
+
+  // Close the modal and show share banner instead
+  closeRemoveModal();
+
+  // Trigger share banner for removal
+  sharePromptData.value = {
+    action: 'removal',
+    name: personName,
+    date: date,
+    isOwner: isOwner,
+  };
+  showSharePrompt.value = true;
 }
 
 function openEditModal(index: number) {

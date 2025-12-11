@@ -15,6 +15,7 @@ import { MemberManagementModal } from '../modals/MemberManagementModal';
 import { useNotifications } from '../modals/NotificationsModal';
 import { InvitePromptModal } from '../modals/InvitePromptModal';
 import { WelcomeModal, showWelcomeModal } from '../ui/WelcomeModal';
+import { SharePromptBanner } from '../ui/SharePromptBanner';
 import { getTodayDate } from '../../utils/helpers';
 import { BottomTabBar, activeTab } from '../navigation/BottomTabBar';
 import { CheckInTab } from '../tabs/CheckInTab';
@@ -42,6 +43,17 @@ export const endTime = signal('');
 // UI state
 export const checkinListExpanded = signal(true);
 export const isAuthenticated = signal(false);
+
+// Share prompt state (after check-in or removal)
+export const showSharePrompt = signal(false);
+export const sharePromptData = signal<{
+  action: 'checkin' | 'removal';
+  name: string;
+  playStyle?: string;
+  timeRange?: { start: string; end: string };
+  date: string;  // Store the date for removal messages
+  isOwner?: boolean;  // For removal: was it self-removal or removing someone else
+} | null>(null);
 
 export function MainApp() {
   // Initialize hooks
@@ -93,6 +105,9 @@ export function MainApp() {
     }
     isAuthenticated.value = true;
 
+    // Scroll to top to ensure header is visible (especially on mobile browsers)
+    window.scrollTo(0, 0);
+
     // Show welcome modal if no session user set
     if (!sessionUser.value) {
       showWelcomeModal.value = true;
@@ -131,6 +146,7 @@ export function MainApp() {
         </div>
       </div>
 
+      <SharePromptBanner />
       <BottomTabBar />
     </>
   );

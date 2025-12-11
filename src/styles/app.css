@@ -3,7 +3,16 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
+        /* Mobile browser optimizations */
+        html {
+            /* Use dvh for dynamic viewport height that accounts for browser UI */
+            height: 100%;
+            height: 100dvh;
+            /* Prevent pull-to-refresh and overscroll bounce */
+            overscroll-behavior: none;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             max-width: 480px;
@@ -12,6 +21,13 @@
             background: #e8e8e8;
             -webkit-font-smoothing: antialiased;
             min-height: 100vh;
+            min-height: 100dvh;
+            /* Disable double-tap zoom for snappier interactions */
+            touch-action: manipulation;
+            /* Prevent overscroll bounce */
+            overscroll-behavior: none;
+            /* Ensure body fills viewport */
+            position: relative;
         }
 
         /* Desktop background pattern for mobile-first app */

@@ -3,18 +3,11 @@
     "rules": "firebase-rules-phase1-fixed.json"
   },
   "hosting": {
-    "public": ".",
+    "public": "dist",
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**",
-      "**/tests/**",
-      "**/src/**",
-      "*.md",
-      "*.sh",
-      "package*.json",
-      "tsconfig.json",
-      "vite.config.ts"
+      "**/node_modules/**"
     ]
   }
 }

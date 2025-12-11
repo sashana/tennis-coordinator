@@ -42,6 +42,9 @@ function handleNameSelect(e: Event) {
   // Close modal
   showWelcomeModal.value = false;
 
+  // Scroll to top to ensure header is visible (especially on mobile browsers)
+  window.scrollTo(0, 0);
+
   showToast(`Welcome, ${name}!`, 'success');
 }
 

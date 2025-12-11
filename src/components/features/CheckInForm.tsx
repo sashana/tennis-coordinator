@@ -3,7 +3,8 @@ import {
   sessionUser,
   currentGroupId,
   coreMembers,
-  showToast
+  showToast,
+  selectedDate,
 } from '../App';
 import {
   isFormExpanded,
@@ -20,6 +21,8 @@ import {
   allowRotation,
   startTime,
   endTime,
+  showSharePrompt,
+  sharePromptData,
 } from '../pages/MainApp';
 import { addCheckin, addMember } from '../../hooks/useFirebase';
 import { showInvitePrompt } from '../modals/InvitePromptModal';
@@ -77,16 +80,29 @@ export function CheckInForm() {
       return;
     }
 
+    const checkinPlayStyle = selectedPreference.value;
+    const checkinTimeRange = startTime.value && endTime.value
+      ? { start: startTime.value, end: endTime.value }
+      : undefined;
+
     await addCheckin({
       name,
-      playStyle: selectedPreference.value,
+      playStyle: checkinPlayStyle,
       isGuest: isGuest.value,
       addedBy: isGuest.value ? guestAddedBy : sessionUser.value,
       allowRotation: allowRotation.value,
-      timeRange: startTime.value && endTime.value
-        ? { start: startTime.value, end: endTime.value }
-        : undefined,
+      timeRange: checkinTimeRange,
     });
+
+    // Show share prompt (non-intrusive banner)
+    sharePromptData.value = {
+      action: 'checkin',
+      name,
+      playStyle: checkinPlayStyle,
+      timeRange: checkinTimeRange,
+      date: selectedDate.value,
+    };
+    showSharePrompt.value = true;
 
     // Reset form
     resetForm();
