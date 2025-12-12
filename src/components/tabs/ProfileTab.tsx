@@ -521,7 +521,7 @@ export function ProfileTab() {
 
       {/* Version Info */}
       <p style="font-size: 12px; color: #aaa; text-align: center; margin-top: 32px;">
-        Tennis Coordinator v0.8.12
+        Tennis Coordinator v0.9.0
       </p>
     </div>
   );
