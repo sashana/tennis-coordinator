@@ -4,7 +4,7 @@ import {
   timesOverlap,
   canPlayTogetherWithTime,
 } from '../utils/matching';
-import type { CheckinData, UserPreferences } from '../types';
+import type { CheckinData, UserPreferences, TimeRange } from '../types';
 
 describe('timesOverlap', () => {
   it('returns true when both have no time restrictions', () => {
@@ -17,7 +17,7 @@ describe('timesOverlap', () => {
   });
 
   it('returns true when both have empty time ranges', () => {
-    expect(timesOverlap({}, {})).toBe(true);
+    expect(timesOverlap({} as TimeRange, {} as TimeRange)).toBe(true);
   });
 
   it('returns true for overlapping time ranges', () => {
@@ -34,19 +34,19 @@ describe('timesOverlap', () => {
 
   it('handles open-ended ranges (from X)', () => {
     expect(
-      timesOverlap({ start: '14:00' }, { start: '09:00', end: '16:00' })
+      timesOverlap({ start: '14:00' } as TimeRange, { start: '09:00', end: '16:00' })
     ).toBe(true);
     expect(
-      timesOverlap({ start: '18:00' }, { start: '09:00', end: '12:00' })
+      timesOverlap({ start: '18:00' } as TimeRange, { start: '09:00', end: '12:00' })
     ).toBe(false);
   });
 
   it('handles open-ended ranges (until X)', () => {
     expect(
-      timesOverlap({ end: '12:00' }, { start: '09:00', end: '14:00' })
+      timesOverlap({ end: '12:00' } as TimeRange, { start: '09:00', end: '14:00' })
     ).toBe(true);
     expect(
-      timesOverlap({ end: '08:00' }, { start: '10:00', end: '12:00' })
+      timesOverlap({ end: '08:00' } as TimeRange, { start: '10:00', end: '12:00' })
     ).toBe(false);
   });
 });
@@ -57,7 +57,7 @@ describe('canPlayTogetherWithTime', () => {
   const createPlayer = (
     name: string,
     playStyle: 'singles' | 'doubles' | 'both' = 'both',
-    timeRange?: { start?: string; end?: string }
+    timeRange?: TimeRange
   ): CheckinData => ({
     name,
     playStyle,

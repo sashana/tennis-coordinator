@@ -25,7 +25,6 @@ import {
   sharePromptData,
 } from '../pages/MainApp';
 import { addCheckin, addMember } from '../../hooks/useFirebase';
-import { showInvitePrompt } from '../modals/InvitePromptModal';
 
 export function CheckInForm() {
   const handleNameSelect = (e: Event) => {
@@ -100,7 +99,7 @@ export function CheckInForm() {
       name,
       playStyle: checkinPlayStyle,
       timeRange: checkinTimeRange,
-      date: selectedDate.value,
+      date: selectedDate.value || '',
     };
     showSharePrompt.value = true;
 
@@ -139,11 +138,7 @@ export function CheckInForm() {
     isNewMember.value = false;
     selectedName.value = '';
     isFormExpanded.value = false;
-
-    // If phone or email provided, prompt to invite
-    if (memberPhone || memberEmail) {
-      showInvitePrompt(memberName, memberPhone, memberEmail);
-    }
+    // Note: addMember() already shows the SharePromptBanner invite prompt
   };
 
   const handleCancel = () => {

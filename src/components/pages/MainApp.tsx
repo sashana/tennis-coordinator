@@ -44,15 +44,19 @@ export const endTime = signal('');
 export const checkinListExpanded = signal(true);
 export const isAuthenticated = signal(false);
 
-// Share prompt state (after check-in or removal)
+// Share prompt state (after check-in, removal, or invite)
 export const showSharePrompt = signal(false);
 export const sharePromptData = signal<{
-  action: 'checkin' | 'removal';
+  action: 'checkin' | 'removal' | 'invite';
   name: string;
   playStyle?: string;
   timeRange?: { start: string; end: string };
   date: string;  // Store the date for removal messages
   isOwner?: boolean;  // For removal: was it self-removal or removing someone else
+  // For invite action
+  groupName?: string;
+  groupUrl?: string;
+  groupPin?: string;
 } | null>(null);
 
 export function MainApp() {

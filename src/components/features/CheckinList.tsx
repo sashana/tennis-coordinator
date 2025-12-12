@@ -1,5 +1,5 @@
 import { signal } from '@preact/signals';
-import { currentCheckins, sessionUser, currentGroupId, memberDetails, selectedDate, currentGroupName } from '../App';
+import { currentCheckins, sessionUser, currentGroupId, selectedDate, currentGroupName } from '../App';
 import { removeCheckin, updateCheckin, canRemoveCheckin } from '../../hooks/useFirebase';
 import { formatTime, formatTimeRange, formatDate } from '../../utils/helpers';
 import { Modal } from '../ui/Modal';
@@ -43,7 +43,7 @@ function openRemoveModal(index: number) {
   removeName.value = result.personName;
   removeIsOwner.value = result.isOwner;
   removeStep.value = 'confirm';
-  removeDate.value = selectedDate.value;
+  removeDate.value = selectedDate.value || '';
   removeGroupName.value = currentGroupName.value;
   removeModalOpen.value = true;
 }

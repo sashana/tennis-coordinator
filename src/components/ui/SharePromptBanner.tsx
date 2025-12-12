@@ -4,6 +4,7 @@ import { showSharePrompt, sharePromptData } from '../pages/MainApp';
 import {
   formatCheckinForWhatsApp,
   formatRemovalForWhatsApp,
+  generateInviteMessageWithLink,
   buildWhatsAppUrl,
   copyToClipboard,
 } from '../../utils/sharing';
@@ -26,8 +27,17 @@ export function SharePromptBanner() {
 
   const data = sharePromptData.value;
   const isRemoval = data.action === 'removal';
+  const isInvite = data.action === 'invite';
 
   const getMessage = () => {
+    if (isInvite) {
+      return generateInviteMessageWithLink(
+        data.name,
+        data.groupName || '',
+        data.groupUrl || '',
+        data.groupPin || ''
+      );
+    }
     if (isRemoval) {
       return formatRemovalForWhatsApp(data.name, data.date);
     }
@@ -66,11 +76,11 @@ export function SharePromptBanner() {
     sharePromptData.value = null;
   };
 
-  // Different styling for check-in vs removal
-  const bgColor = isRemoval ? '#FFF3E0' : '#E8F5E9';
-  const textColor = isRemoval ? '#E65100' : '#2E7D32';
-  const titleText = isRemoval ? 'Removed!' : 'Checked in!';
-  const promptText = isRemoval ? 'Let others know?' : 'Share with the group?';
+  // Different styling for check-in vs removal vs invite
+  const bgColor = isInvite ? '#E3F2FD' : isRemoval ? '#FFF3E0' : '#E8F5E9';
+  const textColor = isInvite ? '#1565C0' : isRemoval ? '#E65100' : '#2E7D32';
+  const titleText = isInvite ? 'Added!' : isRemoval ? 'Removed!' : 'Checked in!';
+  const promptText = isInvite ? `Invite ${data.name}?` : isRemoval ? 'Let others know?' : 'Share with the group?';
 
   return (
     <div

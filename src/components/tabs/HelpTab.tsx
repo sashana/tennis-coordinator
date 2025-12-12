@@ -13,28 +13,28 @@ export function HelpTab() {
       content: [
         'When you first open the app, you\'ll be asked to select your name from the member list.',
         'Use the date selector to pick the day you want to play.',
-        'Check in by selecting your match preference and optionally setting your available times.',
+        'Check in by selecting your game preference and optionally setting your available times.',
       ],
     },
     {
       title: 'Check-in Options',
       icon: '✅',
       content: [
-        'Doubles - You want to play doubles matches (4 players).',
-        'Singles - You want to play singles matches (2 players).',
+        'Doubles - You want to play doubles games (4 players).',
+        'Singles - You want to play singles games (2 players).',
         'Both - You\'re flexible and happy to play either format.',
-        'Rotation - Enable this option to join 3-player rotation matches where players take turns.',
+        'Rotation - Enable this option to join 3-player rotation games where players take turns.',
         'Time Range - Set your earliest and latest available times to help coordinate.',
       ],
     },
     {
-      title: 'Match Types',
+      title: 'Game Types',
       icon: '👥',
       content: [
-        'Doubles (green) - A confirmed 4-player doubles match.',
-        'Singles (green) - A confirmed 2-player singles match.',
-        'Rotation (green) - A confirmed 3-player match with rotating play.',
-        'Forming (yellow) - A match that needs more players to be complete.',
+        'Doubles (green) - A confirmed 4-player doubles game.',
+        'Singles (green) - A confirmed 2-player singles game.',
+        'Rotation (green) - A confirmed 3-player game with rotating play.',
+        'Forming (yellow) - A game that needs more players to be complete.',
       ],
     },
     {
@@ -51,7 +51,7 @@ export function HelpTab() {
       title: 'Alerts',
       icon: '🔔',
       content: [
-        'Get notified when matches are formed or when players join/leave.',
+        'Get notified when games are formed or when players join/leave.',
         'Unread alerts show a red badge with the count on the tab.',
         'Tap a notification to mark it as read.',
         'Access notification settings to configure your preferences.',
@@ -72,9 +72,9 @@ export function HelpTab() {
       icon: '💡',
       content: [
         'Check in early to get matched with your preferred players.',
-        'Select "Both" if you\'re flexible - it increases your chances of getting a match.',
+        'Select "Both" if you\'re flexible - it increases your chances of getting a game.',
         'Set your time preferences to help organizers coordinate scheduling.',
-        'Enable rotation if you\'re open to 3-player matches.',
+        'Enable rotation if you\'re open to 3-player games.',
       ],
     },
     {

@@ -17,6 +17,7 @@ import type {
   NotificationItem,
   UserPreferences,
   MemberDetailsMap,
+  MatchArrangement,
 } from '@/types';
 import { normalizeName } from '@/utils/helpers';
 
@@ -53,6 +54,8 @@ export const firebasePaths = {
   userNotifications: (groupId: string, userName: string) =>
     `groups/${groupId}/userNotifications/${normalizeName(userName)}/items`,
   groupNotifications: (groupId: string) => `groups/${groupId}/userNotifications`,
+  matchArrangements: (groupId: string, date: string) =>
+    `groups/${groupId}/matchArrangements/${date}`,
 };
 
 /**
@@ -240,10 +243,10 @@ export class FirebaseService {
 
     const prefs = snapshot.val() as Partial<NotificationPreferences> | null;
 
-    // Apply defaults
+    // Apply defaults - activityAlerts OFF by default, matchConfirmations ON by default
     return {
-      activityAlerts: prefs?.activityAlerts ?? true,
-      matchConfirmations: prefs?.matchConfirmations ?? true,
+      activityAlerts: prefs?.activityAlerts === true, // Must explicitly opt-in
+      matchConfirmations: prefs?.matchConfirmations !== false, // Default ON
       mutedMembers: prefs?.mutedMembers || [],
     };
   }
@@ -314,6 +317,30 @@ export class FirebaseService {
 
   async saveSiteSettings(settings: { gaTrackingId?: string }): Promise<void> {
     await this.ref(firebasePaths.siteSettings()).set(settings);
+  }
+
+  // ============================================
+  // Match Arrangements (Admin Override)
+  // ============================================
+
+  async loadMatchArrangement(
+    groupId: string,
+    date: string
+  ): Promise<MatchArrangement | null> {
+    const snapshot = await this.ref(firebasePaths.matchArrangements(groupId, date)).once('value');
+    return (snapshot.val() as MatchArrangement) || null;
+  }
+
+  async saveMatchArrangement(
+    groupId: string,
+    date: string,
+    arrangement: MatchArrangement
+  ): Promise<void> {
+    await this.ref(firebasePaths.matchArrangements(groupId, date)).set(arrangement);
+  }
+
+  async clearMatchArrangement(groupId: string, date: string): Promise<void> {
+    await this.ref(firebasePaths.matchArrangements(groupId, date)).remove();
   }
 }
 

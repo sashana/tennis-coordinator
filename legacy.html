@@ -2592,10 +2592,10 @@
             window.open('tennis-coordinator-help.md', '_blank');
         }
 
-        // Notification preferences
+        // Notification preferences - activityAlerts OFF by default, matchConfirmations ON by default
         let userNotificationPrefs = {
             activityAlerts: false,
-            matchConfirmations: false
+            matchConfirmations: true
         };
         let userNotifications = [];
 
@@ -2607,8 +2607,8 @@
                 const prefs = snapshot.val();
                 if (prefs) {
                     userNotificationPrefs = prefs;
-                    document.getElementById('notifActivityAlerts').checked = prefs.activityAlerts || false;
-                    document.getElementById('notifMatchConfirmations').checked = prefs.matchConfirmations || false;
+                    document.getElementById('notifActivityAlerts').checked = prefs.activityAlerts === true; // Default OFF
+                    document.getElementById('notifMatchConfirmations').checked = prefs.matchConfirmations !== false; // Default ON
                 }
             } catch (error) {
                 console.error('Error loading notification prefs:', error);
@@ -2638,8 +2638,8 @@
 
         function openNotificationPrefsModal() {
             document.getElementById('userMenuDropdown').classList.remove('active');
-            document.getElementById('notifActivityAlerts').checked = userNotificationPrefs.activityAlerts || false;
-            document.getElementById('notifMatchConfirmations').checked = userNotificationPrefs.matchConfirmations || false;
+            document.getElementById('notifActivityAlerts').checked = userNotificationPrefs.activityAlerts === true; // Default OFF
+            document.getElementById('notifMatchConfirmations').checked = userNotificationPrefs.matchConfirmations !== false; // Default ON
             renderMutedMembersList();
             document.getElementById('notificationPrefsModal').classList.add('active');
         }
@@ -2875,8 +2875,8 @@
                 const prefs = snapshot.val() || {};
                 userNotificationPrefs = prefs;
 
-                document.getElementById('notifActivityAlertsInline').checked = prefs.activityAlerts || false;
-                document.getElementById('notifMatchConfirmationsInline').checked = prefs.matchConfirmations || false;
+                document.getElementById('notifActivityAlertsInline').checked = prefs.activityAlerts === true; // Default OFF
+                document.getElementById('notifMatchConfirmationsInline').checked = prefs.matchConfirmations !== false; // Default ON
                 renderMutedMembersListInline();
             } catch (error) {
                 console.error('Error loading inline notification prefs:', error);

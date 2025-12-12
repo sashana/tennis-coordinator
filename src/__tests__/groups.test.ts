@@ -286,7 +286,7 @@ describe('mergeGroupSettings', () => {
   const existing: GroupSettings = {
     groupName: 'Original',
     coreMembers: ['Alice'],
-    memberDetails: { Alice: { contact: '123' } },
+    memberDetails: { Alice: { phone: '123', addedBy: 'Admin', addedDate: Date.now() } },
     groupPin: '1234',
     adminPin: '5678',
   };
@@ -299,7 +299,7 @@ describe('mergeGroupSettings', () => {
 
   it('deep merges memberDetails', () => {
     const result = mergeGroupSettings(existing, {
-      memberDetails: { Bob: { contact: '456' } },
+      memberDetails: { Bob: { phone: '456', addedBy: 'Admin', addedDate: Date.now() } },
     });
     expect(result.memberDetails?.Alice).toBeDefined();
     expect(result.memberDetails?.Bob).toBeDefined();

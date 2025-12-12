@@ -54,12 +54,13 @@ A Progressive Web App (PWA) for coordinating tennis matches, managing player che
 - **Admin login access**: Quick access to admin functions from profile
 - **Session persistence**: Remembers your identity across visits
 
-### My Games Tab
+### My Matches Tab
 - **Upcoming games overview**: See all your scheduled matches across dates
 - **Match status indicators**: Green for ready, yellow for forming
-- **Quick navigation**: Tap any game to jump to that day's check-in
+- **Quick navigation**: Calendar icon next to each match to jump to that day's check-in
 - **Multi-game sharing**: Select multiple games and share status via WhatsApp, SMS, or copy
 - **Invite players**: Quick share for forming matches that need players
+- **Admin arrangements visible**: Shows custom match arrangements made by admins
 
 ### Notification System
 - **Activity alerts**: Get notified when players check in or out
@@ -68,11 +69,12 @@ A Progressive Web App (PWA) for coordinating tennis matches, managing player che
 - **Click to navigate**: Tap notifications to jump to that date
 
 ### Group Admin Dashboard
-- **PIN-protected access** via settings
+- **PIN-protected access** via settings (redirects to Profile after successful login)
 - **Member management modal**: Add, edit, and view member details with contact info
 - **Group story and rules**: Configure group description and rules/tips shown in Help tab
-- **Activity history**: View all check-ins, removals, and changes with delete option
-- **Group insights**: Analytics on player activity and engagement trends
+- **Activity history**: View all check-ins, removals, arrangements, and changes with delete option
+- **Match arrangement mode**: Manually arrange players into matches, overriding automatic organization
+- **Arrangement activity logging**: Activity history shows match arrangement details with player assignments
 - **Admin PIN configuration**: Change admin access PIN
 - **Weather location**: Set custom location for weather forecast
 

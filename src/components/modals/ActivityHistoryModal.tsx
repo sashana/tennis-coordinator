@@ -22,10 +22,13 @@ interface ActivityItem {
   previousNote?: string;
   oldName?: string;
   firebaseKey?: string; // Key in Firebase for deletion
+  matchCount?: number;  // For arrangement_saved
+  playerCount?: number; // For arrangement_saved
+  arrangementDetails?: string; // For arrangement_saved - human-readable description
 }
 
 // Filter categories that group related actions
-type FilterCategory = 'login' | 'checkin' | 'removal' | 'shared' | 'notes' | 'members';
+type FilterCategory = 'login' | 'checkin' | 'removal' | 'shared' | 'notes' | 'members' | 'arrangements';
 
 const FILTER_CONFIG: Record<FilterCategory, { label: string; actions: string[] }> = {
   login: { label: 'Logins', actions: ['user_login'] },
@@ -34,6 +37,7 @@ const FILTER_CONFIG: Record<FilterCategory, { label: string; actions: string[] }
   shared: { label: 'Shared', actions: ['whatsapp_share'] },
   notes: { label: 'Notes', actions: ['notes_saved', 'note_added', 'note_updated', 'note_removed'] },
   members: { label: 'Members', actions: ['member_added', 'member_removed', 'member_renamed'] },
+  arrangements: { label: 'Arrangements', actions: ['arrangement_saved', 'arrangement_cleared'] },
 };
 
 const groupByPlayDate = signal(false);
@@ -130,6 +134,10 @@ function getActivityIcon(action: string): string {
       return '🗑️';
     case 'user_login':
       return '🔓';
+    case 'arrangement_saved':
+      return '🔀';
+    case 'arrangement_cleared':
+      return '↩️';
     default:
       return '📋';
   }
@@ -204,6 +212,18 @@ function getActivityDescription(activity: ActivityItem): string {
 
     case 'user_login':
       return `${player} logged in`;
+
+    case 'arrangement_saved': {
+      const { matchCount } = activity;
+      let desc = `${by} arranged matches`;
+      if (matchCount) {
+        desc += ` (${matchCount} match${matchCount > 1 ? 'es' : ''})`;
+      }
+      return desc;
+    }
+
+    case 'arrangement_cleared':
+      return `${by} cleared arrangement (back to auto)`;
 
     default:
       return `${player} - ${action}`;
@@ -362,7 +382,12 @@ export function ActivityHistoryModal() {
                     <div style="display: flex; align-items: flex-start; gap: 6px;">
                       <span>{getActivityIcon(item.action)}</span>
                       <div style="flex: 1;">
-                        {getActivityDescription(item)}
+                        <div style="white-space: pre-wrap;">{getActivityDescription(item)}</div>
+                        {item.arrangementDetails && (
+                          <div style="font-size: 12px; color: #666; margin-top: 4px; background: #fff; padding: 6px 8px; border-radius: 4px; border: 1px solid #e0e0e0;">
+                            {item.arrangementDetails}
+                          </div>
+                        )}
                         <div style="font-size: 12px; color: #999; margin-top: 4px; display: flex; gap: 8px; flex-wrap: wrap;">
                           <span>{formatActivityTime(item.timestamp)}</span>
                           {groupByPlayDate.value ? (

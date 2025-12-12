@@ -105,7 +105,7 @@ export function formatMatchesForWhatsApp(
 export function formatCheckinForWhatsApp(
   _name: string,
   dateStr: string,
-  checkinData: CheckinData
+  checkinData: Pick<CheckinData, 'playStyle' | 'timeRange'>
 ): string {
   const formattedDate = formatDateForSharing(dateStr);
   const lines: string[] = [];

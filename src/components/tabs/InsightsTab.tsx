@@ -278,7 +278,7 @@ export function InsightsTab() {
             return (
               <div key={day} style={{ flex: '1', textAlign: 'center' }}>
                 <div style={{
-                  background: idx === Object.entries(data.dayOfWeekCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ? '#4CAF50' : '#c8e6c9',
+                  background: idx === Number(Object.entries(data.dayOfWeekCounts).sort((a, b) => b[1] - a[1])[0]?.[0]) ? '#4CAF50' : '#c8e6c9',
                   height: `${Math.max(height, 4)}px`,
                   borderRadius: '4px 4px 0 0',
                   marginBottom: '4px',

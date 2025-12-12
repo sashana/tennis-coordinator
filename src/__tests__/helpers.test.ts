@@ -14,6 +14,7 @@ import {
   cleanPhoneNumber,
 } from '../utils/helpers';
 import { isMemberMuted } from '../utils/notifications';
+import type { NotificationPreferences } from '../types';
 
 describe('normalizeName', () => {
   it('converts to lowercase', () => {
@@ -170,22 +171,24 @@ describe('isSameName', () => {
 });
 
 describe('isMemberMuted', () => {
+  const basePrefs: NotificationPreferences = { activityAlerts: true, matchConfirmations: true, mutedMembers: [] };
+
   it('returns false when no muted members', () => {
-    expect(isMemberMuted('Alice', {})).toBe(false);
-    expect(isMemberMuted('Alice', { mutedMembers: [] })).toBe(false);
+    expect(isMemberMuted('Alice', { ...basePrefs } as NotificationPreferences)).toBe(false);
+    expect(isMemberMuted('Alice', { ...basePrefs, mutedMembers: [] })).toBe(false);
   });
 
   it('returns true when member is muted', () => {
-    expect(isMemberMuted('Alice', { mutedMembers: ['alice'] })).toBe(true);
-    expect(isMemberMuted('ALICE', { mutedMembers: ['alice'] })).toBe(true);
+    expect(isMemberMuted('Alice', { ...basePrefs, mutedMembers: ['alice'] })).toBe(true);
+    expect(isMemberMuted('ALICE', { ...basePrefs, mutedMembers: ['alice'] })).toBe(true);
   });
 
   it('returns false when member is not muted', () => {
-    expect(isMemberMuted('Alice', { mutedMembers: ['bob'] })).toBe(false);
+    expect(isMemberMuted('Alice', { ...basePrefs, mutedMembers: ['bob'] })).toBe(false);
   });
 
   it('handles case-insensitive matching', () => {
-    expect(isMemberMuted('Alice', { mutedMembers: ['ALICE'] })).toBe(true);
+    expect(isMemberMuted('Alice', { ...basePrefs, mutedMembers: ['ALICE'] })).toBe(true);
   });
 });
 

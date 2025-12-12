@@ -58,7 +58,7 @@ describe('isEmptyObject', () => {
 
 describe('mergeObjects', () => {
   it('merges multiple objects', () => {
-    const result = mergeObjects({ a: 1 }, { b: 2 }, { c: 3 });
+    const result = mergeObjects({ a: 1 } as Record<string, number>, { b: 2 } as Record<string, number>, { c: 3 } as Record<string, number>);
     expect(result).toEqual({ a: 1, b: 2, c: 3 });
   });
 
@@ -71,8 +71,8 @@ describe('mergeObjects', () => {
 describe('deepMerge', () => {
   it('deeply merges nested objects', () => {
     const result = deepMerge(
-      { a: { b: 1, c: 2 } },
-      { a: { c: 3, d: 4 } }
+      { a: { b: 1, c: 2 } } as Record<string, Record<string, number>>,
+      { a: { c: 3, d: 4 } } as Record<string, Record<string, number>>
     );
     expect(result).toEqual({ a: { b: 1, c: 3, d: 4 } });
   });

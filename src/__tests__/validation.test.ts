@@ -11,6 +11,7 @@ import {
   isDuplicateName,
   validateUniqueName,
 } from '../utils/validation';
+import type { TimeRange } from '../types';
 
 describe('isValidPlayStyle', () => {
   it('returns true for valid play styles', () => {
@@ -46,7 +47,7 @@ describe('isValidTimeFormat', () => {
 describe('validateTimeRange', () => {
   it('accepts empty/undefined time range', () => {
     expect(validateTimeRange(undefined).valid).toBe(true);
-    expect(validateTimeRange({} as { start?: string; end?: string }).valid).toBe(true);
+    expect(validateTimeRange({} as TimeRange).valid).toBe(true);
   });
 
   it('validates time formats', () => {

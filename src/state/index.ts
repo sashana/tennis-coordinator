@@ -17,8 +17,8 @@ import { getTodayDate, normalizeName } from '@/utils/helpers';
  * Default notification preferences
  */
 const DEFAULT_NOTIFICATION_PREFS: NotificationPreferences = {
-  activityAlerts: true,
-  matchConfirmations: true,
+  activityAlerts: false, // OFF by default - user must opt-in to check-in alerts
+  matchConfirmations: true, // ON by default - users want to know when they're in a match
   mutedMembers: [],
 };
 

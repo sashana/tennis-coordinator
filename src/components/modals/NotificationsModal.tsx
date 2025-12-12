@@ -41,8 +41,9 @@ async function loadNotificationPrefs() {
     const snapshot = await prefsRef.once('value');
     const prefs = snapshot.val() as { activityAlerts?: boolean; matchConfirmations?: boolean; mutedMembers?: string[] } || {};
 
+    // Activity alerts default OFF (must opt-in), Match confirmations default ON
     activityAlertsEnabled.value = prefs.activityAlerts === true;
-    matchConfirmationsEnabled.value = prefs.matchConfirmations === true;
+    matchConfirmationsEnabled.value = prefs.matchConfirmations !== false; // Default ON
     mutedMembers.value = prefs.mutedMembers || [];
   } catch (error) {
     console.error('Error loading notification prefs from Firebase:', error);
@@ -332,11 +333,11 @@ export function NotificationsModal() {
                   </label>
                 </div>
 
-                {/* Match Confirmations Toggle */}
+                {/* Game Confirmations Toggle */}
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                   <div>
-                    <div style="font-weight: 500; font-size: 14px;">Match confirmations</div>
-                    <div style="font-size: 12px; color: #666;">When you're placed in a match</div>
+                    <div style="font-weight: 500; font-size: 14px;">Game confirmations</div>
+                    <div style="font-size: 12px; color: #666;">When placed in or removed from a confirmed game</div>
                   </div>
                   <label class="toggle-switch" style="position: relative; display: inline-block; width: 48px; height: 26px;">
                     <input

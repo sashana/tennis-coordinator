@@ -294,11 +294,11 @@ export function NotificationsTab() {
               </label>
             </div>
 
-            {/* Match Confirmations Toggle */}
+            {/* Game Confirmations Toggle */}
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
               <div>
-                <div style="font-weight: 500; font-size: 14px; color: #333;">Match confirmations</div>
-                <div style="font-size: 12px; color: #666;">When you're placed in a match</div>
+                <div style="font-weight: 500; font-size: 14px; color: #333;">Game confirmations</div>
+                <div style="font-size: 12px; color: #666;">When placed in or removed from a confirmed game</div>
               </div>
               <label style="position: relative; display: inline-block; width: 48px; height: 26px;">
                 <input

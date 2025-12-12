@@ -10,7 +10,7 @@
 2. **Select Your Name** → Choose from dropdown (creates your session)
 3. **Select Date** → Scroll horizontally to choose date (past or future)
 4. **Check In** → Follow steps below
-5. **View Matches** → See organized games automatically
+5. **View Games** → See organized games automatically
 
 ### How to Check In
 
@@ -19,8 +19,8 @@
 - Or select "+ Add Guest" to bring a friend
 
 **Step 2: Choose Play Style**
-- 🏸 **Singles Only** → Only 1v1 matches
-- 🎾 **Doubles Only** → Only 2v2 matches
+- 🏸 **Singles Only** → Only 1v1 games
+- 🎾 **Doubles Only** → Only 2v2 games
 - ⚡ **Either** → Most flexible (recommended)
 
 **Step 3: Set Time (Optional)**
@@ -29,25 +29,25 @@
 
 **Step 4: Rotation Preference**
 - ✅ Checked → Can play 3-player rotation
-- ⬜ Unchecked → Only standard matches
+- ⬜ Unchecked → Only standard games
 
 **Step 5: Tap "Check In"**
 
 ---
 
-## 📋 How Match Organization Works
+## 📋 How Game Organization Works
 
 ### Priority System
 ⏰ **First-come, first-served** based on check-in time
 
-### Match Formation Order
+### Game Formation Order
 
-**1️⃣ Doubles Matches (Groups of 4)**
+**1️⃣ Doubles Games (Groups of 4)**
 - Takes first 4 players who selected "Doubles" or "Either"
 - Check-in order determines priority
 - Time shown but not enforced (you coordinate)
 
-**2️⃣ Singles Matches (Pairs)**
+**2️⃣ Singles Games (Pairs)**
 - Pairs remaining players who selected "Singles" or "Either"
 - ⚠️ **Requires overlapping time windows**
 - ⚠️ **Respects exclusion preferences**
@@ -62,14 +62,14 @@
 ## 🏸 Play Style Guide
 
 ### Singles Only 🎯
-**Best for:** Players who prefer 1v1 matches
-- ✅ Only paired for singles matches
+**Best for:** Players who prefer 1v1 games
+- ✅ Only paired for singles games
 - ❌ Never placed in doubles
 - ⚠️ May wait if no compatible partners
 
 ### Doubles Only 🎾
-**Best for:** Players who prefer 2v2 matches
-- ✅ Only placed in doubles matches (groups of 4)
+**Best for:** Players who prefer 2v2 games
+- ✅ Only placed in doubles games (groups of 4)
 - ❌ Never in singles or rotation
 - ⚠️ Goes to waiting if less than 4 doubles players
 
@@ -78,7 +78,7 @@
 - 1️⃣ First considered for doubles
 - 2️⃣ Then available for singles if not in doubles
 - 3️⃣ Can be in rotation groups
-- ✅ Best chance of getting a match
+- ✅ Best chance of getting a game
 
 ---
 
@@ -101,7 +101,7 @@ When exactly 3 compatible players remain, they can form a rotation group
 
 ### Your Preference
 - ✅ **Checked** → Can be placed in rotation (default)
-- ⬜ **Unchecked** → Only standard matches
+- ⬜ **Unchecked** → Only standard games
 
 **Note:** All 3 players must allow rotation for it to form
 
@@ -129,11 +129,11 @@ When exactly 3 compatible players remain, they can form a rotation group
 
 ### Important Rules
 
-⚠️ **Singles Matches ONLY**
+⚠️ **Singles Games ONLY**
 - Time overlap required for pairing
 - No overlap = both go to waiting
 
-✅ **Doubles Matches**
+✅ **Doubles Games**
 - Times shown but not enforced
 - Group coordinates together
 
@@ -156,11 +156,11 @@ Click ⚙️ **Preferences** button next to your name in check-in list
 ### Exclude Players (Singles Only)
 **What it does:**
 - System won't pair you with excluded players
-- Only applies to singles matches
+- Only applies to singles games
 - Completely private - no one can see your exclusions
 
 **When you exclude someone:**
-- ✅ Works for singles matches
+- ✅ Works for singles games
 - ❌ Doesn't affect doubles or rotation
 - ⚠️ May result in waiting if no other partners available
 
@@ -262,7 +262,7 @@ If you want to stop receiving alerts from specific members:
 ### Guest Features
 - ✅ Can check in like regular members
 - ✅ Can set play style and time preferences
-- ✅ Can be in any match type
+- ✅ Can be in any game type
 - ⚠️ You're responsible for your guest
 
 ---
@@ -296,7 +296,7 @@ John Smith                              [Remove]
 ```
 
 ### Guidelines
-- ✅ Add players who match the group's skill level
+- ✅ Add players who fit the group's skill level
 - ✅ Be thoughtful - your name is attached
 - ✅ Include contact info to help coordination
 - ⚠️ Admin can remove if someone adds poorly
@@ -305,7 +305,12 @@ John Smith                              [Remove]
 
 ## ⚙️ Admin Settings
 
-**Access:** Click **User Menu → ⚙️ Admin** → Enter admin PIN
+**Access:** Go to **Profile tab** → Click **Admin Login** button → Enter admin PIN
+
+After successful admin login, you'll be returned to the Profile page with admin mode enabled. From there you can access:
+- **Admin Settings** (via the settings button that appears)
+- **Manage Members** modal
+- **Activity History** with full admin visibility
 
 ### Core Members
 - 👀 **View all members** and who added them
@@ -320,6 +325,21 @@ John Smith                              [Remove]
 
 **Note:** Anyone with group PIN can view member details in settings. This promotes transparency about who vouched for new members.
 
+### Game Arrangement Mode (Admin Only)
+Admins can manually arrange players into games, overriding the automatic organization:
+
+1. **Enter Arrange Mode:** Click **"Arrange"** button in the games section
+2. **Drag and Drop:** Move players between games or to/from the unassigned pool
+3. **Add Game Notes:** Each game can have a note (e.g., "12pm start")
+4. **Save Arrangement:** Click **"Save"** to lock in the arrangement
+5. **Clear Arrangement:** Click **"Back to Auto"** to return to automatic grouping
+
+**Arranged games:**
+- Show "Arranged by [admin]" indicator
+- Are logged in Activity History with full details
+- Persist until cleared or a player removes themselves
+- Automatically update when players are removed (removes player from game, cleans up empty games)
+
 ### Admin PIN
 - 🔐 Required for admin settings
 - 🔑 Only admin should know this
@@ -331,9 +351,12 @@ John Smith                              [Remove]
 - Can be changed by admin
 
 ### Activity History
-- 📋 Access via **User Menu → 📋 History**
-- Shows check-ins, removals, and who performed them
-- Helps track changes throughout the day
+- 📋 Access via **Admin Settings → Activity History**
+- Shows check-ins, removals, logins, notes, and game arrangements
+- Filter by activity type (Logins, Check-ins, Removals, Shared, Notes, Members, Arrangements)
+- Group by play date or by when changes were made
+- Arrangement entries show detailed game assignments
+- Delete individual activity entries
 
 ### Reset Day (Admin Only)
 - 🗑️ **"Reset This Day"** button appears next to WhatsApp share (when logged in as admin)
@@ -342,10 +365,10 @@ John Smith                              [Remove]
 - Cannot be undone
 
 ### WhatsApp Sharing
-- 📱 Share button appears when matches are organized
+- 📱 Share button appears when games are organized
 - Automatically formats message with:
   - Date
-  - Match assignments (Doubles/Singles/Rotation)
+  - Game assignments (Doubles/Singles/Rotation)
   - Player names and time windows
   - Standby list (if any)
   - Weather forecast
@@ -390,7 +413,7 @@ John Smith                              [Remove]
 ### Guests
 
 **👥 Guests welcome!**
-- ✅ Ensure they match the skill level
+- ✅ Ensure they fit the skill level
 - ✅ You're responsible for their behavior
 - ✅ Introduce them to the group
 
@@ -410,7 +433,7 @@ John Smith                              [Remove]
 - Coordinate with group via WhatsApp
 - Consider changing play style to "Either"
 
-### "Match shows time conflict"
+### "Game shows time conflict"
 
 **What it means:**
 - Players have non-overlapping times
@@ -444,7 +467,7 @@ John Smith                              [Remove]
 
 ---
 
-## 📊 Match Formation Tables
+## 📊 Game Formation Tables
 
 This group prioritizes **doubles formation**. "Either" players default toward doubles.
 
@@ -463,7 +486,7 @@ This group prioritizes **doubles formation**. "Either" players default toward do
 | Either | Either | Doubles (forming) - Need 2 more |
 | Either | Singles Only | Doubles (forming) + Singles (forming) |
 | Either | Doubles Only | Doubles (forming) - Need 2 more |
-| Singles Only | Singles Only | Singles match |
+| Singles Only | Singles Only | Singles game |
 | Singles Only | Doubles Only | Singles (forming) + Doubles (forming) separate |
 | Doubles Only | Doubles Only | Doubles (forming) - Need 2 more |
 
@@ -485,7 +508,7 @@ This group prioritizes **doubles formation**. "Either" players default toward do
 
 | Scenario | Result |
 |----------|--------|
-| 4+ who can play doubles | Doubles match forms, remainder handled per above |
+| 4+ who can play doubles | Doubles game forms, remainder handled per above |
 
 ### Fallback Messages for Doubles (forming)
 
@@ -501,20 +524,20 @@ When players are waiting for doubles to fill, the system shows helpful fallback 
 
 ---
 
-## 📋 Match Organization Examples
+## 📋 Game Organization Examples
 
 ### Example 1: Perfect Doubles Day
 **8 Players, all select "Either"**
 ```
-Result: 🎾 2 Doubles Matches
+Result: 🎾 2 Doubles Games
 ```
 
 ### Example 2: Mixed Preferences
 **6 Players: 4 "Either", 2 "Singles Only"**
 ```
 Result:
-🎾 1 Doubles Match (first 4 Either)
-🏸 1 Singles Match (2 Singles Only)
+🎾 1 Doubles Game (first 4 Either)
+🏸 1 Singles Game (2 Singles Only)
 ```
 
 ### Example 3: Doubles Forming
@@ -545,7 +568,7 @@ Result:
 - 2 available 9-11 AM
 - 2 available 2-5 PM
 ```
-Result: 🏸 2 Singles Matches
+Result: 🏸 2 Singles Games
 (paired within same time windows)
 ```
 
@@ -562,7 +585,7 @@ Result:
 
 ## 💡 Tips for Success
 
-### Get More Matches
+### Get More Games
 - ⚡ **Select "Either"** → Maximum flexibility
 - ⏰ **Be flexible with times** → More partners
 - 🎯 **Limit exclusions** → Better pairing chances
@@ -595,7 +618,7 @@ Result:
 - ✓ Confirm you clicked "Check In" button
 - ✓ Refresh page (changes sync automatically)
 
-### Match Looks Wrong
+### Game Looks Wrong
 
 **Problem:** Organization seems incorrect
 - ✓ Review time windows for conflicts
@@ -650,7 +673,7 @@ Contact group admin via WhatsApp
 
 **Benefits:**
 - Everyone sees the same data
-- Real-time match organization
+- Real-time game organization
 - Admin manages members once → everyone sees them
 - No need to manually sync devices
 
@@ -796,10 +819,13 @@ Contact group admin via WhatsApp
 ## Architecture
 
 **Technology Stack:**
-- Frontend: HTML, CSS, JavaScript (vanilla)
+- Frontend: Preact with TypeScript
+- State Management: @preact/signals
+- Build Tool: Vite
 - Backend: Firebase Realtime Database
-- Hosting: GitHub Pages
+- Hosting: Firebase Hosting
 - APIs: Open-Meteo (weather)
+- Testing: Vitest (718 unit tests)
 
 **Data Structure:**
 ```
@@ -861,27 +887,27 @@ Contact group admin via WhatsApp
 
 ---
 
-**Version:** 2.8 (UI Improvements & Historical Data)
+**Version:** 3.0 (Admin Game Arrangement & Profile Improvements)
 **Last Updated:** December 2024
 **Repository:** https://github.com/sashana/tennis-coordinator
 
-**Recent Updates:**
+**Recent Updates (v3.0):**
+- Admin Game Arrangement Mode - manually arrange players into games with drag-and-drop
+- Activity history now shows arrangement details with player assignments
+- Admin login redirects to Profile page after successful PIN entry
+- My Games tab calendar icon improvements - smaller icon next to game status
+- Player removal from arranged games properly updates the arrangement
+- Empty games automatically removed when all players removed
+- 718 unit tests covering game organization logic, arrangement mode, and more
+
+**Previous Updates:**
 - Date selector now shows past 14 days + future 14 days (scrollable, auto-centers on today)
 - Past dates appear faded for visual distinction
-- Shorter menu labels: "History" and "Admin" for cleaner UI
-- Click outside user dropdown to close it
-- Notification bell now uses 🔔 emoji for better visibility
-- Consistent icon styling across all action buttons
 - Mute members feature - stop receiving alerts from specific members
 - Removal notifications - get notified when someone removes themselves from a date
 - Combined notifications UI - settings now accessible via collapsible section in notifications panel
-- Bell icon moved to header (separate from user dropdown menu)
 - In-app notification system with activity alerts and match confirmations
-- User dropdown menu (History, Admin, User Guide, Change User)
 - Notification preferences per user with toggle controls
-- Notification details include play style, time range, and "added by" info
-- Unit test suite (114 tests covering matching logic, member management, notifications)
-- Safari compatibility fix for welcome modal after PIN entry
 - Session user management with changeable identity
 - Activity history tracking
 - Admin-only day reset functionality

@@ -109,6 +109,9 @@ function handleAdminPinSubmit() {
   if (adminPinEntry.value === groupSettings.value.adminPin) {
     setAdminAuth();
     adminPinRequired.value = false;
+    // Close modal and return to Profile page instead of showing settings
+    showSettingsModal.value = false;
+    showToast('Admin mode enabled', 'success');
   } else {
     showToast('Incorrect PIN', 'error');
     adminPinEntry.value = '';

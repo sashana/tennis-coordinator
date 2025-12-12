@@ -11,8 +11,10 @@ import {
   sessionUser,
   showToast
 } from '../components/App';
-import { selectedName, isFormExpanded } from '../components/pages/MainApp';
-import { formatTimeRange } from '../utils/helpers';
+import { selectedName, isFormExpanded, showSharePrompt, sharePromptData } from '../components/pages/MainApp';
+import { formatTimeRange, formatDateForNotification } from '../utils/helpers';
+import { organizeMatches } from '../utils/matching';
+import type { CheckinData } from '../types';
 
 // Group settings
 export const groupSettings = signal<{
@@ -29,6 +31,9 @@ export const groupSettings = signal<{
 
 // Match notes
 export const matchNotes = signal<Record<string, string>>({});
+
+// Track previous match state by date (for detecting new match formations)
+const previousMatchState: Record<string, Record<string, { type: string; players: string[] }>> = {};
 
 // Firebase references helper
 function getRef(path: string) {
@@ -52,6 +57,15 @@ export function useGroupData() {
         currentGroupName.value = (settings.groupName as string) || 'Unknown Group';
         coreMembers.value = (settings.members as string[]) || [];
         memberDetails.value = (settings.memberDetails as Record<string, unknown>) || {};
+
+        // Check if current session user was renamed by admin
+        const renamedMembers = (settings.renamedMembers as Record<string, string>) || {};
+        if (sessionUser.value && renamedMembers[sessionUser.value]) {
+          const newName = renamedMembers[sessionUser.value];
+          sessionUser.value = newName;
+          localStorage.setItem(`sessionUser_${groupId}`, newName);
+        }
+
         groupSettings.value = {
           groupPin: (settings.groupPin as string) || '',
           adminPin: (settings.adminPin as string) || '',
@@ -195,7 +209,7 @@ export async function addCheckin(checkin: {
 
   try {
     await checkinsRef.set([...currentCheckins, newCheckin]);
-    showToast(`${checkin.name} checked in!`, 'success');
+    // Toast removed - SharePromptBanner handles the feedback
 
     // Log activity
     await logActivity(groupId, date, 'checkin', checkin.name, checkin.addedBy);
@@ -206,6 +220,10 @@ export async function addCheckin(checkin: {
       timeRange: checkin.timeRange,
       allowRotation: checkin.allowRotation,
     });
+
+    // Check if any new matches were formed and notify players
+    // Use setTimeout to allow Firebase to update before checking
+    setTimeout(() => checkAndNotifyMatchFormations(groupId, date), 500);
   } catch (error) {
     console.error('Error adding check-in:', error);
     showToast('Failed to check in', 'error');
@@ -254,6 +272,53 @@ export async function updateCheckin(
   }
 }
 
+// Helper to remove a player from the current match arrangement
+async function removePlayerFromArrangement(groupId: string, date: string, playerName: string) {
+  const arrangement = matchArrangement.value;
+  if (!arrangement || !arrangement.matches) return;
+
+  // Remove player from all matches
+  const newMatches: Record<string, { players: string[]; note?: string }> = {};
+  for (const [matchKey, matchData] of Object.entries(arrangement.matches)) {
+    const players = (matchData.players || []).filter(
+      (p: string) => normalizeName(p) !== normalizeName(playerName)
+    );
+    // Only keep matches that still have players
+    if (players.length > 0) {
+      newMatches[matchKey] = { ...matchData, players };
+    }
+  }
+
+  // Remove from unassigned as well
+  const newUnassigned = (arrangement.unassigned || []).filter(
+    (p: string) => normalizeName(p) !== normalizeName(playerName)
+  );
+
+  // If no matches left and no unassigned, clear the arrangement entirely
+  if (Object.keys(newMatches).length === 0 && newUnassigned.length === 0) {
+    try {
+      await getRef(`groups/${groupId}/matchArrangements/${date}`).remove();
+      matchArrangement.value = null;
+    } catch (error) {
+      console.error('Error clearing arrangement after removal:', error);
+    }
+    return;
+  }
+
+  const updatedArrangement = {
+    ...arrangement,
+    matches: newMatches,
+    unassigned: newUnassigned,
+  };
+
+  try {
+    await getRef(`groups/${groupId}/matchArrangements/${date}`).set(updatedArrangement);
+    matchArrangement.value = updatedArrangement;
+  } catch (error) {
+    console.error('Error updating arrangement after removal:', error);
+  }
+}
+
 // Check if user can remove a check-in (returns info or null if not allowed)
 export function canRemoveCheckin(index: number, sessionUserName: string): {
   personName: string;
@@ -268,8 +333,8 @@ export function canRemoveCheckin(index: number, sessionUserName: string): {
   const personName = person?.name || 'this person';
 
   // Permission check: Can remove if you're the owner, the adder, or admin
-  const isOwner = sessionUserName && normalizeName(sessionUserName) === normalizeName(personName);
-  const isAdder = person?.addedBy && sessionUserName && normalizeName(sessionUserName) === normalizeName(person.addedBy);
+  const isOwner = Boolean(sessionUserName && normalizeName(sessionUserName) === normalizeName(personName));
+  const isAdder = Boolean(person?.addedBy && sessionUserName && normalizeName(sessionUserName) === normalizeName(person.addedBy));
   const isAdmin = sessionStorage.getItem(`adminAuth_${groupId}`) === 'true';
 
   if (!isOwner && !isAdder && !isAdmin) {
@@ -296,7 +361,12 @@ export async function removeCheckin(index: number, sessionUserName: string) {
 
   try {
     await checkinsRef.set(updatedCheckins.length > 0 ? updatedCheckins : null);
-    showToast(`${personName} removed`, 'info');
+    // Toast removed - SharePromptBanner handles the feedback
+
+    // If there's a custom arrangement, remove the player from it too
+    if (matchArrangement.value && personName) {
+      await removePlayerFromArrangement(groupId, date, personName);
+    }
 
     // If user removed their own check-in, pre-select their name for easy re-check-in
     if (isOwner && sessionUserName) {
@@ -309,6 +379,10 @@ export async function removeCheckin(index: number, sessionUserName: string) {
 
     // Notify users with activity alerts
     await notifyRemovalAlert(groupId, personName, date, sessionUserName);
+
+    // Check if any matches were dissolved and notify players
+    // Use setTimeout to allow Firebase to update before checking
+    setTimeout(() => checkAndNotifyMatchFormations(groupId, date), 500);
   } catch (error) {
     console.error('Error removing check-in:', error);
     showToast('Failed to remove check-in', 'error');
@@ -484,6 +558,119 @@ async function notifyCheckinAlert(
   }
 }
 
+// Check and notify match formations
+// This compares current match state to previous and notifies players when new complete matches form
+async function checkAndNotifyMatchFormations(groupId: string, date: string) {
+  const checkins = (allCheckins.value[date] || []) as CheckinData[];
+  if (checkins.length === 0) return;
+
+  const { matches } = organizeMatches(checkins);
+  const currentState: Record<string, { type: string; players: string[] }> = {};
+
+  // Build current state of complete matches
+  matches.forEach(match => {
+    if (match.type === 'doubles' || match.type === 'singles') {
+      const playerNames = match.players.map(p => normalizeName(p.name)).sort().join(',');
+      currentState[playerNames] = {
+        type: match.type,
+        players: match.players.map(p => p.name)
+      };
+    }
+  });
+
+  const prevState = previousMatchState[date] || {};
+
+  // Find new matches (in current but not in previous)
+  for (const [key, matchData] of Object.entries(currentState)) {
+    if (!prevState[key]) {
+      // This is a new complete match - notify all players
+      const formattedDate = formatDateForNotification(date);
+      const matchType = matchData.type === 'doubles' ? 'Doubles' : 'Singles';
+
+      for (const playerName of matchData.players) {
+        const teammates = matchData.players.filter(p => normalizeName(p) !== normalizeName(playerName));
+        const message = `✅ You're in ${matchType} for ${formattedDate} with ${teammates.join(', ')}`;
+
+        try {
+          const db = getDatabase();
+          const snapshot = await db.ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/preferences`).once('value');
+          const prefs = (snapshot.val() || {}) as { matchConfirmations?: boolean };
+
+          // Only send if matchConfirmations is enabled (default true)
+          if (prefs.matchConfirmations !== false) {
+            const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/items`).push();
+            await notifRef.set({
+              message,
+              timestamp: Date.now(),
+              read: false,
+              date,
+              type: 'match_formed',
+              matchType,
+            });
+            console.log(`[checkAndNotifyMatchFormations] Sent notification to ${playerName}`);
+          }
+        } catch (error) {
+          console.error(`Error sending match notification to ${playerName}:`, error);
+        }
+      }
+    }
+  }
+
+  // Find dissolved matches (in previous but not in current)
+  for (const [key, prevMatchData] of Object.entries(prevState)) {
+    if (!currentState[key]) {
+      // This match no longer exists - find who's still checked in and notify them
+      const formattedDate = formatDateForNotification(date);
+      const matchType = prevMatchData.type === 'doubles' ? 'Doubles' : 'Singles';
+
+      // Find which players from the old match are still checked in
+      const currentCheckinNames = checkins.map(c => normalizeName(c.name));
+      const remainingPlayers = prevMatchData.players.filter(p =>
+        currentCheckinNames.includes(normalizeName(p))
+      );
+      const droppedPlayers = prevMatchData.players.filter(p =>
+        !currentCheckinNames.includes(normalizeName(p))
+      );
+
+      // Only notify if someone actually dropped out (not just reshuffled into another match)
+      if (droppedPlayers.length > 0 && remainingPlayers.length > 0) {
+        const droppedNames = droppedPlayers.join(', ');
+        const needed = matchType === 'Doubles' ? 4 - remainingPlayers.length : 2 - remainingPlayers.length;
+        const neededText = needed === 1 ? 'Need 1 more player' : `Need ${needed} more players`;
+        const message = `⚠️ Your ${matchType} for ${formattedDate} is no longer confirmed - ${droppedNames} dropped out. ${neededText}.`;
+
+        // Notify remaining players
+        for (const playerName of remainingPlayers) {
+          try {
+            const db = getDatabase();
+            const snapshot = await db.ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/preferences`).once('value');
+            const prefs = (snapshot.val() || {}) as { matchConfirmations?: boolean };
+
+            // Only send if matchConfirmations is enabled (default true)
+            if (prefs.matchConfirmations !== false) {
+              const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/items`).push();
+              await notifRef.set({
+                message,
+                timestamp: Date.now(),
+                read: false,
+                date,
+                type: 'match_dissolved',
+                matchType,
+              });
+              console.log(`[checkAndNotifyMatchFormations] Sent dissolved notification to ${playerName}`);
+            }
+          } catch (error) {
+            console.error(`Error sending dissolved match notification to ${playerName}:`, error);
+          }
+        }
+      }
+    }
+  }
+
+  // Update previous state
+  previousMatchState[date] = currentState;
+}
+
 // Notify users about note changes
 async function notifyNoteAlert(
   groupId: string,
@@ -641,6 +828,10 @@ export async function addMember(member: {
       memberDetails: newDetails,
     });
 
+    // Update local signals immediately
+    coreMembers.value = newMembers;
+    memberDetails.value = newDetails as Record<string, { phone?: string; email?: string; notes?: string; addedBy?: string; addedDate?: string }>;
+
     // Log activity
     const date = selectedDate.value || new Date().toISOString().split('T')[0];
     await logActivity(groupId, date, 'member_added', member.name, member.addedBy, {
@@ -648,7 +839,17 @@ export async function addMember(member: {
       notes: member.notes || undefined,
     });
 
-    showToast(`${member.name} added to members`, 'success');
+    // Show invite prompt instead of toast
+    const groupUrl = `${window.location.origin}${window.location.pathname}?group=${groupId}`;
+    sharePromptData.value = {
+      action: 'invite',
+      name: member.name,
+      date: date,
+      groupName: currentGroupName.value || 'Tennis Group',
+      groupUrl: groupUrl,
+      groupPin: groupSettings.value.groupPin || '',
+    };
+    showSharePrompt.value = true;
   } catch (error) {
     console.error('Error adding member:', error);
     showToast('Failed to add member', 'error');
@@ -775,14 +976,25 @@ export async function renameMember(oldName: string, newName: string) {
       delete newDetails[oldName];
     }
 
+    // Get existing renamedMembers and add this rename mapping
+    const existingRenamedMembers = (settings.renamedMembers as Record<string, string>) || {};
+    const updatedRenamedMembers = { ...existingRenamedMembers, [oldName]: trimmedNewName };
+
     await settingsRef.update({
       members: newMembers,
       memberDetails: newDetails,
+      renamedMembers: updatedRenamedMembers,
     });
 
     // Update local signals
     coreMembers.value = newMembers;
     memberDetails.value = newDetails;
+
+    // Update sessionUser if the renamed member is the current session user
+    if (sessionUser.value === oldName) {
+      sessionUser.value = trimmedNewName;
+      localStorage.setItem(`sessionUser_${groupId}`, trimmedNewName);
+    }
 
     // Update all check-ins with the old name to the new name
     const db = getDatabase();
@@ -822,4 +1034,164 @@ export async function renameMember(oldName: string, newName: string) {
     showToast('Failed to rename member', 'error');
     return false;
   }
+}
+
+// Match arrangement type and signal (loaded per date)
+type MatchArrangementData = {
+  matches: Record<string, { players: string[]; note?: string }>;
+  unassigned: string[];
+  arrangedBy: string;
+  arrangedAt: number;
+};
+
+function isValidMatchArrangement(data: unknown): data is MatchArrangementData {
+  return (
+    data !== null &&
+    typeof data === 'object' &&
+    'matches' in data &&
+    'arrangedBy' in data &&
+    'arrangedAt' in data
+  );
+}
+
+export const matchArrangement = signal<MatchArrangementData | null>(null);
+
+// Load match arrangement for current date
+export async function loadMatchArrangement() {
+  const groupId = currentGroupId.value;
+  const date = selectedDate.value;
+  if (!groupId || !date) {
+    matchArrangement.value = null;
+    return;
+  }
+
+  try {
+    const snapshot = await getRef(`groups/${groupId}/matchArrangements/${date}`).once('value');
+    const data = snapshot.val();
+    matchArrangement.value = isValidMatchArrangement(data) ? data : null;
+  } catch (error) {
+    console.error('Error loading match arrangement:', error);
+    matchArrangement.value = null;
+  }
+}
+
+// Save match arrangement
+export async function saveMatchArrangement(arrangement: {
+  matches: Record<string, { players: string[]; note?: string }>;
+  unassigned: string[];
+}) {
+  const groupId = currentGroupId.value;
+  const date = selectedDate.value;
+  if (!groupId || !date) return;
+
+  const arrangedBy = sessionUser.value || 'Admin';
+  const fullArrangement = {
+    ...arrangement,
+    arrangedBy,
+    arrangedAt: Date.now(),
+  };
+
+  try {
+    await getRef(`groups/${groupId}/matchArrangements/${date}`).set(fullArrangement);
+    matchArrangement.value = fullArrangement;
+
+    // Calculate stats for activity log
+    const matchCount = Object.keys(arrangement.matches).length;
+    const playerCount = Object.values(arrangement.matches).reduce(
+      (sum, m) => sum + (m.players?.length || 0), 0
+    ) + (arrangement.unassigned?.length || 0);
+
+    // Build human-readable arrangement details
+    const matchDescriptions: string[] = [];
+    const sortedKeys = Object.keys(arrangement.matches).sort();
+    for (const matchKey of sortedKeys) {
+      const matchData = arrangement.matches[matchKey];
+      const players = matchData?.players || [];
+      if (players.length > 0) {
+        // Format: "Doubles 1: Alex, Bob, Carol, Dan" or "Singles 1: Alex vs Bob"
+        const matchLabel = matchKey.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase());
+        const playerList = matchKey.startsWith('singles') && players.length === 2
+          ? `${players[0]} vs ${players[1]}`
+          : players.join(', ');
+        matchDescriptions.push(`${matchLabel}: ${playerList}`);
+      }
+    }
+    if (arrangement.unassigned?.length > 0) {
+      matchDescriptions.push(`Unassigned: ${arrangement.unassigned.join(', ')}`);
+    }
+    const arrangementDetails = matchDescriptions.join(' | ');
+
+    // Log activity
+    await logActivity(groupId, date, 'arrangement_saved', arrangedBy, arrangedBy, {
+      matchCount,
+      playerCount,
+      arrangementDetails,
+    });
+
+    showToast('Match arrangement saved', 'success');
+  } catch (error) {
+    console.error('Error saving match arrangement:', error);
+    showToast('Failed to save arrangement', 'error');
+  }
+}
+
+// Clear match arrangement (revert to auto-organized)
+export async function clearMatchArrangement() {
+  const groupId = currentGroupId.value;
+  const date = selectedDate.value;
+  if (!groupId || !date) return;
+
+  const clearedBy = sessionUser.value || 'Admin';
+
+  try {
+    await getRef(`groups/${groupId}/matchArrangements/${date}`).remove();
+    matchArrangement.value = null;
+
+    // Log activity
+    await logActivity(groupId, date, 'arrangement_cleared', clearedBy, clearedBy);
+
+    showToast('Arrangement cleared - using auto-organization', 'info');
+  } catch (error) {
+    console.error('Error clearing match arrangement:', error);
+    showToast('Failed to clear arrangement', 'error');
+  }
+}
+
+// Hook to load match arrangement when date changes
+export function useMatchArrangement() {
+  useEffect(() => {
+    let currentRef: ReturnType<typeof getRef> | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let currentUnsubscribe: any = null;
+
+    const dispose = effect(() => {
+      const groupId = currentGroupId.value;
+      const date = selectedDate.value;
+
+      // Cleanup previous listener
+      if (currentRef && currentUnsubscribe) {
+        currentRef.off('value', currentUnsubscribe);
+      }
+
+      if (!groupId || groupId === 'admin' || !date) {
+        matchArrangement.value = null;
+        return;
+      }
+
+      currentRef = getRef(`groups/${groupId}/matchArrangements/${date}`);
+
+      // Set up real-time listener for match arrangements
+      currentUnsubscribe = currentRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        matchArrangement.value = isValidMatchArrangement(data) ? data : null;
+      });
+    });
+
+    return () => {
+      dispose();
+      if (currentRef && currentUnsubscribe) {
+        currentRef.off('value', currentUnsubscribe);
+      }
+    };
+  }, []);
 }

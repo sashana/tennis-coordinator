@@ -1,5 +1,5 @@
-import { signal, effect } from '@preact/signals';
-import { currentCheckins, selectedDate, sessionUser, currentGroupId, showToast } from '../App';
+import { signal } from '@preact/signals';
+import { currentCheckins, selectedDate, currentGroupId, showToast } from '../App';
 import { matchNotes, saveMatchNote, resetDay, groupSettings } from '../../hooks/useFirebase';
 import { organizeMatches } from '../../utils/matching';
 import { formatTimeRange, formatDate } from '../../utils/helpers';
@@ -83,7 +83,7 @@ function shareNeedPlayers(match: any, date: string, method: 'whatsapp' | 'sms' |
 }
 
 // Invite button with dropdown
-function NeedPlayersButton({ match, matchKey, needed }: { match: any; matchKey: string; needed: number }) {
+function NeedPlayersButton({ match, matchKey }: { match: any; matchKey: string; needed: number }) {
   const date = selectedDate.value || '';
   const isOpen = activeShareDropdown.value === matchKey;
 

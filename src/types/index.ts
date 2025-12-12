@@ -135,7 +135,9 @@ export type ActivityAction =
   | 'member_added'
   | 'member_removed'
   | 'whatsapp_share'
-  | 'notes_saved';
+  | 'notes_saved'
+  | 'arrangement_saved'
+  | 'arrangement_cleared';
 
 export interface ActivityEntry {
   timestamp: number;
@@ -148,6 +150,9 @@ export interface ActivityEntry {
   notes?: string;
   type?: string;  // for whatsapp_share
   matchKey?: string;  // for notes_saved
+  matchCount?: number;  // for arrangement_saved - number of matches arranged
+  playerCount?: number;  // for arrangement_saved - total players arranged
+  arrangementDetails?: string;  // for arrangement_saved - human-readable description of arrangement
 }
 
 export interface ActivityByDate {
@@ -175,6 +180,22 @@ export interface Match {
 export interface OrganizeMatchesResult {
   matches: Match[];
   warnings: string[];
+}
+
+// ============================================
+// Match Arrangement Types (Admin Override)
+// ============================================
+
+export interface MatchArrangement {
+  matches: {
+    [matchKey: string]: {  // e.g., "doubles-1", "doubles-2", "singles-1"
+      players: string[];   // Player names in this match
+      note?: string;       // Optional time note like "12pm start"
+    };
+  };
+  unassigned: string[];    // Players not assigned to any match
+  arrangedBy: string;      // Admin who set this
+  arrangedAt: number;      // Timestamp
 }
 
 // ============================================

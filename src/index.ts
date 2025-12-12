@@ -19,7 +19,29 @@ export * from './utils/display';
 export * from './utils/sharing';
 export * from './utils/weather';
 export * from './utils/validation';
-export * from './utils/members';
+export {
+  findMemberByName,
+  isMember,
+  getMemberDetails,
+  getMemberContact,
+  sortMembersAlphabetically,
+  sortMembersByCheckinStatus,
+  filterActiveMembers,
+  isMemberCheckedIn,
+  getMemberCheckin,
+  getMembersNotCheckedIn,
+  addMemberToList,
+  removeMemberFromList,
+  updateMemberDetails,
+  removeMemberDetails,
+  getMemberCount,
+  getMembersAddedBy,
+  renameMemberInList,
+  transferMemberDetails,
+  updateCheckinNames,
+  // isDuplicateName is already exported from validation
+  validateMemberName,
+} from './utils/members';
 export * from './utils/checkins';
 export * from './utils/matchNotes';
 export * from './utils/groups';

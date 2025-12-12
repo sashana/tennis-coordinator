@@ -1,15 +1,14 @@
 import { signal } from '@preact/signals';
 import { Modal } from '../ui/Modal';
-import { currentGroupId, coreMembers, memberDetails, showToast } from '../App';
-import { removeMember, renameMember } from '../../hooks/useFirebase';
+import { currentGroupId, coreMembers, memberDetails, showToast, sessionUser } from '../App';
+import { removeMember, renameMember, addMember } from '../../hooks/useFirebase';
 import { getDatabase } from '../../config/firebase';
-import { showInvitePrompt } from './InvitePromptModal';
+import { showInvitePrompt } from './InvitePromptModal'; // Used for invite button in member list
 
 // Export for use in ProfileTab
 export const showMemberModal = signal(false);
 
-// Local form state
-const newMemberInput = signal('');
+// Local form state for editing
 const editingMember = signal<string | null>(null);
 const editMemberName = signal('');
 const editMemberPhone = signal('');
@@ -17,32 +16,47 @@ const editMemberEmail = signal('');
 const editMemberNotes = signal('');
 const searchQuery = signal('');
 
-async function addCoreMember() {
-  const name = newMemberInput.value.trim();
-  if (!name) return;
+// Add member form state
+const addFormExpanded = signal(false);
+const newMemberName = signal('');
+const newMemberPhone = signal('');
+const newMemberEmail = signal('');
+const newMemberNotes = signal('');
 
-  const groupId = currentGroupId.value;
-  if (!groupId) return;
-
-  if (coreMembers.value.includes(name)) {
-    showToast('Member already exists', 'error');
+async function handleAddMember() {
+  const name = newMemberName.value.trim();
+  if (!name) {
+    showToast('Please enter member name', 'error');
     return;
   }
 
-  try {
-    const db = getDatabase();
-    const settingsRef = db.ref(`groups/${groupId}/settings`);
+  const memberPhone = newMemberPhone.value.trim();
+  const memberEmail = newMemberEmail.value.trim();
 
-    const newMembers = [...coreMembers.value, name].sort();
-    await settingsRef.update({ members: newMembers });
+  // Use the shared addMember function which handles all the logic including invite prompt
+  await addMember({
+    name: name,
+    phone: memberPhone,
+    email: memberEmail,
+    notes: newMemberNotes.value.trim(),
+    addedBy: sessionUser.value || 'Admin',
+  });
 
-    coreMembers.value = newMembers;
-    newMemberInput.value = '';
-    showToast(`${name} added`, 'success');
-  } catch (error) {
-    console.error('Error adding member:', error);
-    showToast('Failed to add member', 'error');
-  }
+  // Reset form
+  newMemberName.value = '';
+  newMemberPhone.value = '';
+  newMemberEmail.value = '';
+  newMemberNotes.value = '';
+  addFormExpanded.value = false;
+  // Note: addMember() already shows the SharePromptBanner invite prompt
+}
+
+function resetAddForm() {
+  newMemberName.value = '';
+  newMemberPhone.value = '';
+  newMemberEmail.value = '';
+  newMemberNotes.value = '';
+  addFormExpanded.value = false;
 }
 
 function handleRemoveMember(name: string) {
@@ -114,11 +128,16 @@ function handleClose() {
   showMemberModal.value = false;
   editingMember.value = null;
   searchQuery.value = '';
+  resetAddForm();
 }
 
 export function MemberManagementModal() {
+  // Subscribe to coreMembers signal to ensure re-render on changes
+  const members = coreMembers.value;
+  const details = memberDetails.value;
+
   // Filter members by search query
-  const filteredMembers = coreMembers.value
+  const filteredMembers = members
     .filter(name => name.toLowerCase().includes(searchQuery.value.toLowerCase()))
     .sort((a, b) => a.localeCompare(b));
 
@@ -127,7 +146,7 @@ export function MemberManagementModal() {
       isOpen={showMemberModal.value}
       onClose={handleClose}
       title="Manage Members"
-      subtitle={`${coreMembers.value.length} members in group`}
+      subtitle={`${members.length} members in group`}
     >
       {/* Edit Member Sub-Modal */}
       {editingMember.value && (
@@ -231,11 +250,11 @@ export function MemberManagementModal() {
           </div>
         ) : (
           filteredMembers.map((name) => {
-            const details = memberDetails.value[name] as { phone?: string; email?: string; notes?: string; addedBy?: string; addedDate?: number } | undefined;
-            const hasDetails = details && (details.phone || details.email || details.addedBy);
-            const hasContact = details && (details.phone || details.email);
-            const addedDate = details?.addedDate
-              ? new Date(details.addedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+            const memberDetail = details[name] as { phone?: string; email?: string; notes?: string; addedBy?: string; addedDate?: number } | undefined;
+            const hasDetails = memberDetail && (memberDetail.phone || memberDetail.email || memberDetail.addedBy);
+            const hasContact = memberDetail && (memberDetail.phone || memberDetail.email);
+            const addedDate = memberDetail?.addedDate
+              ? new Date(memberDetail.addedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
               : null;
 
             return (
@@ -266,7 +285,7 @@ export function MemberManagementModal() {
                     </button>
                     {hasContact && (
                       <button
-                        onClick={() => showInvitePrompt(name, details?.phone, details?.email)}
+                        onClick={() => showInvitePrompt(name, memberDetail?.phone, memberDetail?.email)}
                         style={{
                           background: 'rgba(33, 150, 243, 0.1)',
                           color: '#2196F3',
@@ -312,12 +331,12 @@ export function MemberManagementModal() {
                 </div>
                 {hasDetails && (
                   <div style="font-size: 12px; color: #666; margin-top: 8px; padding-left: 12px; border-left: 3px solid #4CAF50;">
-                    {details.addedBy && (
-                      <div>Added by: <strong>{details.addedBy}</strong>{addedDate && ` on ${addedDate}`}</div>
+                    {memberDetail?.addedBy && (
+                      <div>Added by: <strong>{memberDetail.addedBy}</strong>{addedDate && ` on ${addedDate}`}</div>
                     )}
-                    {details.phone && <div>📱 {details.phone}</div>}
-                    {details.email && <div>📧 {details.email}</div>}
-                    {details.notes && <div>Notes: {details.notes}</div>}
+                    {memberDetail?.phone && <div>📱 {memberDetail.phone}</div>}
+                    {memberDetail?.email && <div>📧 {memberDetail.email}</div>}
+                    {memberDetail?.notes && <div>Notes: {memberDetail.notes}</div>}
                   </div>
                 )}
               </div>
@@ -326,22 +345,75 @@ export function MemberManagementModal() {
         )}
       </div>
 
-      {/* Add Member Input */}
-      <div style="display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid #e0e0e0;">
-        <input
-          type="text"
-          placeholder="New member name"
-          value={newMemberInput.value}
-          onInput={(e) => { newMemberInput.value = (e.target as HTMLInputElement).value; }}
-          onKeyPress={(e) => { if (e.key === 'Enter') addCoreMember(); }}
-          style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;"
-        />
-        <button
-          onClick={addCoreMember}
-          style="padding: 12px 24px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;"
-        >
-          Add
-        </button>
+      {/* Add Member Section */}
+      <div style="padding-top: 12px; border-top: 1px solid #e0e0e0;">
+        {!addFormExpanded.value ? (
+          <button
+            onClick={() => { addFormExpanded.value = true; }}
+            style="width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px;"
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+            Add New Member
+          </button>
+        ) : (
+          <div style="background: #f9f9f9; padding: 16px; border-radius: 8px;">
+            <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #333;">Add New Member</h4>
+
+            <input
+              type="text"
+              placeholder="Member's full name"
+              value={newMemberName.value}
+              onInput={(e) => { newMemberName.value = (e.target as HTMLInputElement).value; }}
+              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; margin-bottom: 8px; box-sizing: border-box;"
+            />
+
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+              <input
+                type="tel"
+                placeholder="Phone (optional)"
+                value={newMemberPhone.value}
+                onInput={(e) => { newMemberPhone.value = (e.target as HTMLInputElement).value; }}
+                style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box;"
+              />
+              <input
+                type="email"
+                placeholder="Email (optional)"
+                value={newMemberEmail.value}
+                onInput={(e) => { newMemberEmail.value = (e.target as HTMLInputElement).value; }}
+                style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box;"
+              />
+            </div>
+
+            <textarea
+              placeholder="Notes (skill level, how you know them, etc.) - optional"
+              rows={2}
+              value={newMemberNotes.value}
+              onInput={(e) => { newMemberNotes.value = (e.target as HTMLTextAreaElement).value; }}
+              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; resize: vertical; margin-bottom: 12px; box-sizing: border-box; font-family: inherit;"
+            />
+
+            <div style="font-size: 12px; color: #666; margin-bottom: 12px;">
+              Added by: <strong>{sessionUser.value || 'Admin'}</strong>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button
+                onClick={resetAddForm}
+                style="flex: 1; padding: 10px; background: #ccc; color: #333; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddMember}
+                style="flex: 2; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;"
+              >
+                Add Member
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </Modal>
   );

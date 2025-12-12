@@ -24,8 +24,8 @@ export function AdminPage() {
       // Load site admin PIN from Firebase
       const db = getDatabase();
       const siteSettingsSnapshot = await db.ref('siteSettings').once('value');
-      const siteSettings = siteSettingsSnapshot.val() || {};
-      siteAdminPin.value = siteSettings.siteAdminPin || null;
+      const siteSettings = siteSettingsSnapshot.val() as { siteAdminPin?: string } | null;
+      siteAdminPin.value = siteSettings?.siteAdminPin || null;
 
       // Check if already authenticated
       const auth = sessionStorage.getItem('siteAdminAuth');

@@ -387,7 +387,7 @@ export function MyMatchesTab() {
                 overflow: 'hidden',
                 minWidth: '160px',
               }}>
-                {navigator.share && (
+                {typeof navigator.share === 'function' && (
                   <button
                     onClick={() => shareSelectedGames('native', schedule)}
                     style={{
@@ -422,7 +422,7 @@ export function MyMatchesTab() {
                     cursor: 'pointer',
                     fontSize: '14px',
                     color: '#25D366',
-                    borderTop: navigator.share ? '1px solid #f0f0f0' : 'none',
+                    borderTop: typeof navigator.share === 'function' ? '1px solid #f0f0f0' : 'none',
                   }}
                 >
                   <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -658,22 +658,52 @@ export function MyMatchesTab() {
                       {getMatchTypeLabel(match.type)}
                     </span>
                   </div>
-                  {/* Status badge */}
-                  {match.isForming ? (
-                    <span style="display: flex; align-items: center; gap: 4px; color: #F57C00; font-size: 12px; font-weight: 600;">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                        <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
-                      </svg>
-                      Need {needed}
-                    </span>
-                  ) : (
-                    <span style="display: flex; align-items: center; gap: 4px; color: #4CAF50; font-size: 12px; font-weight: 600;">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                      </svg>
-                      Ready
-                    </span>
-                  )}
+                  {/* Status badge with calendar icon */}
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    {match.isForming ? (
+                      <span style="display: flex; align-items: center; gap: 4px; color: #F57C00; font-size: 12px; font-weight: 600;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                          <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                        </svg>
+                        Need {needed}
+                      </span>
+                    ) : (
+                      <span style="display: flex; align-items: center; gap: 4px; color: #4CAF50; font-size: 12px; font-weight: 600;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        Ready
+                      </span>
+                    )}
+                    {/* Small calendar icon */}
+                    {!inSelectionMode && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCalendar(match);
+                        }}
+                        title="Add to Calendar"
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          padding: '4px',
+                          cursor: 'pointer',
+                          color: '#888',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '4px',
+                          transition: 'color 0.2s',
+                        }}
+                        onMouseOver={(e) => { (e.currentTarget as HTMLElement).style.color = '#4CAF50'; }}
+                        onMouseOut={(e) => { (e.currentTarget as HTMLElement).style.color = '#888'; }}
+                      >
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                          <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/>
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Players info */}
@@ -703,40 +733,10 @@ export function MyMatchesTab() {
                   )}
                 </div>
 
-                {/* Action buttons - hidden in selection mode */}
-                {!inSelectionMode && (
+                {/* Action buttons - hidden in selection mode, only show for forming games */}
+                {!inSelectionMode && match.isForming && (
                   <div style="margin-top: 12px; display: flex; gap: 8px; align-items: center; position: relative;">
-                    {/* Calendar button */}
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToCalendar(match);
-                      }}
-                      title="Add to Calendar"
-                      style={{
-                        background: '#f5f5f5',
-                        border: '1px solid #ddd',
-                        borderRadius: '16px',
-                        padding: '6px 12px',
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        color: '#666',
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                        <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/>
-                      </svg>
-                      <span>Calendar</span>
-                    </button>
-
-                    {/* Invite button for forming games */}
-                    {match.isForming && (
-                      <>
-                        <button
                           data-share-button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -844,8 +844,6 @@ export function MyMatchesTab() {
                             </button>
                           </div>
                         )}
-                      </>
-                    )}
                   </div>
                 )}
               </div>
