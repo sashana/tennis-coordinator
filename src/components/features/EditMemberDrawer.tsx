@@ -491,7 +491,7 @@ export function EditMemberDrawer() {
           font-weight: 600;
           color: white;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(44, 110, 73, 0.25);
+          box-shadow: 0 4px 12px rgba(var(--color-primary-rgb, 44, 110, 73), 0.25);
         }
 
         .confirm-btn:hover {

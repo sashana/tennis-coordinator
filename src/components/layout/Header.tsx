@@ -143,10 +143,8 @@ export function Header() {
             padding: currentThemeInfo.logo ? '3px' : '0',
             flexShrink: 0,
             boxShadow: adminStatus ? 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.1))' : 'none',
-            transition: 'transform 0.2s, box-shadow 0.2s',
           }}
-          onMouseEnter={(e) => { if (adminStatus) { (e.currentTarget as HTMLElement).style.transform = 'scale(1.1)'; (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-md, 0 2px 8px rgba(0,0,0,0.15))'; } }}
-          onMouseLeave={(e) => { if (adminStatus) { (e.currentTarget as HTMLElement).style.transform = 'scale(1)'; (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.1))'; } }}
+          className={adminStatus ? 'hover-admin-badge' : ''}
         >
           {currentThemeInfo.logo ? (
             <img

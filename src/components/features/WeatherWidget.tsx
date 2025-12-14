@@ -141,7 +141,7 @@ export function WeatherWidget() {
           borderRadius: '10px',
           marginBottom: '8px',
           fontSize: '13px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+          boxShadow: 'var(--shadow-md, 0 2px 8px rgba(0,0,0,0.05))',
           color: '#666',
         }}
       >
@@ -169,7 +169,7 @@ export function WeatherWidget() {
         borderRadius: '10px',
         marginBottom: '8px',
         fontSize: '13px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+        boxShadow: 'var(--shadow-md, 0 2px 8px rgba(0,0,0,0.05))',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

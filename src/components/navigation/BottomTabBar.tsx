@@ -69,7 +69,7 @@ export function BottomTabBar() {
         paddingTop: '8px',
         zIndex: 1000,
         paddingBottom: 'env(safe-area-inset-bottom)',
-        boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
+        boxShadow: 'var(--shadow-lg, 0 -2px 10px rgba(0,0,0,0.1))',
       }}
     >
       {tabs.map((tab) => {

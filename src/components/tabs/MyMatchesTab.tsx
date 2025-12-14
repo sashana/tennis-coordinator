@@ -18,6 +18,9 @@ const isSelectionMode = signal(false);
 const selectedGames = signal<Set<string>>(new Set());
 const showShareOptions = signal(false);
 
+// State for Upcoming/Past toggle
+const gamesView = signal<'upcoming' | 'past'>('upcoming');
+
 // Check if current user is admin
 function isGroupAdmin(): boolean {
   const groupId = currentGroupId.value;
@@ -59,14 +62,15 @@ interface ScheduledMatch {
   needed?: number;
 }
 
-// Compute user's matches across all dates
-const userSchedule = computed(() => {
+// Compute user's matches across all dates (both upcoming and past)
+const allUserMatches = computed(() => {
   // Use viewingUser if admin is viewing another user, otherwise use sessionUser
   const user = viewingUser.value || sessionUser.value;
-  if (!user) return [];
+  if (!user) return { upcoming: [], past: [] };
 
   const normalizedUser = normalizeName(user);
-  const schedule: ScheduledMatch[] = [];
+  const upcoming: ScheduledMatch[] = [];
+  const past: ScheduledMatch[] = [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -74,9 +78,8 @@ const userSchedule = computed(() => {
   const dates = Object.keys(allCheckins.value).sort();
 
   for (const date of dates) {
-    // Skip past dates
     const dateObj = new Date(date + 'T00:00:00');
-    if (dateObj < today) continue;
+    const isPast = dateObj < today;
 
     const checkins = allCheckins.value[date] || [];
     if (checkins.length === 0) continue;
@@ -102,19 +105,28 @@ const userSchedule = computed(() => {
 
       if (playerNames.includes(normalizedUser)) {
         const isForming = match.type === 'doubles-forming' || match.type === 'singles-forming';
-        schedule.push({
+        const matchData: ScheduledMatch = {
           date,
           type: match.type,
           matchNumber: match.number || 1,
           players: match.players.map((p: any) => ({ name: p.name, timeRange: p.timeRange })),
           isForming,
           needed: match.needed,
-        });
+        };
+
+        if (isPast) {
+          past.push(matchData);
+        } else {
+          upcoming.push(matchData);
+        }
       }
     }
   }
 
-  return schedule;
+  // Sort past games: most recent first (reverse chronological)
+  past.sort((a, b) => b.date.localeCompare(a.date));
+
+  return { upcoming, past };
 });
 
 function getMatchTypeLabel(type: string): string {
@@ -322,13 +334,16 @@ export function MyMatchesTab() {
   // Load all match notes for upcoming games
   useAllMatchNotes();
 
-  const schedule = userSchedule.value;
+  // Get schedule based on current view (upcoming or past)
+  const allMatches = allUserMatches.value;
+  const schedule = gamesView.value === 'upcoming' ? allMatches.upcoming : allMatches.past;
   const isAdmin = isGroupAdmin();
   const currentViewUser = viewingUser.value || sessionUser.value;
   const isViewingOther = viewingUser.value && viewingUser.value !== sessionUser.value;
 
   const selectionCount = selectedGames.value.size;
   const inSelectionMode = isSelectionMode.value;
+  const isPastView = gamesView.value === 'past';
 
   return (
     <div style="padding: 16px 0;">
@@ -494,9 +509,57 @@ export function MyMatchesTab() {
         </div>
       )}
 
+      {/* Segmented control for Upcoming/Past */}
+      <div style={{
+        display: 'flex',
+        background: 'var(--color-gray-lightest, #f0f0f0)',
+        borderRadius: '10px',
+        padding: '4px',
+        marginBottom: '16px',
+      }}>
+        <button
+          onClick={() => { gamesView.value = 'upcoming'; exitSelectionMode(); }}
+          style={{
+            flex: 1,
+            padding: '10px 16px',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            background: gamesView.value === 'upcoming' ? 'white' : 'transparent',
+            color: gamesView.value === 'upcoming' ? 'var(--color-primary, #2C6E49)' : 'var(--color-gray-base, #666)',
+            boxShadow: gamesView.value === 'upcoming' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+          }}
+        >
+          Upcoming ({allMatches.upcoming.length})
+        </button>
+        <button
+          onClick={() => { gamesView.value = 'past'; exitSelectionMode(); }}
+          style={{
+            flex: 1,
+            padding: '10px 16px',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            background: gamesView.value === 'past' ? 'white' : 'transparent',
+            color: gamesView.value === 'past' ? 'var(--color-primary, #2C6E49)' : 'var(--color-gray-base, #666)',
+            boxShadow: gamesView.value === 'past' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+          }}
+        >
+          Past ({allMatches.past.length})
+        </button>
+      </div>
+
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h2 style="margin: 0; font-size: 20px;">
-          {isViewingOther ? `${viewingUser.value}'s Games` : 'My Upcoming Games'}
+          {isViewingOther
+            ? `${viewingUser.value}'s ${isPastView ? 'Past' : 'Upcoming'} Games`
+            : `My ${isPastView ? 'Past' : 'Upcoming'} Games`}
         </h2>
         <div style="display: flex; gap: 8px; align-items: center;">
           {isViewingOther && (
@@ -623,10 +686,8 @@ export function MyMatchesTab() {
                       fontSize: 'var(--font-size-base, 14px)',
                       color: 'var(--color-text-primary, #333)',
                       cursor: 'pointer',
-                      transition: 'background 0.15s',
                     }}
-                    onMouseOver={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-subtle, #f9f9f9)'; }}
-                    onMouseOut={(e) => { (e.currentTarget as HTMLElement).style.background = 'white'; }}
+                    className="hover-bg-subtle"
                   >
                     {member}
                   </button>
@@ -639,12 +700,18 @@ export function MyMatchesTab() {
 
       {schedule.length === 0 ? (
         <div style="text-align: center; padding: 48px 24px; background: #f9f9f9; border-radius: 12px;">
-          <div style="font-size: 48px; margin-bottom: 16px;">📅</div>
-          <p style="font-size: 18px; margin: 0 0 8px 0; color: var(--color-gray-dark, #333);">No upcoming games</p>
+          <div style="font-size: 48px; margin-bottom: 16px;">{isPastView ? '📜' : '📅'}</div>
+          <p style="font-size: 18px; margin: 0 0 8px 0; color: var(--color-gray-dark, #333);">
+            {isPastView ? 'No past games' : 'No upcoming games'}
+          </p>
           <p style="font-size: 14px; color: var(--color-gray-base, #666); margin: 0;">
-            {isViewingOther
-              ? `${viewingUser.value} has no upcoming games.`
-              : 'Check in for a date to get matched with other players!'
+            {isPastView
+              ? (isViewingOther
+                  ? `${viewingUser.value} has no past games on record.`
+                  : 'Your game history will appear here.')
+              : (isViewingOther
+                  ? `${viewingUser.value} has no upcoming games.`
+                  : 'Check in for a date to get matched with other players!')
             }
           </p>
         </div>
@@ -881,10 +948,8 @@ export function MyMatchesTab() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           borderRadius: '4px',
-                          transition: 'color 0.2s',
                         }}
-                        onMouseOver={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-primary, #2C6E49)'; }}
-                        onMouseOut={(e) => { (e.currentTarget as HTMLElement).style.color = '#888'; }}
+                        className="hover-color-primary"
                       >
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
                           <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/>
@@ -953,7 +1018,7 @@ export function MyMatchesTab() {
 
       {schedule.length > 0 && (
         <p style="font-size: 13px; color: var(--color-gray-muted, #999); text-align: center; margin-top: 16px;">
-          Tap a game to view that day's details
+          {isPastView ? 'Tap a game to view that day\'s history' : 'Tap a game to view that day\'s details'}
         </p>
       )}
     </div>

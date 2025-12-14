@@ -310,7 +310,7 @@ export function CheckInDrawer() {
         .handle-bar {
           width: 40px;
           height: 4px;
-          background: #ddd;
+          background: var(--color-gray-light, #ddd);
           border-radius: 2px;
         }
 
@@ -322,7 +322,7 @@ export function CheckInDrawer() {
         .drawer-header h2 {
           margin: 0 0 12px;
           font-size: 22px;
-          color: #333;
+          color: var(--color-text-primary, #333);
         }
 
         .player-display {
@@ -330,7 +330,7 @@ export function CheckInDrawer() {
           align-items: center;
           gap: 12px;
           justify-content: center;
-          background: #f9fafb;
+          background: var(--color-bg-subtle, #f9f9f9);
           padding: 12px 16px;
           border-radius: 12px;
         }
@@ -359,12 +359,12 @@ export function CheckInDrawer() {
         .player-name {
           font-size: 16px;
           font-weight: 600;
-          color: #333;
+          color: var(--color-text-primary, #333);
         }
 
         .player-context {
           font-size: 12px;
-          color: #666;
+          color: var(--color-text-secondary, #666);
         }
 
         .drawer-section {
@@ -374,13 +374,13 @@ export function CheckInDrawer() {
         .drawer-section h3 {
           margin: 0 0 12px;
           font-size: 14px;
-          color: #333;
+          color: var(--color-text-primary, #333);
           font-weight: 600;
         }
 
         .optional-tag {
           font-weight: normal;
-          color: #999;
+          color: var(--color-text-muted, #999);
           font-size: 12px;
         }
 
@@ -392,18 +392,18 @@ export function CheckInDrawer() {
         .pref-btn {
           flex: 1;
           padding: 14px 10px;
-          border: 2px solid #e0e0e0;
+          border: 2px solid var(--color-border, #e0e0e0);
           border-radius: 12px;
           background: white;
           font-size: 14px;
           font-weight: 500;
-          color: #333;
+          color: var(--color-text-primary, #333);
           cursor: pointer;
           transition: all 0.2s;
         }
 
         .pref-btn:hover {
-          border-color: #ccc;
+          border-color: var(--color-gray-disabled, #ccc);
         }
 
         .pref-btn.selected {
@@ -429,7 +429,7 @@ export function CheckInDrawer() {
           align-items: flex-start;
           gap: 12px;
           padding: 14px;
-          background: #f9f9f9;
+          background: var(--color-bg-subtle, #f9f9f9);
           border-radius: 12px;
           cursor: pointer;
         }
@@ -450,12 +450,12 @@ export function CheckInDrawer() {
         .toggle-title {
           font-size: 14px;
           font-weight: 500;
-          color: #333;
+          color: var(--color-text-primary, #333);
         }
 
         .toggle-desc {
           font-size: 12px;
-          color: #666;
+          color: var(--color-text-secondary, #666);
         }
 
         .time-presets {
@@ -470,7 +470,7 @@ export function CheckInDrawer() {
           flex-direction: column;
           align-items: center;
           padding: 10px 6px;
-          border: 2px solid #e0e0e0;
+          border: 2px solid var(--color-border, #e0e0e0);
           border-radius: 10px;
           background: white;
           cursor: pointer;
@@ -496,12 +496,12 @@ export function CheckInDrawer() {
         .time-label {
           font-size: 12px;
           font-weight: 500;
-          color: #333;
+          color: var(--color-text-primary, #333);
         }
 
         .time-range {
           font-size: 10px;
-          color: #666;
+          color: var(--color-text-secondary, #666);
           margin-top: 2px;
         }
 
@@ -514,7 +514,7 @@ export function CheckInDrawer() {
         .custom-time input[type="time"] {
           flex: 1;
           padding: 12px;
-          border: 2px solid #e0e0e0;
+          border: 2px solid var(--color-border, #e0e0e0);
           border-radius: 10px;
           font-size: 14px;
         }
@@ -525,22 +525,22 @@ export function CheckInDrawer() {
         }
 
         .time-separator {
-          color: #666;
+          color: var(--color-text-secondary, #666);
           font-size: 14px;
         }
 
         .clear-time-btn {
           padding: 12px 14px;
-          background: #f5f5f5;
+          background: var(--color-gray-lightest, #f5f5f5);
           border: none;
           border-radius: 10px;
-          color: #666;
+          color: var(--color-text-secondary, #666);
           font-size: 13px;
           cursor: pointer;
         }
 
         .clear-time-btn:hover {
-          background: #e0e0e0;
+          background: var(--color-border, #e0e0e0);
         }
 
         .drawer-actions {
@@ -552,17 +552,17 @@ export function CheckInDrawer() {
         .cancel-btn {
           flex: 1;
           padding: 16px;
-          background: #f5f5f5;
+          background: var(--color-gray-lightest, #f5f5f5);
           border: none;
           border-radius: 12px;
           font-size: 16px;
           font-weight: 500;
-          color: #666;
+          color: var(--color-text-secondary, #666);
           cursor: pointer;
         }
 
         .cancel-btn:hover {
-          background: #e8e8e8;
+          background: var(--color-bg-page, #e8e8e8);
         }
 
         .confirm-btn {
@@ -591,7 +591,7 @@ export function CheckInDrawer() {
           padding: 12px 24px;
           background: transparent;
           border: none;
-          color: #e53935;
+          color: var(--color-error, #e53935);
           font-size: 14px;
           font-weight: 500;
           cursor: pointer;
