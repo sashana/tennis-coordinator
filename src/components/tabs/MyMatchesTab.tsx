@@ -354,18 +354,18 @@ export function MyMatchesTab() {
           <button
             onClick={exitSelectionMode}
             style={{
-              background: '#f5f5f5',
-              border: '1px solid #ddd',
+              background: 'var(--color-gray-lightest, #f5f5f5)',
+              border: '1px solid var(--color-gray-light, #ddd)',
               borderRadius: '20px',
               padding: '8px 16px',
               fontSize: '14px',
               cursor: 'pointer',
-              color: '#666',
+              color: 'var(--color-gray-base, #666)',
             }}
           >
             Cancel
           </button>
-          <span style={{ fontSize: '14px', color: '#666' }}>
+          <span style={{ fontSize: '14px', color: 'var(--color-gray-base, #666)' }}>
             {selectionCount} selected
           </span>
           <div style={{ position: 'relative' }}>
@@ -373,7 +373,7 @@ export function MyMatchesTab() {
               onClick={() => { showShareOptions.value = !showShareOptions.value; }}
               disabled={selectionCount === 0}
               style={{
-                background: selectionCount > 0 ? 'var(--color-primary, #2C6E49)' : '#ccc',
+                background: selectionCount > 0 ? 'var(--color-primary, #2C6E49)' : 'var(--color-gray-disabled, #ccc)',
                 border: 'none',
                 borderRadius: '20px',
                 padding: '8px 16px',
@@ -437,7 +437,7 @@ export function MyMatchesTab() {
                     background: 'white',
                     cursor: 'pointer',
                     fontSize: '14px',
-                    color: '#25D366',
+                    color: 'var(--color-whatsapp, #25D366)',
                     borderTop: typeof navigator.share === 'function' ? '1px solid #f0f0f0' : 'none',
                   }}
                 >
@@ -458,7 +458,7 @@ export function MyMatchesTab() {
                     background: 'white',
                     cursor: 'pointer',
                     fontSize: '14px',
-                    color: '#2196F3',
+                    color: 'var(--color-sms, #2196F3)',
                     borderTop: '1px solid #f0f0f0',
                   }}
                 >
@@ -479,7 +479,7 @@ export function MyMatchesTab() {
                     background: 'white',
                     cursor: 'pointer',
                     fontSize: '14px',
-                    color: '#666',
+                    color: 'var(--color-gray-base, #666)',
                     borderTop: '1px solid #f0f0f0',
                   }}
                 >
@@ -503,13 +503,13 @@ export function MyMatchesTab() {
             <button
               onClick={() => { viewingUser.value = null; }}
               style={{
-                background: '#f5f5f5',
-                border: '1px solid #ddd',
+                background: 'var(--color-gray-lightest, #f5f5f5)',
+                border: '1px solid var(--color-gray-light, #ddd)',
                 borderRadius: '16px',
                 padding: '4px 12px',
                 fontSize: '12px',
                 cursor: 'pointer',
-                color: '#666',
+                color: 'var(--color-gray-base, #666)',
               }}
             >
               Back to mine
@@ -519,13 +519,13 @@ export function MyMatchesTab() {
             <button
               onClick={() => { isSelectionMode.value = true; }}
               style={{
-                background: '#f5f5f5',
-                border: '1px solid #ddd',
+                background: 'var(--color-gray-lightest, #f5f5f5)',
+                border: '1px solid var(--color-gray-light, #ddd)',
                 borderRadius: '16px',
                 padding: '6px 12px',
                 fontSize: '13px',
                 cursor: 'pointer',
-                color: '#666',
+                color: 'var(--color-gray-base, #666)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
@@ -640,8 +640,8 @@ export function MyMatchesTab() {
       {schedule.length === 0 ? (
         <div style="text-align: center; padding: 48px 24px; background: #f9f9f9; border-radius: 12px;">
           <div style="font-size: 48px; margin-bottom: 16px;">📅</div>
-          <p style="font-size: 18px; margin: 0 0 8px 0; color: #333;">No upcoming games</p>
-          <p style="font-size: 14px; color: #666; margin: 0;">
+          <p style="font-size: 18px; margin: 0 0 8px 0; color: var(--color-gray-dark, #333);">No upcoming games</p>
+          <p style="font-size: 14px; color: var(--color-gray-base, #666); margin: 0;">
             {isViewingOther
               ? `${viewingUser.value} has no upcoming games.`
               : 'Check in for a date to get matched with other players!'
@@ -687,7 +687,7 @@ export function MyMatchesTab() {
                     width: '24px',
                     height: '24px',
                     borderRadius: '6px',
-                    border: isSelected ? 'none' : '2px solid #ccc',
+                    border: isSelected ? 'none' : '2px solid var(--color-gray-disabled, #ccc)',
                     background: isSelected ? 'var(--color-primary, #2C6E49)' : 'white',
                     display: 'flex',
                     alignItems: 'center',
@@ -718,7 +718,7 @@ export function MyMatchesTab() {
                   }}
                 >
                   <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-weight: 600; color: #333; font-size: 16px;">
+                    <span style="font-weight: 600; color: var(--color-gray-dark, #333); font-size: 16px;">
                       {formatDate(match.date)}
                     </span>
                     <span style={{
@@ -726,7 +726,7 @@ export function MyMatchesTab() {
                       padding: '2px 8px',
                       borderRadius: '10px',
                       background: '#f0f0f0',
-                      color: '#666',
+                      color: 'var(--color-gray-base, #666)',
                       fontWeight: '500',
                     }}>
                       {getMatchTypeLabel(match.type)}
@@ -760,7 +760,7 @@ export function MyMatchesTab() {
                           }}
                           title="Invite players"
                           style={{
-                            background: isDropdownOpen ? '#e65100' : '#ff9800',
+                            background: isDropdownOpen ? 'var(--color-orange-dark, #e65100)' : 'var(--color-orange-primary, #ff9800)',
                             border: 'none',
                             borderRadius: '12px',
                             padding: '4px 10px',
@@ -809,7 +809,7 @@ export function MyMatchesTab() {
                                 background: 'white',
                                 cursor: 'pointer',
                                 fontSize: '14px',
-                                color: '#25D366',
+                                color: 'var(--color-whatsapp, #25D366)',
                               }}
                             >
                               <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -829,7 +829,7 @@ export function MyMatchesTab() {
                                 background: 'white',
                                 cursor: 'pointer',
                                 fontSize: '14px',
-                                color: '#2196F3',
+                                color: 'var(--color-sms, #2196F3)',
                                 borderTop: '1px solid #f0f0f0',
                               }}
                             >
@@ -850,7 +850,7 @@ export function MyMatchesTab() {
                                 background: 'white',
                                 cursor: 'pointer',
                                 fontSize: '14px',
-                                color: '#666',
+                                color: 'var(--color-gray-base, #666)',
                                 borderTop: '1px solid #f0f0f0',
                               }}
                             >
@@ -933,12 +933,12 @@ export function MyMatchesTab() {
                         background: match.isForming ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.6)',
                         borderRadius: '6px',
                         fontSize: '13px',
-                        color: '#666',
+                        color: 'var(--color-gray-base, #666)',
                         display: 'flex',
                         alignItems: 'flex-start',
                         gap: '6px',
                       }}>
-                        <span style={{ color: '#999', flexShrink: 0 }}>📝</span>
+                        <span style={{ color: 'var(--color-gray-muted, #999)', flexShrink: 0 }}>📝</span>
                         <span>{noteForMatch}</span>
                       </div>
                     );
@@ -952,7 +952,7 @@ export function MyMatchesTab() {
       )}
 
       {schedule.length > 0 && (
-        <p style="font-size: 13px; color: #888; text-align: center; margin-top: 16px;">
+        <p style="font-size: 13px; color: var(--color-gray-muted, #999); text-align: center; margin-top: 16px;">
           Tap a game to view that day's details
         </p>
       )}

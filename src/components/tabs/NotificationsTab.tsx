@@ -241,7 +241,7 @@ export function NotificationsTab() {
                         width: '20px',
                         height: '20px',
                         borderRadius: 'var(--radius-sm, 4px)',
-                        border: watched ? 'none' : '2px solid #ccc',
+                        border: watched ? 'none' : '2px solid var(--color-gray-disabled, #ccc)',
                         background: watched ? 'var(--color-primary, #2C6E49)' : 'var(--color-bg-card, white)',
                         display: 'flex',
                         alignItems: 'center',
@@ -337,7 +337,7 @@ export function NotificationsTab() {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundColor: matchConfirmationsEnabled.value ? 'var(--color-primary, #2C6E49)' : '#ccc',
+                    backgroundColor: matchConfirmationsEnabled.value ? 'var(--color-primary, #2C6E49)' : 'var(--color-gray-disabled, #ccc)',
                     transition: '0.3s',
                     borderRadius: '26px',
                   }}
@@ -382,7 +382,7 @@ export function NotificationsTab() {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundColor: activityAlertsEnabled.value ? 'var(--color-primary, #2C6E49)' : '#ccc',
+                    backgroundColor: activityAlertsEnabled.value ? 'var(--color-primary, #2C6E49)' : 'var(--color-gray-disabled, #ccc)',
                     transition: '0.3s',
                     borderRadius: '26px',
                   }}
@@ -482,7 +482,7 @@ export function NotificationsTab() {
                             activeInviteDropdown.value = isDropdownOpen ? null : notification.id;
                           }}
                           style={{
-                            background: isDropdownOpen ? '#e65100' : '#ff9800',
+                            background: isDropdownOpen ? 'var(--color-orange-dark, #e65100)' : 'var(--color-orange-primary, #ff9800)',
                             border: 'none',
                             borderRadius: '16px',
                             padding: '6px 14px',
@@ -534,7 +534,7 @@ export function NotificationsTab() {
                                 background: 'white',
                                 cursor: 'pointer',
                                 fontSize: '14px',
-                                color: '#25D366',
+                                color: 'var(--color-whatsapp, #25D366)',
                               }}
                             >
                               <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -557,7 +557,7 @@ export function NotificationsTab() {
                                 background: 'white',
                                 cursor: 'pointer',
                                 fontSize: '14px',
-                                color: '#2196F3',
+                                color: 'var(--color-sms, #2196F3)',
                                 borderTop: '1px solid #f0f0f0',
                               }}
                             >
@@ -581,7 +581,7 @@ export function NotificationsTab() {
                                 background: 'white',
                                 cursor: 'pointer',
                                 fontSize: '14px',
-                                color: '#666',
+                                color: 'var(--color-gray-base, #666)',
                                 borderTop: '1px solid #f0f0f0',
                               }}
                             >

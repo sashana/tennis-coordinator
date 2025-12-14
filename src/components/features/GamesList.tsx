@@ -185,7 +185,7 @@ function MatchNoteInput({ matchKey }: { matchKey: string }) {
 
   return (
     <div style="padding: 8px 12px; background: var(--color-bg-muted, #f9f9f9); border-radius: var(--radius-lg, 8px); margin-top: 8px;">
-      <div style="font-size: 11px; color: #666; margin-bottom: 4px; font-weight: 500;">Booking Details</div>
+      <div style="font-size: 11px; color: var(--color-gray-base, #666); margin-bottom: 4px; font-weight: 500;">Booking Details</div>
       <input
         type="text"
         placeholder="e.g. Courtside Court 1, 12PM"
@@ -197,7 +197,7 @@ function MatchNoteInput({ matchKey }: { matchKey: string }) {
         style={{
           width: '100%',
           padding: '8px 12px',
-          border: '1px solid #e0e0e0',
+          border: '1px solid var(--color-border, #e0e0e0)',
           borderRadius: '6px',
           fontSize: '14px',
           background: 'white',
@@ -238,7 +238,7 @@ function CheckinTile({ checkin, globalIndex }: { checkin: any; globalIndex: numb
           {addedByInfo && <span class="guest-indicator"> {addedByInfo}</span>}
           {timeInfo && <span class="time-badge">{timeInfo}</span>}
           {checkin.allowRotation === false && (
-            <span class="time-badge" style="background: #fff3e0; color: #e65100;">No 3s</span>
+            <span class="time-badge" style="background: var(--color-orange-light, #fff3e0); color: var(--color-orange-dark, #e65100);">No 3s</span>
           )}
         </span>
         <span class={`preference-badge ${checkin.playStyle || 'both'}`}>
@@ -254,7 +254,7 @@ function CheckinTile({ checkin, globalIndex }: { checkin: any; globalIndex: numb
           style={{
             background: 'white',
             color: 'var(--color-primary, #2C6E49)',
-            border: '1px solid #e0e0e0',
+            border: '1px solid var(--color-border, #e0e0e0)',
             borderRadius: '8px',
             padding: '0',
             width: '32px',
@@ -348,7 +348,7 @@ function NeedPlayersButton({ match, matchKey }: { match: any; matchKey: string; 
           activeShareDropdown.value = isOpen ? null : matchKey;
         }}
         style={{
-          background: isOpen ? '#e65100' : '#ff9800',
+          background: isOpen ? 'var(--color-orange-dark, #e65100)' : 'var(--color-orange-primary, #ff9800)',
           border: 'none',
           borderRadius: '12px',
           padding: '4px 10px',
@@ -397,7 +397,7 @@ function NeedPlayersButton({ match, matchKey }: { match: any; matchKey: string; 
               background: 'white',
               cursor: 'pointer',
               fontSize: '14px',
-              color: '#25D366',
+              color: 'var(--color-whatsapp, #25D366)',
             }}
           >
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -417,7 +417,7 @@ function NeedPlayersButton({ match, matchKey }: { match: any; matchKey: string; 
               background: 'white',
               cursor: 'pointer',
               fontSize: '14px',
-              color: '#2196F3',
+              color: 'var(--color-sms, #2196F3)',
               borderTop: '1px solid #f0f0f0',
             }}
           >
@@ -438,7 +438,7 @@ function NeedPlayersButton({ match, matchKey }: { match: any; matchKey: string; 
               background: 'white',
               cursor: 'pointer',
               fontSize: '14px',
-              color: '#666',
+              color: 'var(--color-gray-base, #666)',
               borderTop: '1px solid #f0f0f0',
             }}
           >
@@ -810,10 +810,10 @@ export function GamesList() {
                   style={{
                     flex: 1,
                     padding: '10px',
-                    border: editPlayStyle.value === style ? '2px solid var(--color-primary, #2C6E49)' : '2px solid #e0e0e0',
+                    border: editPlayStyle.value === style ? '2px solid var(--color-primary, #2C6E49)' : '2px solid var(--color-border, #e0e0e0)',
                     borderRadius: '8px',
                     background: editPlayStyle.value === style ? 'var(--color-primary-light, #E8F5E9)' : '#fff',
-                    color: editPlayStyle.value === style ? 'var(--color-primary, #2E7D32)' : '#666',
+                    color: editPlayStyle.value === style ? 'var(--color-primary, #2E7D32)' : 'var(--color-gray-base, #666)',
                     cursor: 'pointer',
                     fontWeight: editPlayStyle.value === style ? '600' : '400',
                   }}
@@ -831,14 +831,14 @@ export function GamesList() {
                 type="time"
                 value={editTimeStart.value}
                 onInput={(e) => { editTimeStart.value = (e.target as HTMLInputElement).value; }}
-                style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px;"
+                style="flex: 1; padding: 8px; border: 1px solid var(--color-gray-light, #ddd); border-radius: 6px;"
               />
               <span>to</span>
               <input
                 type="time"
                 value={editTimeEnd.value}
                 onInput={(e) => { editTimeEnd.value = (e.target as HTMLInputElement).value; }}
-                style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px;"
+                style="flex: 1; padding: 8px; border: 1px solid var(--color-gray-light, #ddd); border-radius: 6px;"
               />
             </div>
           </div>
@@ -853,7 +853,7 @@ export function GamesList() {
                 />
                 <span>Open to 3-player rotation</span>
               </label>
-              <p style="font-size: 12px; color: #666; margin: 4px 0 0 24px;">
+              <p style="font-size: 12px; color: var(--color-gray-base, #666); margin: 4px 0 0 24px;">
                 If unchecked, you'll only be matched for 2-player singles
               </p>
             </div>
@@ -896,14 +896,14 @@ export function GamesList() {
             <>
               {removeIsOwner.value ? (
                 <>
-                  <p style="color: #666; margin: 0; line-height: 1.5;">
+                  <p style="color: var(--color-gray-base, #666); margin: 0; line-height: 1.5;">
                     Are you sure you want to remove yourself from this date?
                   </p>
                   <div style="background: #FFF8E1; border-radius: 8px; padding: 12px; border-left: 4px solid #FFB74D;">
                     <p style="margin: 0 0 8px 0; font-weight: 500; color: #E65100;">
                       Things to consider:
                     </p>
-                    <ul style="margin: 0; padding-left: 20px; color: #666; font-size: 14px;">
+                    <ul style="margin: 0; padding-left: 20px; color: var(--color-gray-base, #666); font-size: 14px;">
                       <li>You'll lose your current spot in the check-in order</li>
                       <li>If you want to change your preferences, you can <strong>edit</strong> instead</li>
                       <li>You can always check in again after removing</li>
@@ -912,11 +912,11 @@ export function GamesList() {
                 </>
               ) : (
                 <>
-                  <p style="color: #666; margin: 0; line-height: 1.5;">
+                  <p style="color: var(--color-gray-base, #666); margin: 0; line-height: 1.5;">
                     Are you sure you want to remove <strong>{removeName.value}</strong> from this date?
                   </p>
                   <div style="background: #FFF8E1; border-radius: 8px; padding: 12px; border-left: 4px solid #FFB74D;">
-                    <p style="margin: 0; color: #666; font-size: 14px;">
+                    <p style="margin: 0; color: var(--color-gray-base, #666); font-size: 14px;">
                       They will lose their spot in the check-in order. Consider using <strong>edit</strong> to update their preferences instead.
                     </p>
                   </div>
@@ -929,8 +929,8 @@ export function GamesList() {
                   style={{
                     flex: 1,
                     padding: '12px',
-                    background: '#f5f5f5',
-                    color: '#666',
+                    background: 'var(--color-gray-lightest, #f5f5f5)',
+                    color: 'var(--color-gray-base, #666)',
                     border: 'none',
                     borderRadius: '8px',
                     fontSize: '16px',
@@ -962,7 +962,7 @@ export function GamesList() {
             <>
               <div style="text-align: center; padding: 8px 0;">
                 <div style="font-size: 48px; margin-bottom: 8px;">✓</div>
-                <p style="color: #666; margin: 0;">
+                <p style="color: var(--color-gray-base, #666); margin: 0;">
                   {removeIsOwner.value
                     ? `You've been removed from ${formatDate(removeDate.value)}`
                     : `${removeName.value} has been removed from ${formatDate(removeDate.value)}`
@@ -971,7 +971,7 @@ export function GamesList() {
               </div>
 
               <div>
-                <p style="margin: 0 0 8px 0; font-size: 13px; color: #666; text-align: center;">
+                <p style="margin: 0 0 8px 0; font-size: 13px; color: var(--color-gray-base, #666); text-align: center;">
                   Let others know:
                 </p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
@@ -988,7 +988,7 @@ export function GamesList() {
                       alignItems: 'center',
                       gap: '4px',
                       padding: '8px 16px',
-                      background: '#25D366',
+                      background: 'var(--color-whatsapp, #25D366)',
                       color: 'white',
                       borderRadius: '6px',
                       fontSize: '14px',
@@ -1103,7 +1103,7 @@ export function GamesList() {
             {hasCustomArrangement && !isArrangeMode && (
               <span style={{
                 fontSize: '11px',
-                background: '#9C27B0',
+                background: 'var(--color-purple-arrange, #9C27B0)',
                 color: 'white',
                 padding: '2px 6px',
                 borderRadius: '4px',
@@ -1135,8 +1135,8 @@ export function GamesList() {
                 <button
                   onClick={cancelArrangeMode}
                   style={{
-                    background: '#f5f5f5',
-                    color: '#666',
+                    background: 'var(--color-gray-lightest, #f5f5f5)',
+                    color: 'var(--color-gray-base, #666)',
                     border: 'none',
                     borderRadius: '6px',
                     padding: '6px 12px',
@@ -1220,10 +1220,10 @@ export function GamesList() {
                             background: 'white',
                             cursor: 'pointer',
                             fontSize: '14px',
-                            color: '#333',
+                            color: 'var(--color-gray-dark, #333)',
                           }}
                         >
-                          <svg viewBox="0 0 24 24" width="20" height="20" fill="#25D366">
+                          <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-whatsapp, #25D366)">
                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                           </svg>
                           WhatsApp
@@ -1240,10 +1240,10 @@ export function GamesList() {
                             background: 'white',
                             cursor: 'pointer',
                             fontSize: '14px',
-                            color: '#333',
+                            color: 'var(--color-gray-dark, #333)',
                           }}
                         >
-                          <svg viewBox="0 0 24 24" width="20" height="20" fill="#2196F3">
+                          <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-sms, #2196F3)">
                             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
                           </svg>
                           SMS
@@ -1260,10 +1260,10 @@ export function GamesList() {
                             background: 'white',
                             cursor: 'pointer',
                             fontSize: '14px',
-                            color: '#333',
+                            color: 'var(--color-gray-dark, #333)',
                           }}
                         >
-                          <svg viewBox="0 0 24 24" width="20" height="20" fill="#666">
+                          <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-gray-base, #666)">
                             <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
                           </svg>
                           Copy
@@ -1277,7 +1277,7 @@ export function GamesList() {
                     onClick={() => startArrangeMode(matches, checkins)}
                     title="Arrange Players"
                     style={{
-                      background: '#9C27B0',
+                      background: 'var(--color-purple-arrange, #9C27B0)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
@@ -1328,11 +1328,11 @@ export function GamesList() {
         {/* Arrange mode instruction */}
         {isArrangeMode && (
           <div style={{
-            background: '#F3E5F5',
+            background: 'var(--color-purple-arrange-light, #F3E5F5)',
             borderRadius: '8px',
             padding: '12px',
             marginBottom: '16px',
-            color: '#7B1FA2',
+            color: 'var(--color-purple-arrange-dark, #7B1FA2)',
             fontSize: '14px',
           }}>
             <strong>Arrange Mode:</strong> Tap a player to select, then tap another player to swap their positions.
@@ -1356,13 +1356,13 @@ export function GamesList() {
               return (
                 <div key={matchKey} class="match-group" style={{
                   marginBottom: '16px',
-                  border: '2px dashed #9C27B0',
+                  border: '2px dashed var(--color-purple-arrange, #9C27B0)',
                   borderRadius: '8px',
                   padding: '8px',
                 }}>
                   <h3 style="margin: 0 0 8px 0;">
                     {isDoubles ? `Doubles ${matchNum}` : `Singles ${matchNum}`}
-                    <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--color-gray-base, #666)', marginLeft: '8px' }}>
                       ({players.length}/{isDoubles ? 4 : 2})
                     </span>
                   </h3>
@@ -1375,13 +1375,13 @@ export function GamesList() {
                           onClick={() => handleArrangeClick(playerName, matchKey)}
                           style={{
                             padding: '10px 12px',
-                            background: isSelected ? '#9C27B0' : '#f5f5f5',
-                            color: isSelected ? 'white' : '#333',
+                            background: isSelected ? 'var(--color-purple-arrange, #9C27B0)' : 'var(--color-gray-lightest, #f5f5f5)',
+                            color: isSelected ? 'white' : 'var(--color-gray-dark, #333)',
                             borderRadius: '6px',
                             cursor: 'pointer',
                             fontWeight: '500',
                             transition: 'all 0.15s',
-                            border: isSelected ? '2px solid #7B1FA2' : '2px solid transparent',
+                            border: isSelected ? '2px solid var(--color-purple-arrange-dark, #7B1FA2)' : '2px solid transparent',
                           }}
                         >
                           {playerName}
@@ -1402,7 +1402,7 @@ export function GamesList() {
                 padding: '8px',
                 background: '#fafafa',
               }}>
-                <h3 style="margin: 0 0 8px 0; color: #666;">Unassigned</h3>
+                <h3 style="margin: 0 0 8px 0; color: var(--color-gray-base, #666);">Unassigned</h3>
                 <div style="display: flex; flex-direction: column; gap: 4px;">
                   {tempArrangement.value.unassigned.map((playerName: string) => {
                     const isSelected = selectedPlayer.value?.name === playerName && selectedPlayer.value?.matchKey === 'unassigned';
@@ -1412,13 +1412,13 @@ export function GamesList() {
                         onClick={() => handleArrangeClick(playerName, 'unassigned')}
                         style={{
                           padding: '10px 12px',
-                          background: isSelected ? '#9C27B0' : '#fff',
-                          color: isSelected ? 'white' : '#333',
+                          background: isSelected ? 'var(--color-purple-arrange, #9C27B0)' : '#fff',
+                          color: isSelected ? 'white' : 'var(--color-gray-dark, #333)',
                           borderRadius: '6px',
                           cursor: 'pointer',
                           fontWeight: '500',
                           transition: 'all 0.15s',
-                          border: isSelected ? '2px solid #7B1FA2' : '2px solid #e0e0e0',
+                          border: isSelected ? '2px solid var(--color-purple-arrange-dark, #7B1FA2)' : '2px solid var(--color-border, #e0e0e0)',
                         }}
                       >
                         {playerName}
@@ -1554,7 +1554,7 @@ export function GamesList() {
                   })}
                 </div>
                 {isProvisional && (
-                  <p style="color: #666; font-size: 13px; margin: 8px 0 4px 0; font-style: italic; padding: 0 12px;">
+                  <p style="color: var(--color-gray-base, #666); font-size: 13px; margin: 8px 0 4px 0; font-style: italic; padding: 0 12px;">
                     Open to more players
                   </p>
                 )}
@@ -1623,7 +1623,7 @@ export function GamesList() {
                   })}
                 </div>
                 {fallbackText && (
-                  <p style="color: #666; font-size: 13px; margin: 8px 0 4px 0; font-style: italic; padding: 0 12px;">
+                  <p style="color: var(--color-gray-base, #666); font-size: 13px; margin: 8px 0 4px 0; font-style: italic; padding: 0 12px;">
                     {fallbackText}
                   </p>
                 )}
