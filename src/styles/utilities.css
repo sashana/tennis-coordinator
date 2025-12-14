@@ -14,7 +14,8 @@
   transition: background 0.15s;
 }
 
-.hover-bg-subtle:hover {
+.hover-bg-subtle:hover,
+.hover-bg-subtle:active {
   background: var(--color-bg-subtle, #f9f9f9) !important;
 }
 
@@ -23,7 +24,8 @@
   transition: color 0.2s;
 }
 
-.hover-color-primary:hover {
+.hover-color-primary:hover,
+.hover-color-primary:active {
   color: var(--color-primary, #2C6E49) !important;
 }
 
@@ -32,7 +34,8 @@
   transition: color 0.2s, background 0.2s;
 }
 
-.hover-danger:hover {
+.hover-danger:hover,
+.hover-danger:active {
   color: var(--color-error, #f44336) !important;
   background: var(--color-error-light, #ffebee) !important;
 }
@@ -42,7 +45,8 @@
   transition: opacity 0.2s;
 }
 
-.hover-opacity:hover {
+.hover-opacity:hover,
+.hover-opacity:active {
   opacity: 0.9 !important;
 }
 
@@ -51,7 +55,8 @@
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.hover-scale:hover {
+.hover-scale:hover,
+.hover-scale:active {
   transform: scale(1.1) !important;
 }
 
@@ -60,7 +65,8 @@
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.hover-lift:hover {
+.hover-lift:hover,
+.hover-lift:active {
   transform: translateY(-1px) !important;
 }
 
@@ -73,7 +79,8 @@
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.hover-admin-badge:hover {
+.hover-admin-badge:hover,
+.hover-admin-badge:active {
   transform: scale(1.1) !important;
   box-shadow: var(--shadow-md, 0 2px 8px rgba(0,0,0,0.15)) !important;
 }
@@ -101,6 +108,7 @@
   transition: background 0.15s;
 }
 
-.dropdown-item-hover:hover {
+.dropdown-item-hover:hover,
+.dropdown-item-hover:active {
   background: var(--color-bg-subtle, #f9f9f9) !important;
 }

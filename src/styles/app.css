@@ -82,8 +82,8 @@
             font-size: 20px;
             cursor: pointer;
             border-radius: 50%;
-            width: 36px;
-            height: 36px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -154,7 +154,7 @@
             right: 2px;
             background: #f44336;
             color: white;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 600;
             min-width: 16px;
             height: 16px;
@@ -287,7 +287,7 @@
         }
 
         .date-selector h2 {
-            font-size: 13px;
+            font-size: 14px;
             margin-bottom: 6px;
             color: #666;
         }
@@ -360,7 +360,7 @@
         }
 
         .date-btn .day-name {
-            font-size: 9px;
+            font-size: 11px;
             text-transform: uppercase;
             opacity: 0.8;
             display: block;
@@ -465,7 +465,7 @@
         .preference-group {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
+            gap: 10px;
             margin-bottom: 16px;
         }
         
@@ -632,7 +632,7 @@
             display: inline-block;
             padding: 3px 8px;
             border-radius: 4px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
             white-space: nowrap;
         }
@@ -654,7 +654,7 @@
         }
         
         .checkin-time {
-            font-size: 12px;
+            font-size: 13px;
             color: #999;
         }
         
@@ -785,7 +785,7 @@
             padding: 8px 10px;
             border: 1px solid #ddd;
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 14px;
             background: #fafafa;
         }
 
@@ -816,7 +816,7 @@
             z-index: 1000;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
         }
         
         .modal.active {
@@ -1352,7 +1352,7 @@
         /* Toast Notifications - positioned at bottom above nav bar */
         .toast-container {
             position: fixed;
-            bottom: 70px;
+            bottom: calc(64px + env(safe-area-inset-bottom) + 10px);
             left: 50%;
             transform: translateX(-50%);
             z-index: 10000;
@@ -2229,9 +2229,9 @@
             font-size: 24px;
             color: #999;
             cursor: pointer;
-            padding: 0;
-            width: 32px;
-            height: 32px;
+            padding: 8px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;

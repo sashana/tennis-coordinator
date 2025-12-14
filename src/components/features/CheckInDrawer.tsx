@@ -386,7 +386,7 @@ export function CheckInDrawer() {
 
         .preference-buttons {
           display: flex;
-          gap: 10px;
+          gap: 12px;
         }
 
         .pref-btn {
@@ -461,7 +461,7 @@ export function CheckInDrawer() {
         .time-presets {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 8px;
+          gap: 12px;
           margin-bottom: 12px;
         }
 
