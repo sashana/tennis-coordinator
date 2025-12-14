@@ -11,6 +11,7 @@ const activeShareDropdown = signal<string | null>(null);
 
 // State for admin viewing another user's games
 const viewingUser = signal<string | null>(null);
+const showMemberPicker = signal(false);
 
 // State for multi-select sharing
 const isSelectionMode = signal(false);
@@ -24,13 +25,22 @@ function isGroupAdmin(): boolean {
   return sessionStorage.getItem(`adminAuth_${groupId}`) === 'true';
 }
 
-// Close dropdown when clicking outside
+// Close dropdowns when clicking outside
 if (typeof document !== 'undefined') {
   document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+
+    // Close share dropdown
     if (activeShareDropdown.value) {
-      const target = e.target as HTMLElement;
       if (!target.closest('.share-dropdown') && !target.closest('[data-share-button]')) {
         activeShareDropdown.value = null;
+      }
+    }
+
+    // Close member picker dropdown
+    if (showMemberPicker.value) {
+      if (!target.closest('.member-picker-dropdown') && !target.closest('[data-member-picker-button]')) {
+        showMemberPicker.value = false;
       }
     }
   });
@@ -533,39 +543,97 @@ export function MyMatchesTab() {
       {/* Admin user selector */}
       {isAdmin && !isViewingOther && (
         <div style={{
-          background: '#f5f5f5',
-          borderRadius: '8px',
-          padding: '12px',
-          marginBottom: '16px',
+          background: 'var(--color-gray-lightest, #f5f5f5)',
+          borderRadius: 'var(--radius-lg, 8px)',
+          padding: 'var(--spacing-xl, 12px)',
+          marginBottom: 'var(--spacing-2xl, 16px)',
+          position: 'relative',
         }}>
           <label style={{
             display: 'block',
-            fontSize: '12px',
-            color: '#666',
-            marginBottom: '6px',
+            fontSize: 'var(--font-size-sm, 13px)',
+            color: 'var(--color-gray-base, #666)',
+            marginBottom: 'var(--spacing-sm, 6px)',
             fontWeight: '500',
           }}>
             View another member's games
           </label>
-          <select
-            value=""
-            onChange={(e) => {
-              const val = (e.target as HTMLSelectElement).value;
-              if (val) {
-                viewingUser.value = val;
-              }
+          <button
+            data-member-picker-button
+            onClick={(e) => {
+              e.stopPropagation();
+              showMemberPicker.value = !showMemberPicker.value;
             }}
-            style={{ marginBottom: 0 }}
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              background: 'white',
+              border: '1px solid var(--color-border, #e0e0e0)',
+              borderRadius: 'var(--radius-md, 6px)',
+              fontSize: 'var(--font-size-base, 14px)',
+              color: 'var(--color-text-secondary, #666)',
+              cursor: 'pointer',
+              textAlign: 'left',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
           >
-            <option value="">Select a member...</option>
-            {coreMembers.value
-              .filter(m => m !== sessionUser.value)
-              .sort((a, b) => a.localeCompare(b))
-              .map(member => (
-                <option key={member} value={member}>{member}</option>
-              ))
-            }
-          </select>
+            <span>Select a member...</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style={{ transform: showMemberPicker.value ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+              <path d="M7 10l5 5 5-5z"/>
+            </svg>
+          </button>
+
+          {showMemberPicker.value && (
+            <div
+              class="member-picker-dropdown"
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 'var(--spacing-xl, 12px)',
+                right: 'var(--spacing-xl, 12px)',
+                marginTop: 'var(--spacing-xs, 4px)',
+                background: 'white',
+                border: '1px solid var(--color-border, #e0e0e0)',
+                borderRadius: 'var(--radius-lg, 8px)',
+                boxShadow: 'var(--shadow-xl, 0 4px 12px rgba(0,0,0,0.15))',
+                zIndex: 100,
+                maxHeight: '300px',
+                overflowY: 'auto',
+              }}
+            >
+              {coreMembers.value
+                .filter(m => m !== sessionUser.value)
+                .sort((a, b) => a.localeCompare(b))
+                .map(member => (
+                  <button
+                    key={member}
+                    onClick={() => {
+                      viewingUser.value = member;
+                      showMemberPicker.value = false;
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      background: 'white',
+                      border: 'none',
+                      borderBottom: '1px solid var(--color-border, #e0e0e0)',
+                      textAlign: 'left',
+                      fontSize: 'var(--font-size-base, 14px)',
+                      color: 'var(--color-text-primary, #333)',
+                      cursor: 'pointer',
+                      transition: 'background 0.15s',
+                    }}
+                    onMouseOver={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-subtle, #f9f9f9)'; }}
+                    onMouseOut={(e) => { (e.currentTarget as HTMLElement).style.background = 'white'; }}
+                  >
+                    {member}
+                  </button>
+                ))
+              }
+            </div>
+          )}
         </div>
       )}
 
