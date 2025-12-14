@@ -3,7 +3,7 @@ import { useEffect } from 'preact/hooks';
 import { Modal } from '../ui/Modal';
 import { currentGroupId } from '../App';
 import { showActivityModal } from '../layout/Header';
-import { formatDate, formatTime } from '../../utils/helpers';
+import { formatDate, formatTime, getPreferenceLabel } from '../../utils/helpers';
 import { getDatabase } from '../../config/firebase';
 
 interface ActivityItem {
@@ -98,13 +98,6 @@ async function deleteActivity(item: ActivityItem) {
   }
 }
 
-function getPreferenceLabel(playStyle: string): string {
-  switch (playStyle) {
-    case 'singles': return 'Singles';
-    case 'doubles': return 'Doubles';
-    default: return 'Either';
-  }
-}
 
 function formatActivityTime(timestamp: number): string {
   return formatTime(timestamp);

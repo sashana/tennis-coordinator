@@ -2,7 +2,7 @@ import { signal } from '@preact/signals';
 import { useState, useEffect } from 'preact/hooks';
 import { currentCheckins, sessionUser, currentGroupId, selectedDate, currentGroupName, showToast } from '../App';
 import { removeCheckin, updateCheckin, canRemoveCheckin, matchNotes, saveMatchNote, resetDay, groupSettings, matchArrangement, saveMatchArrangement, clearMatchArrangement, useMatchArrangement } from '../../hooks/useFirebase';
-import { formatTime, formatTimeRange, formatDate } from '../../utils/helpers';
+import { formatTime, formatTimeRange, formatDate, normalizeName, getPreferenceLabel } from '../../utils/helpers';
 import { Modal } from '../ui/Modal';
 import { showSharePrompt, sharePromptData } from '../pages/MainApp';
 import { organizeMatches } from '../../utils/matching';
@@ -11,17 +11,6 @@ import { openCheckInDrawer } from './CheckInDrawer';
 import { TennisEmptyState } from '../ui/TennisEffects';
 import type { CheckinData } from '../../types';
 
-function normalizeName(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, '');
-}
-
-function getPreferenceLabel(playStyle: string): string {
-  switch (playStyle) {
-    case 'singles': return 'Singles';
-    case 'doubles': return 'Doubles';
-    default: return 'Either';
-  }
-}
 
 // Edit modal state
 const editModalOpen = signal(false);

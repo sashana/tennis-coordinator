@@ -2,15 +2,12 @@ import { signal, computed } from '@preact/signals';
 import { Modal } from '../ui/Modal';
 import { allCheckins, sessionUser, selectedDate } from '../App';
 import { organizeMatches } from '../../utils/matching';
-import { formatDate } from '../../utils/helpers';
+import { formatDate, normalizeName } from '../../utils/helpers';
 import { memberDetails } from '../App';
 
 // Modal state
 export const showMyScheduleModal = signal(false);
 
-function normalizeName(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, '');
-}
 
 interface ScheduledMatch {
   date: string;

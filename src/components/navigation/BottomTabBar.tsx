@@ -20,6 +20,7 @@ interface TabConfig {
   label: string;
   icon: string;
   activeIcon: string;
+  useImageIcon?: boolean; // If true, icon/activeIcon are image URLs instead of SVG strings
 }
 
 const tabs: TabConfig[] = [
@@ -32,8 +33,8 @@ const tabs: TabConfig[] = [
   {
     id: 'matches',
     label: 'My Games',
-    icon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`,
-    activeIcon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`,
+    icon: `<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M5 5c2 3 2 6 2 7s0 4-2 7" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><path d="M19 5c-2 3-2 6-2 7s0 4 2 7" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+    activeIcon: `<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M5 5c2 3 2 6 2 7s0 4-2 7" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><path d="M19 5c-2 3-2 6-2 7s0 4 2 7" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>`,
   },
   {
     id: 'directory',
@@ -95,10 +96,22 @@ export function BottomTabBar() {
               minWidth: '60px',
             }}
           >
-            <div
-              style={{ position: 'relative' }}
-              dangerouslySetInnerHTML={{ __html: isActive ? tab.activeIcon : tab.icon }}
-            />
+            {tab.useImageIcon ? (
+              <img
+                src={isActive ? tab.activeIcon : tab.icon}
+                alt={tab.label}
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  opacity: isActive ? 1 : 0.7,
+                }}
+              />
+            ) : (
+              <div
+                style={{ position: 'relative' }}
+                dangerouslySetInnerHTML={{ __html: isActive ? tab.activeIcon : tab.icon }}
+              />
+            )}
             {showBadge && (
               <span
                 style={{

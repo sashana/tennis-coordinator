@@ -1,7 +1,7 @@
 import { signal, computed } from '@preact/signals';
 import { allCheckins, sessionUser, selectedDate, memberDetails, currentGroupId, currentGroupName, showToast, coreMembers } from '../App';
 import { organizeMatches } from '../../utils/matching';
-import { formatDate, formatTimeRange } from '../../utils/helpers';
+import { formatDate, formatTimeRange, normalizeName } from '../../utils/helpers';
 import { activeTab } from '../navigation/BottomTabBar';
 import { groupSettings, matchNotes, allMatchNotes, useAllMatchNotes } from '../../hooks/useFirebase';
 import { createCalendarEventFromMatch, downloadICSFile } from '../../utils/calendar';
@@ -49,9 +49,6 @@ if (typeof document !== 'undefined') {
   });
 }
 
-function normalizeName(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, '');
-}
 
 interface ScheduledMatch {
   date: string;
@@ -704,7 +701,7 @@ export function MyMatchesTab() {
           <p style="font-size: 18px; margin: 0 0 8px 0; color: var(--color-gray-dark, #333);">
             {isPastView ? 'No past games' : 'No upcoming games'}
           </p>
-          <p style="font-size: 14px; color: var(--color-gray-base, #666); margin: 0;">
+          <p style="font-size: 14px; color: var(--color-gray-base, #666); margin: 0 0 16px 0;">
             {isPastView
               ? (isViewingOther
                   ? `${viewingUser.value} has no past games on record.`
@@ -714,6 +711,31 @@ export function MyMatchesTab() {
                   : 'Check in for a date to get matched with other players!')
             }
           </p>
+          {/* Check In button for upcoming empty state (only for self, not when viewing others) */}
+          {!isPastView && !isViewingOther && (
+            <button
+              onClick={() => { activeTab.value = 'checkin'; }}
+              style={{
+                background: 'var(--color-primary, #2C6E49)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '12px 24px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 12px rgba(var(--color-primary-rgb, 44, 110, 73), 0.25)',
+              }}
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+              </svg>
+              Check In
+            </button>
+          )}
         </div>
       ) : (
         <div style="display: flex; flex-direction: column; gap: 12px;">

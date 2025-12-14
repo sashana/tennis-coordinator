@@ -1,10 +1,7 @@
 import { computed } from '@preact/signals';
 import { allCheckins, coreMembers } from '../App';
 import { organizeMatches } from '../../utils/matching';
-
-function normalizeName(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, '');
-}
+import { normalizeName } from '../../utils/helpers';
 
 // Compute insights from all check-ins
 const insights = computed(() => {

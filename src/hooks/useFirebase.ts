@@ -12,7 +12,7 @@ import {
   showToast
 } from '../components/App';
 import { selectedName, isFormExpanded, showSharePrompt, sharePromptData } from '../components/pages/MainApp';
-import { formatTimeRange, formatDateForNotification } from '../utils/helpers';
+import { formatTimeRange, formatDateForNotification, normalizeName } from '../utils/helpers';
 import { organizeMatches } from '../utils/matching';
 import type { CheckinData } from '../types';
 
@@ -234,10 +234,6 @@ export function useAllMatchNotes() {
   }, []);
 }
 
-// Helper function to normalize names for comparison
-function normalizeName(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, '');
-}
 
 // Check-in functions
 export async function addCheckin(checkin: {

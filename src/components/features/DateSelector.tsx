@@ -1,12 +1,8 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { selectedDate, allCheckins, sessionUser } from '../App';
-import { formatLocalDate } from '../../utils/helpers';
+import { formatLocalDate, normalizeName } from '../../utils/helpers';
 import { selectedName, isFormExpanded } from '../pages/MainApp';
 
-// Helper function to normalize names for comparison
-function normalizeName(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, '');
-}
 
 // Check if session user is checked in for a given date
 function isSessionUserCheckedIn(dateStr: string): boolean {

@@ -3,6 +3,7 @@ import { useEffect } from 'preact/hooks';
 import { Modal } from '../ui/Modal';
 import { currentGroupId, sessionUser, coreMembers, showToast, selectedDate } from '../App';
 import { getDatabase } from '../../config/firebase';
+import { normalizeName } from '../../utils/helpers';
 
 // Modal visibility - kept for legacy support but not used with tab navigation
 const showNotificationsModal = signal(false);
@@ -13,10 +14,6 @@ interface Notification {
   timestamp: number;
   read: boolean;
   date?: string;
-}
-
-function normalizeName(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, '');
 }
 
 // Notification settings - default to false until loaded from Firebase

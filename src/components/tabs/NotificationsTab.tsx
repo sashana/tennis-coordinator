@@ -1,7 +1,7 @@
 import { signal } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
 import { notifications, markAsRead, markAllAsRead, clearNotification } from '../modals/NotificationsModal';
-import { formatDate } from '../../utils/helpers';
+import { formatDate, normalizeName } from '../../utils/helpers';
 import { currentGroupId, sessionUser, coreMembers, showToast, selectedDate, currentGroupName } from '../App';
 import { activeTab } from '../navigation/BottomTabBar';
 import { getDatabase } from '../../config/firebase';
@@ -15,10 +15,6 @@ const unwatchedMembers = signal<string[]>([]); // Store unwatched for efficiency
 
 // State for invite dropdown on dissolved notifications
 const activeInviteDropdown = signal<string | null>(null);
-
-function normalizeName(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, '');
-}
 
 // Close dropdown when clicking outside
 if (typeof document !== 'undefined') {

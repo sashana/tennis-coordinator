@@ -2,8 +2,7 @@ import { signal } from '@preact/signals';
 import { currentCheckins, selectedDate, currentGroupId, showToast } from '../App';
 import { matchNotes, saveMatchNote, resetDay, groupSettings } from '../../hooks/useFirebase';
 import { organizeMatches } from '../../utils/matching';
-import { formatTimeRange, formatDate } from '../../utils/helpers';
-import { debounce } from '../../utils/helpers';
+import { formatTimeRange, formatDate, debounce, getPreferenceLabel } from '../../utils/helpers';
 import { weatherCache, getWeatherDescription } from './WeatherWidget';
 
 // State for inline share dropdown
@@ -201,13 +200,6 @@ function NeedPlayersButton({ match, matchKey }: { match: any; matchKey: string; 
   );
 }
 
-function getPreferenceLabel(playStyle: string): string {
-  switch (playStyle) {
-    case 'singles': return 'Singles';
-    case 'doubles': return 'Doubles';
-    default: return 'Either';
-  }
-}
 
 // Debounced save function
 const saveMatchNoteDebounced = debounce((...args: unknown[]) => {
