@@ -3,10 +3,11 @@ import { sessionUser, currentGroupId, showToast, memberDetails } from '../App';
 import { showWelcomeModal } from '../ui/WelcomeModal';
 import { showSettingsModal } from '../layout/Header';
 import { showActivityModal } from '../layout/Header';
-import { updateMemberDetails, renameMember, groupSettings, applyTheme } from '../../hooks/useFirebase';
+import { groupSettings, applyTheme } from '../../hooks/useFirebase';
 import { getDatabase } from '../../config/firebase';
 import { InsightsTab } from './InsightsTab';
 import { HelpTab } from './HelpTab';
+import { openEditMemberDrawer } from '../features/EditMemberDrawer';
 
 // Available themes - 5 Grand Slam themes
 const THEMES = [
@@ -26,15 +27,8 @@ function isGroupAdmin(): boolean {
 
 export function ProfileTab() {
   const [adminStatus, setAdminStatus] = useState(isGroupAdmin());
-  const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [saving, setSaving] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const [shareContactInDirectory, setShareContactInDirectory] = useState(false);
-  const [shareNotesInDirectory, setShareNotesInDirectory] = useState(false);
 
   // Re-check admin status periodically (for when user logs in as admin)
   useEffect(() => {
@@ -43,78 +37,6 @@ export function ProfileTab() {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
-
-  // Load current profile info when component mounts or user changes
-  useEffect(() => {
-    const userName = sessionUser.value;
-    if (userName) {
-      setName(userName);
-      if (memberDetails.value) {
-        const details = memberDetails.value[userName];
-        if (details) {
-          setPhone(details.phone || '');
-          setEmail(details.email || '');
-          setShareContactInDirectory(details.shareContactInDirectory || false);
-          setShareNotesInDirectory(details.shareNotesInDirectory || false);
-        }
-      }
-    }
-  }, [sessionUser.value, memberDetails.value]);
-
-  const handleSaveProfile = async () => {
-    const currentName = sessionUser.value;
-    if (!currentName) return;
-
-    setSaving(true);
-
-    // Check if name changed
-    const trimmedName = name.trim();
-    const nameChanged = trimmedName !== currentName;
-
-    if (nameChanged) {
-      // Rename member (this also updates check-ins)
-      const renameSuccess = await renameMember(currentName, trimmedName);
-      if (renameSuccess) {
-        // Update session user to new name
-        sessionUser.value = trimmedName;
-        const groupId = currentGroupId.value;
-        if (groupId) {
-          localStorage.setItem(`sessionUser_${groupId}`, trimmedName);
-        }
-        // Update contact info with new name
-        await updateMemberDetails(trimmedName, { phone, email, shareContactInDirectory, shareNotesInDirectory });
-      }
-      setSaving(false);
-      if (renameSuccess) {
-        setIsEditing(false);
-      }
-    } else {
-      // Just update contact info
-      const success = await updateMemberDetails(currentName, { phone, email, shareContactInDirectory, shareNotesInDirectory });
-      setSaving(false);
-      if (success) {
-        setIsEditing(false);
-      }
-    }
-  };
-
-  const handleCancelEdit = () => {
-    // Reset to saved values
-    const userName = sessionUser.value;
-    if (userName) {
-      setName(userName);
-      if (memberDetails.value) {
-        const details = memberDetails.value[userName];
-        if (details) {
-          setPhone(details.phone || '');
-          setEmail(details.email || '');
-          setShareContactInDirectory(details.shareContactInDirectory || false);
-          setShareNotesInDirectory(details.shareNotesInDirectory || false);
-        }
-      }
-    }
-    setIsEditing(false);
-  };
 
   // Get current contact info for display
   const currentDetails = sessionUser.value && memberDetails.value
@@ -147,229 +69,41 @@ export function ProfileTab() {
       <h2 style="margin: 0 0 var(--spacing-2xl, 16px) 0; font-size: var(--font-size-3xl, 20px);">Profile</h2>
 
       {/* Profile Information Section */}
-      <div
+      <button
+        onClick={() => sessionUser.value && openEditMemberDrawer(sessionUser.value)}
         style={{
-          background: 'var(--color-bg-card, #fff)',
-          borderRadius: 'var(--radius-xl, 12px)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--spacing-xl, 12px)',
           padding: 'var(--spacing-2xl, 16px)',
-          marginBottom: 'var(--spacing-2xl, 16px)',
+          background: 'var(--color-bg-card, #fff)',
           border: '1px solid var(--color-border, #e0e0e0)',
+          borderRadius: 'var(--radius-xl, 12px)',
+          cursor: 'pointer',
+          width: '100%',
+          textAlign: 'left',
+          marginBottom: 'var(--spacing-2xl, 16px)',
         }}
       >
-        {!isEditing && (
-          <div style="display: flex; justify-content: flex-end; margin-bottom: var(--spacing-md, 8px);">
-            <button
-              onClick={() => setIsEditing(true)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--color-primary, #2C6E49)',
-                cursor: 'pointer',
-                fontSize: 'var(--font-size-base, 14px)',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--spacing-xs, 4px)',
-              }}
-            >
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-              </svg>
-              Edit
-            </button>
+        <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-full, 50%)', background: 'var(--color-primary-light, #E8F5E9)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="var(--color-primary, #2C6E49)">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+        </div>
+        <div style="flex: 1;">
+          <div style="font-size: var(--font-size-lg, 16px); font-weight: 500; color: var(--color-text-primary, #333);">
+            {sessionUser.value || 'Not set'}
           </div>
-        )}
-
-        {isEditing ? (
-          <div style="display: flex; flex-direction: column; gap: var(--spacing-xl, 12px);">
-            <div>
-              <label style="display: block; font-size: var(--font-size-sm, 13px); color: var(--color-text-secondary, #666); margin-bottom: var(--spacing-xs, 4px);">
-                Display Name
-              </label>
-              <input
-                type="text"
-                value={name}
-                onInput={(e) => setName((e.target as HTMLInputElement).value)}
-                placeholder="Your name"
-                style={{
-                  width: '100%',
-                  padding: 'var(--spacing-lg, 10px) var(--spacing-xl, 12px)',
-                  border: '1px solid var(--color-border-light, #ddd)',
-                  borderRadius: 'var(--radius-lg, 8px)',
-                  fontSize: 'var(--font-size-base, 14px)',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-            <div>
-              <label style="display: block; font-size: var(--font-size-sm, 13px); color: var(--color-text-secondary, #666); margin-bottom: var(--spacing-xs, 4px);">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                value={phone}
-                onInput={(e) => setPhone((e.target as HTMLInputElement).value)}
-                placeholder="e.g., (555) 123-4567"
-                style={{
-                  width: '100%',
-                  padding: 'var(--spacing-lg, 10px) var(--spacing-xl, 12px)',
-                  border: '1px solid var(--color-border-light, #ddd)',
-                  borderRadius: 'var(--radius-lg, 8px)',
-                  fontSize: 'var(--font-size-base, 14px)',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-            <div>
-              <label style="display: block; font-size: var(--font-size-sm, 13px); color: var(--color-text-secondary, #666); margin-bottom: var(--spacing-xs, 4px);">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
-                placeholder="e.g., name@example.com"
-                style={{
-                  width: '100%',
-                  padding: 'var(--spacing-lg, 10px) var(--spacing-xl, 12px)',
-                  border: '1px solid var(--color-border-light, #ddd)',
-                  borderRadius: 'var(--radius-lg, 8px)',
-                  fontSize: 'var(--font-size-base, 14px)',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-            <div style={{
-              padding: 'var(--spacing-xl, 12px)',
-              background: 'var(--color-bg-subtle, #f9f9f9)',
-              borderRadius: 'var(--radius-lg, 8px)',
-              border: '1px solid var(--color-border, #e0e0e0)',
-            }}>
-              <label style={{
-                display: 'flex',
-                alignItems: 'start',
-                gap: 'var(--spacing-md, 8px)',
-                cursor: 'pointer',
-                fontSize: 'var(--font-size-base, 14px)',
-              }}>
-                <input
-                  type="checkbox"
-                  checked={shareContactInDirectory}
-                  onChange={(e) => setShareContactInDirectory((e.target as HTMLInputElement).checked)}
-                  style={{
-                    marginTop: '2px',
-                    cursor: 'pointer',
-                  }}
-                />
-                <span style={{ color: 'var(--color-text-primary, #333)' }}>
-                  Share my contact info in team directory
-                  <div style={{ fontSize: 'var(--font-size-xs, 12px)', color: 'var(--color-text-secondary, #666)', marginTop: 'var(--spacing-xs, 4px)' }}>
-                    When enabled, your phone and email will be visible to all team members in the directory
-                  </div>
-                </span>
-              </label>
-            </div>
-            <div style={{
-              padding: 'var(--spacing-xl, 12px)',
-              background: 'var(--color-bg-subtle, #f9f9f9)',
-              borderRadius: 'var(--radius-lg, 8px)',
-              border: '1px solid var(--color-border, #e0e0e0)',
-            }}>
-              <label style={{
-                display: 'flex',
-                alignItems: 'start',
-                gap: 'var(--spacing-md, 8px)',
-                cursor: 'pointer',
-                fontSize: 'var(--font-size-base, 14px)',
-              }}>
-                <input
-                  type="checkbox"
-                  checked={shareNotesInDirectory}
-                  onChange={(e) => setShareNotesInDirectory((e.target as HTMLInputElement).checked)}
-                  style={{
-                    marginTop: '2px',
-                    cursor: 'pointer',
-                  }}
-                />
-                <span style={{ color: 'var(--color-text-primary, #333)' }}>
-                  Share my profile notes in team directory
-                  <div style={{ fontSize: 'var(--font-size-xs, 12px)', color: 'var(--color-text-secondary, #666)', marginTop: 'var(--spacing-xs, 4px)' }}>
-                    When enabled, your profile notes will be visible to all team members in the directory
-                  </div>
-                </span>
-              </label>
-            </div>
-            <div style="display: flex; gap: var(--spacing-md, 8px); margin-top: var(--spacing-xs, 4px);">
-              <button
-                onClick={handleCancelEdit}
-                disabled={saving}
-                style={{
-                  flex: 1,
-                  padding: 'var(--spacing-lg, 10px)',
-                  background: 'var(--color-bg-muted, #f5f5f5)',
-                  border: '1px solid var(--color-border-light, #ddd)',
-                  borderRadius: 'var(--radius-lg, 8px)',
-                  cursor: 'pointer',
-                  fontSize: 'var(--font-size-base, 14px)',
-                  fontWeight: '500',
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveProfile}
-                disabled={saving}
-                style={{
-                  flex: 1,
-                  padding: 'var(--spacing-lg, 10px)',
-                  background: 'var(--color-primary, #2C6E49)',
-                  border: 'none',
-                  borderRadius: 'var(--radius-lg, 8px)',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: 'var(--font-size-base, 14px)',
-                  fontWeight: '500',
-                  opacity: saving ? 0.7 : 1,
-                }}
-              >
-                {saving ? 'Saving...' : 'Save'}
-              </button>
-            </div>
+          <div style="font-size: var(--font-size-sm, 13px); color: var(--color-text-muted, #888);">
+            {currentDetails?.phone || currentDetails?.email
+              ? [currentDetails?.phone, currentDetails?.email].filter(Boolean).join(' • ')
+              : 'Tap to add contact info'}
           </div>
-        ) : (
-          <div style="display: flex; flex-direction: column; gap: var(--spacing-md, 8px);">
-            <div style="display: flex; align-items: center; gap: var(--spacing-md, 8px);">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--color-text-muted, #888)">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-              </svg>
-              <span style={{ color: 'var(--color-text-primary, #333)', fontSize: 'var(--font-size-base, 14px)' }}>
-                {sessionUser.value || 'Not set'}
-              </span>
-            </div>
-            <div style="display: flex; align-items: center; gap: var(--spacing-md, 8px);">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--color-text-muted, #888)">
-                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-              </svg>
-              <span style={{ color: currentDetails?.phone ? 'var(--color-text-primary, #333)' : 'var(--color-text-disabled, #aaa)', fontSize: 'var(--font-size-base, 14px)' }}>
-                {currentDetails?.phone || 'No phone number'}
-              </span>
-            </div>
-            <div style="display: flex; align-items: center; gap: var(--spacing-md, 8px);">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--color-text-muted, #888)">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-              </svg>
-              <span style={{ color: currentDetails?.email ? 'var(--color-text-primary, #333)' : 'var(--color-text-disabled, #aaa)', fontSize: 'var(--font-size-base, 14px)' }}>
-                {currentDetails?.email || 'No email address'}
-              </span>
-            </div>
-            {!currentDetails?.phone && !currentDetails?.email && (
-              <p style="font-size: var(--font-size-sm, 13px); color: var(--color-text-muted, #888); margin: var(--spacing-md, 8px) 0 0 0;">
-                Add your contact info so organizers can reach you about matches.
-              </p>
-            )}
-          </div>
-        )}
-      </div>
+        </div>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-text-disabled, #ccc)">
+          <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+        </svg>
+      </button>
 
       {/* Action Buttons */}
       <div style="display: flex; flex-direction: column; gap: var(--spacing-md, 8px);">
