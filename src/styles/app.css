@@ -402,8 +402,8 @@
             position: absolute;
             top: 1px;
             bottom: 1px;
-            left: 3px;
-            width: 6px;
+            left: 2px;
+            width: 4px;
             border: 2px solid rgba(255, 255, 255, 0.95);
             border-left: none;
             border-radius: 0 50% 50% 0;
@@ -416,8 +416,8 @@
             position: absolute;
             top: 1px;
             bottom: 1px;
-            right: 3px;
-            width: 6px;
+            right: 2px;
+            width: 4px;
             border: 2px solid rgba(255, 255, 255, 0.95);
             border-right: none;
             border-radius: 50% 0 0 50%;
