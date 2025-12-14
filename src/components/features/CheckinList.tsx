@@ -4,6 +4,7 @@ import { removeCheckin, updateCheckin, canRemoveCheckin } from '../../hooks/useF
 import { formatTime, formatTimeRange, formatDate } from '../../utils/helpers';
 import { Modal } from '../ui/Modal';
 import { showSharePrompt, sharePromptData } from '../pages/MainApp';
+import { TennisEmptyState } from '../ui/TennisEffects';
 
 function normalizeName(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '');
@@ -160,7 +161,7 @@ export function CheckinList() {
                   style={{
                     flex: 1,
                     padding: '10px',
-                    border: editPlayStyle.value === style ? '2px solid #4CAF50' : '2px solid #e0e0e0',
+                    border: editPlayStyle.value === style ? '2px solid #2C6E49' : '2px solid #e0e0e0',
                     borderRadius: '8px',
                     background: editPlayStyle.value === style ? '#E8F5E9' : '#fff',
                     color: editPlayStyle.value === style ? '#2E7D32' : '#666',
@@ -216,7 +217,7 @@ export function CheckinList() {
             onClick={saveEdit}
             style={{
               padding: '12px',
-              background: '#4CAF50',
+              background: 'var(--color-primary, #2C6E49)',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
@@ -405,7 +406,7 @@ export function CheckinList() {
                 style={{
                   width: '100%',
                   padding: '12px',
-                  background: '#4CAF50',
+                  background: 'var(--color-primary, #2C6E49)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
@@ -427,7 +428,10 @@ export function CheckinList() {
   if (checkins.length === 0) {
     return (
       <>
-        <div class="empty-state">No check-ins yet</div>
+        <TennisEmptyState
+          message="No check-ins yet"
+          subtext="Be the first to check in for this date!"
+        />
         {modals}
       </>
     );
@@ -478,7 +482,7 @@ export function CheckinList() {
                     title="Edit preferences"
                     style={{
                       background: 'rgba(76, 175, 80, 0.1)',
-                      color: '#4CAF50',
+                      color: 'var(--color-primary, #2C6E49)',
                       border: 'none',
                       borderRadius: '50%',
                       padding: '0',

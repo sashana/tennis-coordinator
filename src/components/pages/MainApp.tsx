@@ -16,12 +16,16 @@ import { useNotifications } from '../modals/NotificationsModal';
 import { InvitePromptModal } from '../modals/InvitePromptModal';
 import { WelcomeModal, showWelcomeModal } from '../ui/WelcomeModal';
 import { SharePromptBanner } from '../ui/SharePromptBanner';
+import { CheckInDrawer } from '../features/CheckInDrawer';
+import { PlayerSelectDrawer } from '../features/PlayerSelectDrawer';
+import { AddMemberDrawer } from '../features/AddMemberDrawer';
+import { EditMemberDrawer } from '../features/EditMemberDrawer';
 import { getTodayDate } from '../../utils/helpers';
 import { BottomTabBar, activeTab } from '../navigation/BottomTabBar';
 import { CheckInTab } from '../tabs/CheckInTab';
 import { MyMatchesTab } from '../tabs/MyMatchesTab';
 import { NotificationsTab } from '../tabs/NotificationsTab';
-import { HelpTab } from '../tabs/HelpTab';
+import { DirectoryTab } from '../tabs/DirectoryTab';
 import { ProfileTab } from '../tabs/ProfileTab';
 
 // Form state
@@ -145,13 +149,17 @@ export function MainApp() {
           {activeTab.value === 'checkin' && <CheckInTab />}
           {activeTab.value === 'matches' && <MyMatchesTab />}
           {activeTab.value === 'notifications' && <NotificationsTab />}
-          {activeTab.value === 'help' && <HelpTab />}
+          {activeTab.value === 'directory' && <DirectoryTab />}
           {activeTab.value === 'profile' && <ProfileTab />}
         </div>
       </div>
 
       <SharePromptBanner />
       <BottomTabBar />
+      <CheckInDrawer />
+      <PlayerSelectDrawer />
+      <AddMemberDrawer />
+      <EditMemberDrawer />
     </>
   );
 }

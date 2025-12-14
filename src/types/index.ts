@@ -95,6 +95,7 @@ export type NotificationType =
   | 'checkin'
   | 'removal'
   | 'match_formed'
+  | 'match_dissolved'
   | 'member_added'
   | 'member_removed';
 

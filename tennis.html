@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Midday Tennis - Court Dates Theme</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tennis: {
+                            green: '#2C6E49',     /* Wimbledon Green */
+                            dark: '#1a402b',
+                            neon: '#CCFF00',      /* Tennis Ball Yellow */
+                            clay: '#E07C51',
+                        },
+                        ui: {
+                            bg: '#F3F4F6',
+                            scoreboard: '#1F2937',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    },
+                    backgroundImage: {
+                        'felt-pattern': "url('data:image/svg+xml,%3Csvg width=\\'4\\' height=\\'4\\' viewBox=\\'0 0 4 4\\' xmlns=\\'http://www.w3.org/2000/svg\\'%3E%3Cpath d=\\'M1 3h1v1H1V3zm2-2h1v1H3V1z\\' fill=\\'%23000000\\' fill-opacity=\\'0.1\\' fill-rule=\\'evenodd\\'/%3E%3C/svg%3E')",
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-900 min-h-screen flex justify-center py-8 px-4 font-sans">
+
+    <div class="w-full max-w-md bg-white rounded-[32px] overflow-hidden shadow-2xl relative flex flex-col h-[900px]">
+        
+        <header class="bg-white pt-6 pb-2 border-b border-gray-100 shadow-sm z-20">
+            <div class="px-5 flex justify-between items-center mb-5">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-tennis-neon flex items-center justify-center shadow-sm">
+                        <i class="fas fa-tennis-ball text-tennis-dark text-sm"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg text-gray-900 leading-none">Midday Tennis</h1>
+                        <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Coordinator</p>
+                    </div>
+                </div>
+                <div class="flex items-center bg-gray-50 border border-gray-100 rounded-full pl-1 pr-3 py-1">
+                    <img src="https://i.pravatar.cc/150?u=pablo" class="w-6 h-6 rounded-full border border-white shadow-sm mr-2">
+                    <span class="text-xs font-bold text-gray-700">Pablo</span>
+                </div>
+            </div>
+
+            <div class="flex space-x-3 overflow-x-auto no-scrollbar px-5 pb-4">
+                
+                <div class="flex-shrink-0 w-[72px] h-[90px] bg-tennis-green rounded-lg border-2 border-tennis-neon relative shadow-lg shadow-green-900/30 overflow-hidden transform scale-105 group cursor-pointer transition-transform">
+                    <div class="absolute top-[15%] left-[10%] right-[10%] h-[70%] border-2 border-white/30"></div>
+                    <div class="absolute top-0 bottom-0 left-1/2 w-[2px] bg-white/30 transform -translate-x-1/2"></div>
+                    <div class="absolute top-1/2 left-0 right-0 h-[2px] bg-white/30 transform -translate-y-1/2"></div>
+                    
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pt-1 z-10">
+                        <span class="text-[10px] font-bold text-white/80 uppercase mb-0.5">Fri</span>
+                        <span class="text-2xl font-bold font-mono text-white drop-shadow-md">12</span>
+                        
+                        <div class="mt-1 w-5 h-5 rounded-full bg-tennis-neon flex items-center justify-center shadow-md">
+                            <span class="text-[9px] font-bold text-tennis-dark">4</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-shrink-0 w-[72px] h-[90px] bg-white border border-gray-200 rounded-lg relative overflow-hidden group cursor-pointer hover:border-tennis-green transition-colors">
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pt-1">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase mb-0.5">Sat</span>
+                        <span class="text-2xl font-bold font-mono text-gray-700">13</span>
+                        <div class="mt-1 w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center">
+                            <span class="text-[9px] font-bold text-orange-600">4</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-shrink-0 w-[72px] h-[90px] bg-white border border-gray-200 rounded-lg relative overflow-hidden group cursor-pointer hover:border-tennis-green transition-colors">
+                     <div class="absolute inset-0 flex flex-col items-center justify-center pt-1">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase mb-0.5">Sun</span>
+                        <span class="text-2xl font-bold font-mono text-gray-700">14</span>
+                         <div class="mt-1 w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center">
+                            <span class="text-[9px] font-bold text-blue-600">1</span>
+                        </div>
+                    </div>
+                </div>
+                
+                 <div class="flex-shrink-0 w-[72px] h-[90px] bg-gray-50 border border-gray-100 rounded-lg relative flex flex-col items-center justify-center opacity-60">
+                     <span class="text-[10px] font-bold text-gray-400 uppercase mb-0.5">Mon</span>
+                    <span class="text-2xl font-bold font-mono text-gray-400">15</span>
+                </div>
+            </div>
+            
+            <div class="mx-5 mt-2 bg-blue-50 rounded-lg px-4 py-2 flex justify-between items-center">
+                <div class="flex items-center text-xs font-medium text-blue-800">
+                     <i class="fas fa-map-marker-alt mr-2 text-blue-500"></i> Los Gatos, CA <span class="mx-2 text-blue-200">|</span> <i class="fas fa-cloud text-gray-400 mr-1"></i> Foggy
+                </div>
+                <div class="font-mono text-xs font-bold text-gray-600">43°-72°F <i class="fas fa-tint ml-1 text-blue-400"></i> 1%</div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto bg-gray-50 p-5">
+            
+            <div class="mb-5 bg-white rounded-xl border border-gray-200 shadow-sm px-4 py-3 flex justify-between items-center cursor-pointer hover:border-tennis-green">
+                <span class="font-bold text-gray-900">Pablo</span>
+                <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-6">
+                
+                <div class="flex gap-2 mb-6">
+                    <button class="flex-1 py-3 bg-gray-50 border border-gray-100 text-gray-400 text-xs font-bold rounded-lg hover:border-tennis-green hover:text-tennis-green transition-colors">
+                        Singles
+                    </button>
+                    <button class="flex-1 py-3 bg-tennis-dark text-white text-xs font-bold rounded-lg shadow-md ring-2 ring-tennis-neon flex items-center justify-center relative overflow-hidden">
+                        <span class="relative z-10">Either</span>
+                        <div class="absolute -top-2 -right-2 w-6 h-6 bg-tennis-neon rotate-45"></div>
+                    </button>
+                    <button class="flex-1 py-3 bg-gray-50 border border-gray-100 text-gray-400 text-xs font-bold rounded-lg hover:border-tennis-green hover:text-tennis-green transition-colors">
+                        Doubles
+                    </button>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 block">Available Time</label>
+                    <div class="grid grid-cols-4 gap-2 mb-4">
+                        <div class="border border-gray-200 rounded-lg p-2 text-center">
+                            <div class="text-[10px] font-bold text-gray-600">Morning</div>
+                            <div class="text-[9px] text-gray-400">8-12</div>
+                        </div>
+                        <div class="bg-green-50 border-2 border-tennis-green rounded-lg p-2 text-center">
+                            <div class="text-[10px] font-bold text-tennis-green">Midday</div>
+                            <div class="text-[9px] text-tennis-dark">12-3</div>
+                        </div>
+                        <div class="border border-gray-200 rounded-lg p-2 text-center">
+                            <div class="text-[10px] font-bold text-gray-600">Afternoon</div>
+                            <div class="text-[9px] text-gray-400">3-6</div>
+                        </div>
+                        <div class="border border-gray-200 rounded-lg p-2 text-center">
+                            <div class="text-[10px] font-bold text-gray-600">Evening</div>
+                            <div class="text-[9px] text-gray-400">6-9</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1 bg-ui-scoreboard rounded-lg p-2 flex items-center justify-between border border-gray-600 shadow-inner">
+                            <span class="font-mono text-tennis-neon text-lg tracking-widest">--:--</span>
+                            <i class="far fa-clock text-gray-500 text-xs"></i>
+                        </div>
+                        <span class="text-xs font-bold text-gray-400 uppercase">to</span>
+                        <div class="flex-1 bg-ui-scoreboard rounded-lg p-2 flex items-center justify-between border border-gray-600 shadow-inner">
+                            <span class="font-mono text-tennis-neon text-lg tracking-widest">--:--</span>
+                            <i class="far fa-clock text-gray-500 text-xs"></i>
+                        </div>
+                        <button class="bg-gray-100 hover:bg-gray-200 text-gray-500 text-xs font-bold px-3 py-3 rounded-lg">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50/50 rounded-xl p-3 border border-blue-100 flex items-start gap-3">
+                    <div class="mt-0.5 relative flex items-center justify-center">
+                        <input type="checkbox" checked class="appearance-none w-5 h-5 border-2 border-blue-300 rounded bg-white checked:bg-blue-600 checked:border-blue-600 transition-colors">
+                        <i class="fas fa-check text-white text-xs absolute pointer-events-none"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-gray-800">Willing to play 3-player rotation</p>
+                        <p class="text-[10px] text-gray-500 mt-0.5">Allows 1v1 or 1v2 formats</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-6">
+                    <button class="flex-1 py-3 bg-gray-100 text-gray-500 font-bold rounded-xl text-sm hover:bg-gray-200">
+                        Cancel
+                    </button>
+                    <button class="flex-[2] py-3 bg-tennis-green text-white font-bold rounded-xl text-sm shadow-lg shadow-green-900/20 relative overflow-hidden group">
+                        <div class="absolute inset-0 bg-felt-pattern opacity-30 mix-blend-overlay"></div>
+                        <span class="relative z-10">Check In</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-20">
+                <div class="flex justify-between items-center mb-3 px-1">
+                    <h2 class="font-bold text-lg text-gray-900">Games (1 checked in)</h2>
+                    <button class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 hover:bg-green-200 transition-colors">
+                        <i class="fab fa-whatsapp"></i>
+                    </button>
+                </div>
+
+                <div class="bg-orange-50 rounded-xl border-2 border-orange-200 border-dashed p-4 relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-2">
+                             <span class="text-sm font-bold text-orange-800">Doubles</span>
+                             <span class="bg-orange-200 text-orange-900 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase flex items-center">
+                                <i class="fas fa-exclamation-triangle mr-1 text-[8px]"></i> Need 3
+                             </span>
+                        </div>
+                        <button class="bg-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm hover:bg-orange-600">
+                            Invite <i class="fas fa-caret-down ml-1"></i>
+                        </button>
+                    </div>
+
+                    <div class="space-y-3 bg-white/60 rounded-lg p-3">
+                         <div class="flex items-center">
+                            <span class="w-4 text-xs font-bold text-orange-400">1.</span>
+                            <span class="text-sm font-bold text-gray-800">Test Member2</span>
+                            <span class="ml-2 text-[9px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded font-bold">Either</span>
+                            <span class="ml-auto text-[10px] font-mono text-gray-400">1:35 PM</span>
+                        </div>
+                         <div class="flex items-center text-gray-400 italic text-xs pl-4">
+                            Can play singles if 1 more joins
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <input type="text" placeholder="Add note (court, time, etc.)" class="w-full bg-white border border-orange-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-orange-400">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+        <div class="bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-20">
+            <div class="flex flex-col items-center text-tennis-green">
+                <i class="fas fa-calendar-check text-lg mb-1"></i>
+                <span class="text-[10px] font-bold">Check-in</span>
+            </div>
+            <div class="flex flex-col items-center text-gray-400">
+                <i class="fas fa-check-circle text-lg mb-1"></i>
+                <span class="text-[10px] font-medium">My Games</span>
+            </div>
+             <div class="flex flex-col items-center text-gray-400 relative">
+                <i class="fas fa-bell text-lg mb-1"></i>
+                <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                <span class="text-[10px] font-medium">Alerts</span>
+            </div>
+             <div class="flex flex-col items-center text-gray-400">
+                <i class="fas fa-question-circle text-lg mb-1"></i>
+                <span class="text-[10px] font-medium">Help</span>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

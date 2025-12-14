@@ -1,10 +1,12 @@
 // Preact signals are used via imports from MainApp
+import { signal } from '@preact/signals';
 import {
   sessionUser,
   currentGroupId,
   coreMembers,
-  showToast,
+  allCheckins,
   selectedDate,
+  showToast,
 } from '../App';
 import {
   isFormExpanded,
@@ -25,337 +27,365 @@ import {
   sharePromptData,
 } from '../pages/MainApp';
 import { addCheckin, addMember } from '../../hooks/useFirebase';
+import { openCheckInDrawer } from './CheckInDrawer';
+import { openPlayerSelectDrawer } from './PlayerSelectDrawer';
+
+// Helper to get current user's check-in status
+function getUserCheckinStatus() {
+  const user = sessionUser.value;
+  const date = selectedDate.value;
+  if (!user || !date) return null;
+
+  const checkins = allCheckins.value[date] || [];
+  const userCheckin = checkins.find((c) => c.name === user);
+  return userCheckin || null;
+}
+
+// Helper to get check-in index
+function getUserCheckinIndex() {
+  const user = sessionUser.value;
+  const date = selectedDate.value;
+  if (!user || !date) return -1;
+
+  const checkins = allCheckins.value[date] || [];
+  return checkins.findIndex((c) => c.name === user);
+}
+
+// Format play style for display
+function formatPlayStyle(style: string) {
+  if (style === 'singles') return 'Singles only';
+  if (style === 'doubles') return 'Doubles only';
+  return 'Either';
+}
+
+// Format time range for display
+function formatTimeDisplay(timeRange?: { start: string; end: string }) {
+  if (!timeRange || !timeRange.start || !timeRange.end) return null;
+
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(':');
+    const h = parseInt(hours);
+    const suffix = h >= 12 ? 'pm' : 'am';
+    const displayHour = h > 12 ? h - 12 : h === 0 ? 12 : h;
+    return minutes === '00' ? `${displayHour}${suffix}` : `${displayHour}:${minutes}${suffix}`;
+  };
+
+  return `${formatTime(timeRange.start)} - ${formatTime(timeRange.end)}`;
+}
 
 export function CheckInForm() {
-  const handleNameSelect = (e: Event) => {
-    const value = (e.target as HTMLSelectElement).value;
-    selectedName.value = value;
+  // Explicitly access sessionUser to trigger re-render when it changes
+  const user = sessionUser.value;
+  const currentCheckin = getUserCheckinStatus();
+  const isCheckedIn = !!currentCheckin;
 
-    if (value === '__guest__') {
-      isGuest.value = true;
-      isNewMember.value = false;
-      isFormExpanded.value = true;
-    } else if (value === '__new_member__') {
-      isNewMember.value = true;
-      isGuest.value = false;
-      isFormExpanded.value = true;
-    } else if (value) {
-      isGuest.value = false;
-      isNewMember.value = false;
-      isFormExpanded.value = true;
-
-      // Set session user if not already set
-      if (!sessionUser.value) {
-        sessionUser.value = value;
-        const groupId = currentGroupId.value;
-        if (groupId) {
-          localStorage.setItem(`sessionUser_${groupId}`, value);
-        }
-      }
-    } else {
-      isFormExpanded.value = false;
-    }
+  const handleCheckInClick = () => {
+    // Open the drawer for self check-in
+    openCheckInDrawer();
   };
 
-  const handleCheckIn = async () => {
-    let name = selectedName.value;
-    let guestAddedBy = '';
-
-    if (isGuest.value) {
-      if (!guestName.value.trim()) {
-        showToast('Please enter guest name', 'error');
-        return;
-      }
-      if (!addedBy.value) {
-        showToast('Please select who is adding the guest', 'error');
-        return;
-      }
-      name = guestName.value.trim();
-      guestAddedBy = addedBy.value;
-    }
-
-    if (!name || name === '__guest__' || name === '__new_member__') {
-      showToast('Please select a name', 'error');
-      return;
-    }
-
-    const checkinPlayStyle = selectedPreference.value;
-    const checkinTimeRange = startTime.value && endTime.value
-      ? { start: startTime.value, end: endTime.value }
-      : undefined;
-
-    await addCheckin({
-      name,
-      playStyle: checkinPlayStyle,
-      isGuest: isGuest.value,
-      addedBy: isGuest.value ? guestAddedBy : sessionUser.value,
-      allowRotation: allowRotation.value,
-      timeRange: checkinTimeRange,
-    });
-
-    // Show share prompt (non-intrusive banner)
-    sharePromptData.value = {
-      action: 'checkin',
-      name,
-      playStyle: checkinPlayStyle,
-      timeRange: checkinTimeRange,
-      date: selectedDate.value || '',
-    };
-    showSharePrompt.value = true;
-
-    // Reset form
-    resetForm();
+  const handleEditClick = () => {
+    // Open drawer in edit mode with current user's data
+    openCheckInDrawer(sessionUser.value, true);
   };
 
-  const handleAddNewMember = async () => {
-    if (!newMemberName.value.trim()) {
-      showToast('Please enter member name', 'error');
-      return;
-    }
-
-    if (!sessionUser.value) {
-      showToast('Please select your name first', 'error');
-      return;
-    }
-
-    const memberName = newMemberName.value.trim();
-    const memberPhone = newMemberPhone.value.trim();
-    const memberEmail = newMemberEmail.value.trim();
-
-    await addMember({
-      name: memberName,
-      phone: memberPhone,
-      email: memberEmail,
-      notes: newMemberNotes.value.trim(),
-      addedBy: sessionUser.value,
-    });
-
-    // Reset new member form
-    newMemberName.value = '';
-    newMemberPhone.value = '';
-    newMemberEmail.value = '';
-    newMemberNotes.value = '';
-    isNewMember.value = false;
-    selectedName.value = '';
-    isFormExpanded.value = false;
-    // Note: addMember() already shows the SharePromptBanner invite prompt
-  };
-
-  const handleCancel = () => {
-    resetForm();
-  };
-
-  const resetForm = () => {
-    selectedName.value = '';
-    isGuest.value = false;
-    isNewMember.value = false;
-    guestName.value = '';
-    newMemberName.value = '';
-    newMemberPhone.value = '';
-    newMemberEmail.value = '';
-    newMemberNotes.value = '';
-    addedBy.value = '';
-    selectedPreference.value = 'both';
-    allowRotation.value = true;
-    startTime.value = '';
-    endTime.value = '';
-    isFormExpanded.value = false;
-  };
-
-  const setTimePreset = (start: string, end: string) => {
-    startTime.value = start;
-    endTime.value = end;
+  const handleCheckInSomeoneElse = () => {
+    openPlayerSelectDrawer();
   };
 
   return (
     <>
-      <div class="input-group">
-        <select
-          id="nameSelect"
-          value={selectedName.value}
-          onChange={handleNameSelect}
-        >
-          <option value="">{sessionUser.value ? 'Check-in another player...' : 'Select your name...'}</option>
-          {[...coreMembers.value].sort((a, b) => a.localeCompare(b)).map((name) => (
-            <option key={name} value={name}>{name}</option>
-          ))}
-          <option disabled>──────────</option>
-          <option value="__guest__">+ Add Guest</option>
-          <option value="__new_member__">+ Add New Member</option>
-        </select>
-        {/* Singles preferences button - hidden per original design
-        {sessionUser.value && (
-          <button
-            class="edit-prefs-btn"
-            title="Edit Singles Preferences"
-            style="display: flex;"
-            onClick={() => { showPreferencesModal.value = true; }}
-          >
-            ⚙️
+      {/* Main Check-in UI */}
+      <div class="checkin-cta-section">
+        {isCheckedIn ? (
+          // Already checked in - show compact status card
+          <div class="checkin-status-card" onClick={handleEditClick}>
+            <div class="status-row">
+              <span class="status-icon">&#10003;</span>
+              <span class="status-text">You're in!</span>
+              <div class="status-details">
+                <span class="detail-item">{formatPlayStyle(currentCheckin.playStyle)}</span>
+                {currentCheckin.allowRotation !== false && (
+                  <span class="detail-item rotation">Open to 3s</span>
+                )}
+                {currentCheckin.timeRange && (
+                  <span class="detail-item time">
+                    {formatTimeDisplay(currentCheckin.timeRange)}
+                  </span>
+                )}
+              </div>
+              <button class="edit-icon-btn" onClick={(e) => { e.stopPropagation(); handleEditClick(); }} title="Edit">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        ) : (
+          // Not checked in - show CTA button
+          <button class="checkin-cta-btn" onClick={handleCheckInClick}>
+            Check In to Play
           </button>
         )}
-        */}
+
+        {/* Check in someone else link */}
+        <button class="checkin-other-link" onClick={handleCheckInSomeoneElse}>
+          Check in someone else
+        </button>
       </div>
 
-      {isFormExpanded.value && (
-        <div class="collapsible-form expanded" id="checkInFormFields">
-          {/* Guest Form */}
-          {isGuest.value && (
-            <div class="guest-form active">
-              <input
-                type="text"
-                placeholder="Guest's name"
-                value={guestName.value}
-                onInput={(e) => { guestName.value = (e.target as HTMLInputElement).value; }}
-              />
-              <select
-                value={addedBy.value}
-                onChange={(e) => { addedBy.value = (e.target as HTMLSelectElement).value; }}
-              >
-                <option value="">Who is adding this guest?</option>
-                {[...coreMembers.value].sort((a, b) => a.localeCompare(b)).map((name) => (
-                  <option key={name} value={name}>{name}</option>
-                ))}
-              </select>
-            </div>
-          )}
+      <style>{`
+        .checkin-cta-section {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 0 0;
+          margin-bottom: -8px;
+        }
 
-          {/* New Member Form */}
-          {isNewMember.value && (
-            <div class="member-form">
-              <h3 style="font-size: 14px; margin-bottom: 12px; color: #333;">Add New Member</h3>
-              <input
-                type="text"
-                placeholder="Member's full name"
-                value={newMemberName.value}
-                onInput={(e) => { newMemberName.value = (e.target as HTMLInputElement).value; }}
-                style="margin-bottom: 8px;"
-              />
-              <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                <input
-                  type="tel"
-                  placeholder="Phone (optional)"
-                  value={newMemberPhone.value}
-                  onInput={(e) => { newMemberPhone.value = (e.target as HTMLInputElement).value; }}
-                  style="flex: 1;"
-                />
-                <input
-                  type="email"
-                  placeholder="Email (optional)"
-                  value={newMemberEmail.value}
-                  onInput={(e) => { newMemberEmail.value = (e.target as HTMLInputElement).value; }}
-                  style="flex: 1;"
-                />
-              </div>
-              <textarea
-                placeholder="Notes (skill level, how you know them, etc.) - optional"
-                rows={3}
-                value={newMemberNotes.value}
-                onInput={(e) => { newMemberNotes.value = (e.target as HTMLTextAreaElement).value; }}
-                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; margin-bottom: 12px;"
-              />
-              <div style="font-size: 12px; color: #666; margin-bottom: 12px;">
-                Added by: <strong>{sessionUser.value || '(select your name first)'}</strong>
-              </div>
-              <div style="display: flex; gap: 8px;">
-                <button onClick={handleCancel} style="flex: 1; background: #ccc; color: #333;">Cancel</button>
-                <button onClick={handleAddNewMember} style="flex: 2; background: #4CAF50; color: white;">Add Member</button>
-              </div>
-            </div>
-          )}
+        .checkin-cta-btn {
+          width: 100%;
+          padding: 18px 24px;
+          background: var(--color-primary, #2C6E49);
+          border: none;
+          border-radius: 14px;
+          color: white;
+          font-size: 18px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(var(--color-primary-rgb, 44, 110, 73), 0.3);
+          transition: all 0.2s;
+        }
 
-          {/* Regular Check-in Form */}
-          {!isNewMember.value && (
-            <>
-              <div class="preference-group">
-                <button
-                  class={`preference-btn singles ${selectedPreference.value === 'singles' ? 'selected' : ''}`}
-                  onClick={() => { selectedPreference.value = 'singles'; }}
-                >
-                  Singles Only
-                </button>
-                <button
-                  class={`preference-btn ${selectedPreference.value === 'both' ? 'selected' : ''}`}
-                  onClick={() => { selectedPreference.value = 'both'; }}
-                >
-                  Either
-                </button>
-                <button
-                  class={`preference-btn doubles ${selectedPreference.value === 'doubles' ? 'selected' : ''}`}
-                  onClick={() => { selectedPreference.value = 'doubles'; }}
-                >
-                  Doubles Only
-                </button>
-              </div>
+        .checkin-cta-btn:hover {
+          background: var(--color-primary-dark, #1a402b);
+          transform: translateY(-1px);
+          box-shadow: 0 6px 16px rgba(var(--color-primary-rgb, 44, 110, 73), 0.4);
+        }
 
-              <div class="time-slots">
-                <h3>Available Time (optional)</h3>
+        .checkin-cta-btn:active {
+          transform: translateY(0);
+        }
 
-                <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;">
-                  <button class="time-preset-btn" onClick={() => setTimePreset('08:00', '12:00')}>
-                    Morning<br /><small>8am-12pm</small>
-                  </button>
-                  <button class="time-preset-btn" onClick={() => setTimePreset('12:00', '15:00')}>
-                    Midday<br /><small>12-3pm</small>
-                  </button>
-                  <button class="time-preset-btn" onClick={() => setTimePreset('15:00', '18:00')}>
-                    Afternoon<br /><small>3-6pm</small>
-                  </button>
-                  <button class="time-preset-btn" onClick={() => setTimePreset('18:00', '21:00')}>
-                    Evening<br /><small>6-9pm</small>
-                  </button>
-                </div>
+        .checkin-status-card {
+          width: 100%;
+          background: linear-gradient(135deg, var(--color-primary-light, #e8f5e9) 0%, var(--color-primary-lighter, #c8e6c9) 100%);
+          border: 2px solid var(--color-primary, #2C6E49);
+          border-radius: 12px;
+          padding: 12px 14px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
 
-                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                  <input
-                    type="time"
-                    value={startTime.value}
-                    onInput={(e) => { startTime.value = (e.target as HTMLInputElement).value; }}
-                    style="flex: 1; min-width: 120px; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;"
-                  />
-                  <span style="color: #666;">to</span>
-                  <input
-                    type="time"
-                    value={endTime.value}
-                    onInput={(e) => { endTime.value = (e.target as HTMLInputElement).value; }}
-                    style="flex: 1; min-width: 120px; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;"
-                  />
-                  <button
-                    onClick={() => { startTime.value = ''; endTime.value = ''; }}
-                    style="padding: 10px 12px; background: #f5f5f5; color: #666; font-size: 13px;"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </div>
+        .checkin-status-card:hover {
+          background: linear-gradient(135deg, var(--color-primary-lighter, #c8e6c9) 0%, var(--color-primary-lightest, #a5d6a7) 100%);
+        }
 
-              <div class="rotation-option" style="margin-bottom: 16px; padding: 12px; background: #f9f9f9; border-radius: 8px;">
-                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 14px;">
-                  <input
-                    type="checkbox"
-                    checked={allowRotation.value}
-                    onChange={(e) => { allowRotation.value = (e.target as HTMLInputElement).checked; }}
-                    style="width: 18px; height: 18px; cursor: pointer; margin-right: 4px;"
-                  />
-                  <span>Willing to play 3-player rotation (1v1 or 1v2 format)</span>
-                </label>
-                <div style="font-size: 12px; color: #666; margin-top: 4px; margin-left: 26px;">
-                  If unchecked, you'll only be placed in doubles or singles matches
-                </div>
-              </div>
+        .status-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
 
-              <div style="display: flex; gap: 10px; margin-top: 16px;">
-                <button onClick={handleCancel} style="flex: 1; background: #f5f5f5; color: #666;">
-                  Cancel
-                </button>
-                <button onClick={handleCheckIn} style="flex: 2; background: #4CAF50; color: white;">
-                  Check In
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+        .status-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          background: var(--color-primary, #2C6E49);
+          color: white;
+          border-radius: 50%;
+          font-size: 14px;
+          font-weight: bold;
+          flex-shrink: 0;
+        }
+
+        .status-text {
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--color-primary, #2C6E49);
+          flex-shrink: 0;
+        }
+
+        .status-details {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          flex: 1;
+          min-width: 0;
+        }
+
+        .detail-item {
+          padding: 3px 8px;
+          background: white;
+          border-radius: 12px;
+          font-size: 12px;
+          color: #555;
+          white-space: nowrap;
+        }
+
+        .detail-item.rotation {
+          background: #e3f2fd;
+          color: #1565c0;
+        }
+
+        .detail-item.time {
+          background: #fff3e0;
+          color: #e65100;
+        }
+
+        .edit-icon-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          padding: 0;
+          background: white;
+          border: 1px solid var(--color-primary-lighter, #c8e6c9);
+          border-radius: 8px;
+          color: var(--color-primary, #2C6E49);
+          cursor: pointer;
+          flex-shrink: 0;
+          margin-left: auto;
+          transition: all 0.2s;
+        }
+
+        .edit-icon-btn:hover {
+          background: var(--color-primary-light, #f1f8e9);
+          border-color: var(--color-primary, #2C6E49);
+        }
+
+        .checkin-other-link {
+          padding: 4px 12px;
+          background: transparent;
+          border: none;
+          color: #888 !important;
+          font-size: 11px;
+          cursor: pointer;
+          text-decoration: none;
+          border-radius: 12px;
+          transition: all 0.2s;
+        }
+
+        .checkin-other-link:hover {
+          background: var(--color-primary, #2C6E49);
+          color: white !important;
+        }
+
+        /* Member Selection Panel */
+        .member-selection-panel {
+          background: white;
+          border: 1px solid #e0e0e0;
+          border-radius: 14px;
+          overflow: hidden;
+        }
+
+        .panel-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 14px 16px;
+          background: #f5f5f5;
+          border-bottom: 1px solid #e0e0e0;
+        }
+
+        .panel-header h3 {
+          margin: 0;
+          font-size: 16px;
+          color: #333;
+        }
+
+        .close-panel-btn {
+          width: 28px;
+          height: 28px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 50%;
+          font-size: 18px;
+          color: #666;
+          cursor: pointer;
+        }
+
+        .close-panel-btn:hover {
+          background: #f5f5f5;
+        }
+
+        .member-list {
+          max-height: 300px;
+          overflow-y: auto;
+          padding: 8px;
+        }
+
+        .member-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          width: 100%;
+          padding: 12px;
+          background: white;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: all 0.2s;
+          text-align: left;
+        }
+
+        .member-item:hover {
+          background: #f5f5f5;
+        }
+
+        .member-initial {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          background: linear-gradient(135deg, var(--color-primary, #2C6E49) 0%, var(--color-primary-dark, #1a402b) 100%);
+          border-radius: 50%;
+          color: white;
+          font-size: 16px;
+          font-weight: 600;
+        }
+
+        .member-name {
+          font-size: 15px;
+          color: #333;
+        }
+
+        .panel-footer {
+          display: flex;
+          gap: 8px;
+          padding: 12px 16px;
+          background: #fafafa;
+          border-top: 1px solid #e0e0e0;
+        }
+
+        .add-guest-btn,
+        .add-member-btn {
+          flex: 1;
+          padding: 10px;
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          font-size: 13px;
+          color: #666;
+          cursor: pointer;
+        }
+
+        .add-guest-btn:hover,
+        .add-member-btn:hover {
+          background: #f5f5f5;
+          border-color: var(--color-primary, #2C6E49);
+          color: var(--color-primary, #2C6E49);
+        }
+      `}</style>
     </>
   );
 }

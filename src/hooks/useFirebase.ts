@@ -24,13 +24,46 @@ export const groupSettings = signal<{
   location?: { lat: number; lon: number; name: string };
   groupDescription?: string;
   groupRules?: string;
+  theme?: string;
 }>({
   groupPin: '',
   adminPin: '',
 });
 
-// Match notes
+// Apply theme to document
+export function applyTheme(themeName?: string) {
+  const root = document.documentElement;
+  console.log('[Theme] Applying theme:', themeName);
+
+  // Remove all theme classes (both old and new theme names)
+  root.classList.remove(
+    'theme-wimbledon',
+    'theme-roland-garros',
+    'theme-australian-open',
+    'theme-us-open',
+    // Legacy theme names (for backwards compatibility)
+    'theme-clay',
+    'theme-hardcourt',
+    'theme-tennis-ball'
+  );
+  root.removeAttribute('data-theme');
+
+  if (themeName && themeName !== 'default') {
+    const themeClass = `theme-${themeName}`;
+    root.classList.add(themeClass);
+    root.setAttribute('data-theme', themeName);
+    console.log('[Theme] Added class:', themeClass, 'data-theme:', themeName);
+    console.log('[Theme] Current html classes:', root.className);
+  } else {
+    console.log('[Theme] Using default theme (no class added)');
+  }
+}
+
+// Match notes (for selected date)
 export const matchNotes = signal<Record<string, string>>({});
+
+// All match notes (across all dates) - keyed by date then matchKey
+export const allMatchNotes = signal<Record<string, Record<string, string>>>({});
 
 // Track previous match state by date (for detecting new match formations)
 const previousMatchState: Record<string, Record<string, { type: string; players: string[] }>> = {};
@@ -73,7 +106,11 @@ export function useGroupData() {
           location: settings.location as { lat: number; lon: number; name: string } | undefined,
           groupDescription: settings.groupDescription as string | undefined,
           groupRules: settings.groupRules as string | undefined,
+          theme: settings.theme as string | undefined,
         };
+
+        // Apply the group's theme
+        applyTheme(settings.theme as string | undefined);
 
         // Update document title
         document.title = `${settings.groupName || 'Tennis'} - Tennis Coordinator`;
@@ -160,6 +197,43 @@ export function useMatchNotes() {
   }, []);
 }
 
+// Load all match notes across all dates (for My Upcoming Games view)
+export function useAllMatchNotes() {
+  useEffect(() => {
+    let currentRef: ReturnType<typeof getRef> | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let currentUnsubscribe: any = null;
+
+    const dispose = effect(() => {
+      const groupId = currentGroupId.value;
+
+      // Cleanup previous listener
+      if (currentRef && currentUnsubscribe) {
+        currentRef.off('value', currentUnsubscribe);
+      }
+
+      if (!groupId || groupId === 'admin') {
+        allMatchNotes.value = {};
+        return;
+      }
+
+      currentRef = getRef(`groups/${groupId}/matchNotes`);
+
+      // Set up real-time listener for all match notes
+      currentUnsubscribe = currentRef.on('value', (snapshot) => {
+        allMatchNotes.value = (snapshot.val() || {}) as Record<string, Record<string, string>>;
+      });
+    });
+
+    return () => {
+      dispose();
+      if (currentRef && currentUnsubscribe) {
+        currentRef.off('value', currentUnsubscribe);
+      }
+    };
+  }, []);
+}
+
 // Helper function to normalize names for comparison
 function normalizeName(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '');
@@ -215,11 +289,17 @@ export async function addCheckin(checkin: {
     await logActivity(groupId, date, 'checkin', checkin.name, checkin.addedBy);
 
     // Notify users with activity alerts
-    await notifyCheckinAlert(groupId, checkin.name, date, checkin.addedBy, {
-      playStyle: checkin.playStyle,
-      timeRange: checkin.timeRange,
-      allowRotation: checkin.allowRotation,
-    });
+    console.log('[addCheckin] About to call notifyCheckinAlert for:', checkin.name);
+    try {
+      await notifyCheckinAlert(groupId, checkin.name, date, checkin.addedBy, {
+        playStyle: checkin.playStyle,
+        timeRange: checkin.timeRange,
+        allowRotation: checkin.allowRotation,
+      });
+      console.log('[addCheckin] notifyCheckinAlert completed');
+    } catch (notifyError) {
+      console.error('[addCheckin] Error in notifyCheckinAlert:', notifyError);
+    }
 
     // Check if any new matches were formed and notify players
     // Use setTimeout to allow Firebase to update before checking
@@ -261,7 +341,16 @@ export async function updateCheckin(
 
   const checkinsRef = getRef(`groups/${groupId}/checkins/${date}`);
   const updatedCheckins = [...currentCheckins];
-  updatedCheckins[index] = { ...updatedCheckins[index], ...updates };
+
+  // Filter out undefined values before applying updates (Firebase doesn't accept undefined)
+  const filteredUpdates: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(updates)) {
+    if (value !== undefined) {
+      filteredUpdates[key] = value;
+    }
+  }
+
+  updatedCheckins[index] = { ...updatedCheckins[index], ...filteredUpdates };
 
   try {
     await checkinsRef.set(updatedCheckins);
@@ -378,7 +467,13 @@ export async function removeCheckin(index: number, sessionUserName: string) {
     await logActivity(groupId, date, 'removal', personName, sessionUserName);
 
     // Notify users with activity alerts
-    await notifyRemovalAlert(groupId, personName, date, sessionUserName);
+    console.log('[removeCheckin] About to call notifyRemovalAlert for:', personName);
+    try {
+      await notifyRemovalAlert(groupId, personName, date, sessionUserName);
+      console.log('[removeCheckin] notifyRemovalAlert completed');
+    } catch (notifyError) {
+      console.error('[removeCheckin] Error in notifyRemovalAlert:', notifyError);
+    }
 
     // Check if any matches were dissolved and notify players
     // Use setTimeout to allow Firebase to update before checking
@@ -580,9 +675,18 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
 
   const prevState = previousMatchState[date] || {};
 
+  console.log('[checkAndNotifyMatchFormations] Match state comparison:', {
+    date,
+    previousMatches: Object.keys(prevState).length,
+    currentMatches: Object.keys(currentState).length,
+    prevKeys: Object.keys(prevState),
+    currentKeys: Object.keys(currentState),
+  });
+
   // Find new matches (in current but not in previous)
   for (const [key, matchData] of Object.entries(currentState)) {
     if (!prevState[key]) {
+      console.log(`[checkAndNotifyMatchFormations] 🎾 NEW MATCH FORMED: ${key}`, matchData);
       // This is a new complete match - notify all players
       const formattedDate = formatDateForNotification(date);
       const matchType = matchData.type === 'doubles' ? 'Doubles' : 'Singles';
@@ -596,6 +700,11 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
           const snapshot = await db.ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/preferences`).once('value');
           const prefs = (snapshot.val() || {}) as { matchConfirmations?: boolean };
 
+          console.log(`[checkAndNotifyMatchFormations] Player "${playerName}" prefs:`, {
+            matchConfirmations: prefs.matchConfirmations,
+            willSend: prefs.matchConfirmations !== false,
+          });
+
           // Only send if matchConfirmations is enabled (default true)
           if (prefs.matchConfirmations !== false) {
             const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/items`).push();
@@ -607,19 +716,24 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
               type: 'match_formed',
               matchType,
             });
-            console.log(`[checkAndNotifyMatchFormations] Sent notification to ${playerName}`);
+            console.log(`[checkAndNotifyMatchFormations] ✅ Sent notification to ${playerName}: "${message}"`);
+          } else {
+            console.log(`[checkAndNotifyMatchFormations] ❌ Skipped ${playerName} - matchConfirmations disabled`);
           }
         } catch (error) {
           console.error(`Error sending match notification to ${playerName}:`, error);
         }
       }
+    } else {
+      console.log(`[checkAndNotifyMatchFormations] Match ${key} already exists (not new)`);
     }
   }
 
   // Find dissolved matches (in previous but not in current)
   for (const [key, prevMatchData] of Object.entries(prevState)) {
     if (!currentState[key]) {
-      // This match no longer exists - find who's still checked in and notify them
+      console.log(`[checkAndNotifyMatchFormations] 💔 MATCH DISSOLVED: ${key}`, prevMatchData);
+      // This match no longer exists - notify ALL players who were in this match
       const formattedDate = formatDateForNotification(date);
       const matchType = prevMatchData.type === 'doubles' ? 'Doubles' : 'Singles';
 
@@ -632,36 +746,42 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
         !currentCheckinNames.includes(normalizeName(p))
       );
 
-      // Only notify if someone actually dropped out (not just reshuffled into another match)
-      if (droppedPlayers.length > 0 && remainingPlayers.length > 0) {
-        const droppedNames = droppedPlayers.join(', ');
-        const needed = matchType === 'Doubles' ? 4 - remainingPlayers.length : 2 - remainingPlayers.length;
-        const neededText = needed === 1 ? 'Need 1 more player' : `Need ${needed} more players`;
-        const message = `⚠️ Your ${matchType} for ${formattedDate} is no longer confirmed - ${droppedNames} dropped out. ${neededText}.`;
+      const droppedNames = droppedPlayers.join(', ');
+      const needed = matchType === 'Doubles' ? 4 - remainingPlayers.length : 2 - remainingPlayers.length;
+      const neededText = needed === 1 ? 'Need 1 more player' : `Need ${needed} more players`;
+      const message = droppedPlayers.length > 0
+        ? `⚠️ Your ${matchType} for ${formattedDate} is no longer confirmed - ${droppedNames} dropped out. ${neededText}.`
+        : `⚠️ Your ${matchType} for ${formattedDate} is no longer confirmed.`;
 
-        // Notify remaining players
-        for (const playerName of remainingPlayers) {
-          try {
-            const db = getDatabase();
-            const snapshot = await db.ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/preferences`).once('value');
-            const prefs = (snapshot.val() || {}) as { matchConfirmations?: boolean };
+      // Notify ALL players who were in the match (both remaining and dropped)
+      for (const playerName of prevMatchData.players) {
+        try {
+          const db = getDatabase();
+          const snapshot = await db.ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/preferences`).once('value');
+          const prefs = (snapshot.val() || {}) as { matchConfirmations?: boolean };
 
-            // Only send if matchConfirmations is enabled (default true)
-            if (prefs.matchConfirmations !== false) {
-              const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/items`).push();
-              await notifRef.set({
-                message,
-                timestamp: Date.now(),
-                read: false,
-                date,
-                type: 'match_dissolved',
-                matchType,
-              });
-              console.log(`[checkAndNotifyMatchFormations] Sent dissolved notification to ${playerName}`);
-            }
-          } catch (error) {
-            console.error(`Error sending dissolved match notification to ${playerName}:`, error);
+          console.log(`[checkAndNotifyMatchFormations] Player "${playerName}" prefs:`, {
+            matchConfirmations: prefs.matchConfirmations,
+            willSend: prefs.matchConfirmations !== false,
+          });
+
+          // Only send if matchConfirmations is enabled (default true)
+          if (prefs.matchConfirmations !== false) {
+            const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/items`).push();
+            await notifRef.set({
+              message,
+              timestamp: Date.now(),
+              read: false,
+              date,
+              type: 'match_dissolved',
+              matchType,
+            });
+            console.log(`[checkAndNotifyMatchFormations] ✅ Sent dissolved notification to ${playerName}: "${message}"`);
+          } else {
+            console.log(`[checkAndNotifyMatchFormations] ❌ Skipped ${playerName} - matchConfirmations disabled`);
           }
+        } catch (error) {
+          console.error(`Error sending dissolved match notification to ${playerName}:`, error);
         }
       }
     }
@@ -897,7 +1017,13 @@ export async function removeMember(name: string) {
 // Update member details (for users to update their own info)
 export async function updateMemberDetails(
   name: string,
-  updates: { phone?: string; email?: string; notes?: string }
+  updates: {
+    phone?: string;
+    email?: string;
+    notes?: string;
+    shareContactInDirectory?: boolean;
+    shareNotesInDirectory?: boolean;
+  }
 ) {
   const groupId = currentGroupId.value;
   if (!groupId) return false;
@@ -907,7 +1033,15 @@ export async function updateMemberDetails(
   try {
     const snapshot = await settingsRef.once('value');
     const settings = (snapshot.val() || {}) as Record<string, unknown>;
-    const currentDetailsList = (settings.memberDetails as Record<string, { phone?: string; email?: string; notes?: string; addedBy?: string; addedDate?: string }>) || {};
+    const currentDetailsList = (settings.memberDetails as Record<string, {
+      phone?: string;
+      email?: string;
+      notes?: string;
+      addedBy?: string;
+      addedDate?: string;
+      shareContactInDirectory?: boolean;
+      shareNotesInDirectory?: boolean;
+    }>) || {};
 
     // Get or create member details
     const existingDetails = currentDetailsList[name] || {};
@@ -918,6 +1052,8 @@ export async function updateMemberDetails(
         phone: updates.phone ?? existingDetails.phone ?? '',
         email: updates.email ?? existingDetails.email ?? '',
         notes: updates.notes ?? existingDetails.notes ?? '',
+        shareContactInDirectory: updates.shareContactInDirectory ?? existingDetails.shareContactInDirectory ?? false,
+        shareNotesInDirectory: updates.shareNotesInDirectory ?? existingDetails.shareNotesInDirectory ?? false,
       },
     };
 

@@ -187,14 +187,14 @@ function StatCard({ label, value, subtext }: { label: string; value: string | nu
       flex: '1',
       minWidth: '100px',
     }}>
-      <div style={{ fontSize: '24px', fontWeight: '700', color: '#4CAF50' }}>{value}</div>
+      <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--color-primary, #2C6E49)' }}>{value}</div>
       <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{label}</div>
       {subtext && <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>{subtext}</div>}
     </div>
   );
 }
 
-function ProgressBar({ value, max, color = '#4CAF50' }: { value: number; max: number; color?: string }) {
+function ProgressBar({ value, max, color = 'var(--color-primary, #2C6E49)' }: { value: number; max: number; color?: string }) {
   const percent = max > 0 ? (value / max) * 100 : 0;
   return (
     <div style={{
@@ -247,7 +247,7 @@ export function InsightsTab() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ width: '70px', fontSize: '14px' }}>Doubles</span>
-            <ProgressBar value={data.doublesGames} max={data.totalGames} color="#4CAF50" />
+            <ProgressBar value={data.doublesGames} max={data.totalGames} color="var(--color-primary, #2C6E49)" />
             <span style={{ width: '40px', textAlign: 'right', fontSize: '14px', fontWeight: '600' }}>{data.doublesGames}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -278,7 +278,7 @@ export function InsightsTab() {
             return (
               <div key={day} style={{ flex: '1', textAlign: 'center' }}>
                 <div style={{
-                  background: idx === Number(Object.entries(data.dayOfWeekCounts).sort((a, b) => b[1] - a[1])[0]?.[0]) ? '#4CAF50' : '#c8e6c9',
+                  background: idx === Number(Object.entries(data.dayOfWeekCounts).sort((a, b) => b[1] - a[1])[0]?.[0]) ? 'var(--color-primary, #2C6E49)' : '#c8e6c9',
                   height: `${Math.max(height, 4)}px`,
                   borderRadius: '4px 4px 0 0',
                   marginBottom: '4px',
@@ -312,7 +312,7 @@ export function InsightsTab() {
               return (
                 <div key={week} style={{ flex: '1', textAlign: 'center' }}>
                   <div style={{
-                    background: '#4CAF50',
+                    background: 'var(--color-primary, #2C6E49)',
                     height: `${Math.max(height, 4)}px`,
                     borderRadius: '4px 4px 0 0',
                     marginBottom: '4px',
@@ -367,7 +367,7 @@ export function InsightsTab() {
                   {idx + 1}
                 </span>
                 <span style={{ flex: '1', fontSize: '14px' }}>{player.name}</span>
-                <span style={{ fontSize: '14px', fontWeight: '600', color: '#4CAF50' }}>
+                <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--color-primary, #2C6E49)' }}>
                   {player.gamesPlayed}
                 </span>
               </div>

@@ -107,7 +107,7 @@ export function PreferencesModal() {
     >
       <div class="pref-section">
         <h3>Exclude Players</h3>
-        <p style="font-size: 12px; color: #666; margin-bottom: 8px;">
+        <p style="font-size: var(--font-size-sm, 12px); color: var(--color-text-secondary, #666); margin-bottom: var(--spacing-md, 8px);">
           You won't be paired with these players in singles matches
         </p>
 
@@ -122,7 +122,7 @@ export function PreferencesModal() {
                   (e.target as HTMLSelectElement).value = '';
                 }
               }}
-              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;"
+              style="width: 100%; padding: var(--spacing-lg, 10px); border: 1px solid var(--color-border, #ddd); border-radius: var(--radius-lg, 8px); font-size: var(--font-size-base, 14px);"
             >
               <option value="">Select player to exclude...</option>
               {availablePlayers.map(name => (
@@ -140,7 +140,7 @@ export function PreferencesModal() {
             value={excludeInput.value}
             onInput={(e) => { excludeInput.value = (e.target as HTMLInputElement).value; }}
             onKeyPress={(e) => { if (e.key === 'Enter') addExclude(); }}
-            style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;"
+            style="flex: 1; padding: var(--spacing-lg, 10px); border: 1px solid var(--color-border, #ddd); border-radius: var(--radius-lg, 8px); font-size: var(--font-size-base, 14px);"
           />
           <button onClick={addExclude}>Add</button>
         </div>
@@ -148,17 +148,17 @@ export function PreferencesModal() {
         {/* Excluded list */}
         <div class="pref-list" style="display: flex; flex-wrap: wrap; gap: 8px;">
           {excludedPlayers.value.length === 0 ? (
-            <p style="color: #999; font-size: 13px;">No players excluded</p>
+            <p style="color: var(--color-text-muted, #999); font-size: var(--font-size-sm, 13px);">No players excluded</p>
           ) : (
             excludedPlayers.value.map(name => (
               <span
                 key={name}
-                style="display: inline-flex; align-items: center; gap: 6px; background: #fee2e2; color: #991b1b; padding: 6px 10px; border-radius: 16px; font-size: 13px;"
+                style="display: inline-flex; align-items: center; gap: var(--spacing-sm, 6px); background: var(--color-error-light, #fee2e2); color: #991b1b; padding: var(--spacing-sm, 6px) var(--spacing-lg, 10px); border-radius: var(--radius-2xl, 16px); font-size: var(--font-size-sm, 13px);"
               >
                 {name}
                 <button
                   onClick={() => removeExclude(name)}
-                  style="background: none; border: none; cursor: pointer; font-size: 16px; color: #991b1b; padding: 0; line-height: 1;"
+                  style="background: none; border: none; cursor: pointer; font-size: var(--font-size-lg, 16px); color: #991b1b; padding: 0; line-height: 1;"
                 >
                   &times;
                 </button>
@@ -169,10 +169,10 @@ export function PreferencesModal() {
       </div>
 
       <div style="margin-top: 16px;">
-        <p style="font-size: 11px; color: #666; margin-bottom: 12px;">
+        <p style="font-size: var(--font-size-xs, 11px); color: var(--color-text-secondary, #666); margin-bottom: var(--spacing-xl, 12px);">
           Note: These preferences affect how the match organizer pairs players. They won't prevent you from being in the same doubles group.
         </p>
-        <button onClick={savePreferences} style="width: 100%; background: #4CAF50; color: white;">
+        <button onClick={savePreferences} style="width: 100%; background: var(--color-primary, #2C6E49); color: white;">
           Save Preferences
         </button>
       </div>

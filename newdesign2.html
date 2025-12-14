@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Midday Tennis - Member Flow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tennis: {
+                            green: '#2C6E49',
+                            dark: '#1a402b',
+                            accent: '#6C5CE7',
+                            warning: '#D35400',
+                        },
+                        ui: {
+                            bg: '#F3F4F6',
+                            card: '#FFFFFF',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Checkbox Logic for Play Style */
+        .style-radio:checked + label {
+            background-color: #2C6E49;
+            color: white;
+            border-color: #2C6E49;
+        }
+    </style>
+</head>
+<body class="bg-ui-bg font-sans text-gray-800 h-screen overflow-hidden relative">
+
+    <div id="dashboard" class="h-full flex flex-col overflow-y-auto pb-24 blur-sm transition-all duration-500">
+        
+        <header class="bg-ui-card sticky top-0 z-10 px-5 py-4 border-b border-gray-200 shadow-sm">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="font-serif text-2xl font-bold text-tennis-dark">Today</h1>
+                    <p class="text-sm text-gray-500 font-medium">Friday, Dec 12</p>
+                </div>
+                <div class="text-right">
+                    <div class="inline-flex items-center bg-blue-50 text-blue-700 px-2 py-1 rounded-lg text-xs font-bold">
+                        <i class="fas fa-cloud-sun mr-1"></i> 72°F
+                    </div>
+                </div>
+            </div>
+            <div id="user-badge" class="hidden mt-2 inline-flex items-center text-xs font-medium text-tennis-green">
+                <i class="fas fa-check-circle mr-1"></i> Logged in as <span id="display-name" class="font-bold ml-1">...</span>
+            </div>
+        </header>
+
+        <div class="px-5 mt-6 mb-6">
+            
+            <div id="state-unchecked">
+                <button onclick="openCheckInDrawer()" class="w-full bg-tennis-green hover:bg-tennis-dark text-white rounded-2xl py-4 shadow-lg shadow-green-900/20 active:scale-95 transition-transform relative overflow-hidden group">
+                    <div class="relative z-10 flex flex-col items-center">
+                        <span class="font-serif text-xl font-bold italic">Check In to Play</span>
+                        <span class="text-xs opacity-80 mt-1 font-medium tracking-wide">TAP TO SET PREFERENCES</span>
+                    </div>
+                    <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/felt.png')]"></div>
+                </button>
+            </div>
+
+            <div id="state-checked-in" class="hidden">
+                <div class="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-green-800 uppercase mb-1">Status</p>
+                        <p class="font-bold text-green-900 flex items-center">
+                            <i class="fas fa-check-circle mr-2"></i> You are in!
+                        </p>
+                    </div>
+                    <button onclick="resetFlow()" class="text-xs font-bold text-green-700 underline">Edit / Leave</button>
+                </div>
+                <button onclick="openCheckInDrawer()" class="w-full mt-3 bg-white border border-gray-300 text-gray-600 rounded-xl py-3 text-sm font-bold flex items-center justify-center hover:bg-gray-50">
+                    <i class="fas fa-user-plus mr-2"></i> Check in another player
+                </button>
+            </div>
+        </div>
+
+        <div class="px-5 flex-1">
+            
+            <div class="mb-6">
+                <h3 class="font-bold text-gray-900 mb-3 flex items-center">
+                    <i class="fas fa-tennis-ball text-tennis-green mr-2 text-xs"></i> Ready to Play
+                </h3>
+                
+                <div class="bg-white rounded-xl p-4 border-l-4 border-tennis-green shadow-sm mb-3">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-bold text-gray-400 uppercase">Doubles • Court 1</span>
+                        <span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded">FULL</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-sm font-medium">1. Dan Nguyen</div>
+                        <div class="text-sm font-medium">2. Chris Abate</div>
+                        <div class="text-sm font-medium">3. Minal</div>
+                        <div class="text-sm font-medium">4. Harshit</div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="font-bold text-gray-900 mb-3 flex items-center">
+                    <i class="far fa-circle text-tennis-warning mr-2 text-xs"></i> Forming...
+                </h3>
+                
+                <div class="bg-white rounded-xl p-4 border border-gray-200 border-l-4 border-l-orange-400 shadow-sm opacity-90">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-bold text-gray-400 uppercase">Need 2 Players</span>
+                        <span class="text-xs font-mono text-gray-400">12:30 PM</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-sm font-medium">1. Vijay S. <span class="text-[10px] text-gray-400 ml-1">(Either)</span></div>
+                        <div class="text-sm font-medium">2. Diego <span class="text-[10px] text-gray-400 ml-1">(Guest)</span></div>
+                        <div class="text-sm text-gray-400 italic">3. Waiting...</div>
+                        <div class="text-sm text-gray-400 italic">4. Waiting...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="identity-modal" class="absolute inset-0 z-50 bg-black/60 flex items-center justify-center p-5 fade-in">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden slide-up">
+            <div class="bg-gray-50 px-5 py-4 border-b border-gray-100 text-center">
+                <h2 class="font-serif font-bold text-xl text-tennis-dark">Welcome Back</h2>
+                <p class="text-xs text-gray-500 mt-1">Select your name to start</p>
+            </div>
+            
+            <div class="max-h-[60vh] overflow-y-auto p-2">
+                <div class="px-2 mb-2">
+                    <input type="text" placeholder="Search member..." class="w-full bg-gray-100 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tennis-green">
+                </div>
+                
+                <button onclick="selectUser('Alex Stolyar')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-green-50 hover:text-tennis-green transition-colors flex items-center">
+                    <img src="https://i.pravatar.cc/150?u=alex" class="w-8 h-8 rounded-full mr-3 border border-gray-200">
+                    <span class="font-medium text-sm">Alex Stolyar</span>
+                </button>
+                 <button onclick="selectUser('Chris Abate')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-green-50 hover:text-tennis-green transition-colors flex items-center">
+                    <img src="https://i.pravatar.cc/150?u=chris" class="w-8 h-8 rounded-full mr-3 border border-gray-200">
+                    <span class="font-medium text-sm">Chris Abate</span>
+                </button>
+                 <button onclick="selectUser('Dan Nguyen')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-green-50 hover:text-tennis-green transition-colors flex items-center">
+                    <img src="https://i.pravatar.cc/150?u=dan" class="w-8 h-8 rounded-full mr-3 border border-gray-200">
+                    <span class="font-medium text-sm">Dan Nguyen</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="checkin-drawer" class="absolute inset-x-0 bottom-0 z-40 bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.2)] transform translate-y-full transition-transform duration-300 flex flex-col max-h-[90vh]">
+        
+        <div class="w-full flex justify-center pt-3 pb-1" onclick="closeCheckInDrawer()">
+            <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+        </div>
+
+        <div class="p-6 overflow-y-auto">
+            <h2 class="font-serif text-2xl font-bold mb-6 text-gray-900">Check In</h2>
+
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Play Style</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="relative">
+                        <input type="radio" name="style" id="singles" class="style-radio hidden">
+                        <label for="singles" class="block w-full text-center py-3 rounded-xl border border-gray-200 text-sm font-medium cursor-pointer transition-colors">Singles</label>
+                    </div>
+                    <div class="relative">
+                        <input type="radio" name="style" id="either" class="style-radio hidden" checked>
+                        <label for="either" class="block w-full text-center py-3 rounded-xl border border-gray-200 text-sm font-medium cursor-pointer transition-colors">Either</label>
+                    </div>
+                    <div class="relative">
+                        <input type="radio" name="style" id="doubles" class="style-radio hidden">
+                        <label for="doubles" class="block w-full text-center py-3 rounded-xl border border-gray-200 text-sm font-medium cursor-pointer transition-colors">Doubles</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="flex items-start p-3 border border-blue-100 bg-blue-50/50 rounded-xl cursor-pointer">
+                    <div class="flex items-center h-5">
+                        <input type="checkbox" checked class="w-5 h-5 text-tennis-green border-gray-300 rounded focus:ring-tennis-green">
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <span class="font-bold text-gray-900">Willing to play 3-player rotation?</span>
+                        <p class="text-xs text-gray-500 mt-1">Allows 1v1 or 1v2 format if we have odd numbers.</p>
+                    </div>
+                </label>
+            </div>
+
+            <div class="mb-8">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Available Time</label>
+                <div class="flex space-x-2 overflow-x-auto no-scrollbar">
+                     <button class="flex-shrink-0 px-4 py-2 bg-tennis-green text-white rounded-lg text-sm font-bold shadow-sm">
+                        12:00 - 2:00 PM
+                    </button>
+                    <button class="flex-shrink-0 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm font-medium">
+                        1:00 - 3:00 PM
+                    </button>
+                     <button class="flex-shrink-0 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm font-medium">
+                        Custom...
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="confirmCheckIn()" class="w-full bg-tennis-green text-white font-bold py-4 rounded-xl text-lg shadow-lg active:scale-95 transition-transform">
+                Confirm Check In
+            </button>
+            
+            <button onclick="closeCheckInDrawer()" class="w-full py-4 text-sm font-medium text-gray-500">
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function selectUser(name) {
+            // 1. Hide Modal
+            document.getElementById('identity-modal').style.display = 'none';
+            // 2. Un-blur Dashboard
+            document.getElementById('dashboard').classList.remove('blur-sm');
+            // 3. Set Name in Header
+            document.getElementById('display-name').innerText = name;
+            document.getElementById('user-badge').classList.remove('hidden');
+        }
+
+        function openCheckInDrawer() {
+            document.getElementById('checkin-drawer').classList.remove('translate-y-full');
+            // Dim background
+            document.getElementById('dashboard').classList.add('opacity-50');
+        }
+
+        function closeCheckInDrawer() {
+            document.getElementById('checkin-drawer').classList.add('translate-y-full');
+            document.getElementById('dashboard').classList.remove('opacity-50');
+        }
+
+        function confirmCheckIn() {
+            closeCheckInDrawer();
+            // Simulate switching state to "Checked In"
+            document.getElementById('state-unchecked').classList.add('hidden');
+            document.getElementById('state-checked-in').classList.remove('hidden');
+            // Trigger confetti or pop here in real app
+        }
+        
+        function resetFlow() {
+             document.getElementById('state-unchecked').classList.remove('hidden');
+            document.getElementById('state-checked-in').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

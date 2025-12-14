@@ -139,7 +139,7 @@ export function WeatherWidget() {
           padding: '10px 14px',
           background: 'linear-gradient(135deg, #e3f2fd 0%, #f0f4ff 100%)',
           borderRadius: '10px',
-          marginBottom: '16px',
+          marginBottom: '8px',
           fontSize: '13px',
           boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
           color: '#666',
@@ -167,7 +167,7 @@ export function WeatherWidget() {
         padding: '10px 14px',
         background: 'linear-gradient(135deg, #e3f2fd 0%, #f0f4ff 100%)',
         borderRadius: '10px',
-        marginBottom: '16px',
+        marginBottom: '8px',
         fontSize: '13px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
       }}

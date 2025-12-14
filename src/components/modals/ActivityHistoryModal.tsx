@@ -309,10 +309,10 @@ export function ActivityHistoryModal() {
               style={{
                 padding: '4px 10px',
                 fontSize: '12px',
-                border: isActive ? '1px solid #4CAF50' : '1px solid #ddd',
-                borderRadius: '16px',
-                background: isActive ? '#E8F5E9' : '#fff',
-                color: isActive ? '#2E7D32' : '#666',
+                border: isActive ? '1px solid var(--color-primary, #2C6E49)' : '1px solid var(--color-border, #ddd)',
+                borderRadius: 'var(--radius-2xl, 16px)',
+                background: isActive ? 'var(--color-primary-light, #E8F5E9)' : 'var(--color-bg-card, #fff)',
+                color: isActive ? 'var(--color-primary, #2E7D32)' : 'var(--color-text-secondary, #666)',
                 cursor: 'pointer',
                 fontWeight: isActive ? '500' : '400',
               }}
@@ -326,11 +326,11 @@ export function ActivityHistoryModal() {
             onClick={() => { activeFilters.value = new Set(); }}
             style={{
               padding: '4px 10px',
-              fontSize: '12px',
-              border: '1px solid #f44336',
-              borderRadius: '16px',
-              background: '#fff',
-              color: '#f44336',
+              fontSize: 'var(--font-size-sm, 12px)',
+              border: '1px solid var(--color-error, #f44336)',
+              borderRadius: 'var(--radius-2xl, 16px)',
+              background: 'var(--color-bg-card, #fff)',
+              color: 'var(--color-error, #f44336)',
               cursor: 'pointer',
             }}
           >
@@ -340,14 +340,14 @@ export function ActivityHistoryModal() {
       </div>
 
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <p style="font-size: 13px; color: #666; margin: 0;">
+        <p style="font-size: var(--font-size-sm, 13px); color: var(--color-text-secondary, #666); margin: 0;">
           {groupByPlayDate.value
             ? 'Grouped by play date'
             : 'Grouped by when changes were made'
           }
           {activeFilters.value.size > 0 && ` (${filteredActivities.length} filtered)`}
         </p>
-        <label style="font-size: 13px; color: #666; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+        <label style="font-size: var(--font-size-sm, 13px); color: var(--color-text-secondary, #666); cursor: pointer; display: flex; align-items: center; gap: 4px;">
           <input
             type="checkbox"
             checked={groupByPlayDate.value}
@@ -361,9 +361,9 @@ export function ActivityHistoryModal() {
 
       <div style="max-height: 400px; overflow-y: auto;">
         {isLoading.value ? (
-          <p style="color: #999; text-align: center; padding: 24px;">Loading...</p>
+          <p style="color: var(--color-text-muted, #999); text-align: center; padding: var(--spacing-4xl, 24px);">Loading...</p>
         ) : filteredActivities.length === 0 ? (
-          <p style="color: #999; text-align: center; padding: 24px;">
+          <p style="color: var(--color-text-muted, #999); text-align: center; padding: var(--spacing-4xl, 24px);">
             {activeFilters.value.size > 0 ? 'No matching activities' : 'No activity recorded yet'}
           </p>
         ) : (
@@ -371,29 +371,29 @@ export function ActivityHistoryModal() {
             .sort(([a], [b]) => b.localeCompare(a))
             .map(([date, items]) => (
               <div key={date}>
-                <div style="font-weight: bold; color: #666; margin-top: 12px; padding-bottom: 4px; border-bottom: 1px solid #ddd;">
+                <div style="font-weight: bold; color: var(--color-text-secondary, #666); margin-top: 12px; padding-bottom: 4px; border-bottom: 1px solid var(--color-border, #ddd);">
                   {formatDate(date)}
                 </div>
                 {items.map((item, idx) => (
                   <div
                     key={idx}
-                    style="padding: 10px; background: #f9f9f9; border-radius: 6px; font-size: 14px; margin-top: 8px; position: relative;"
+                    style="padding: 10px; background: var(--color-bg-subtle, #f9f9f9); border-radius: var(--radius-md, 6px); font-size: var(--font-size-base, 14px); margin-top: 8px; position: relative;"
                   >
                     <div style="display: flex; align-items: flex-start; gap: 6px;">
                       <span>{getActivityIcon(item.action)}</span>
                       <div style="flex: 1;">
                         <div style="white-space: pre-wrap;">{getActivityDescription(item)}</div>
                         {item.arrangementDetails && (
-                          <div style="font-size: 12px; color: #666; margin-top: 4px; background: #fff; padding: 6px 8px; border-radius: 4px; border: 1px solid #e0e0e0;">
+                          <div style="font-size: var(--font-size-sm, 12px); color: var(--color-text-secondary, #666); margin-top: 4px; background: var(--color-bg-card, #fff); padding: 6px 8px; border-radius: var(--radius-sm, 4px); border: 1px solid var(--color-border, #e0e0e0);">
                             {item.arrangementDetails}
                           </div>
                         )}
-                        <div style="font-size: 12px; color: #999; margin-top: 4px; display: flex; gap: 8px; flex-wrap: wrap;">
+                        <div style="font-size: var(--font-size-sm, 12px); color: var(--color-text-muted, #999); margin-top: 4px; display: flex; gap: 8px; flex-wrap: wrap;">
                           <span>{formatActivityTime(item.timestamp)}</span>
                           {groupByPlayDate.value ? (
-                            <span style="color: #666;">changed on {formatDate(new Date(item.timestamp).toISOString().split('T')[0])}</span>
+                            <span style="color: var(--color-text-secondary, #666);">changed on {formatDate(new Date(item.timestamp).toISOString().split('T')[0])}</span>
                           ) : (
-                            <span style="color: #4CAF50;">for {formatDate(item.date)}</span>
+                            <span style="color: var(--color-primary, #2C6E49);">for {formatDate(item.date)}</span>
                           )}
                         </div>
                       </div>
@@ -403,12 +403,12 @@ export function ActivityHistoryModal() {
                         style={{
                           background: 'none',
                           border: 'none',
-                          padding: '4px',
+                          padding: 'var(--spacing-xs, 4px)',
                           cursor: 'pointer',
-                          color: '#999',
-                          fontSize: '16px',
+                          color: 'var(--color-text-muted, #999)',
+                          fontSize: 'var(--font-size-lg, 16px)',
                           lineHeight: '1',
-                          borderRadius: '4px',
+                          borderRadius: 'var(--radius-sm, 4px)',
                           transition: 'color 0.2s, background 0.2s',
                         }}
                         onMouseOver={(e) => {

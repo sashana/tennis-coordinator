@@ -5,6 +5,7 @@ import { LandingPage } from './pages/LandingPage';
 import { MainApp } from './pages/MainApp';
 import { AdminPage } from './pages/AdminPage';
 import { Toast } from './ui/Toast';
+import { TennisLoadingScreen } from './ui/TennisEffects';
 
 // App State Signals
 export const currentGroupId = signal<string | null>(null);
@@ -134,12 +135,7 @@ export function App() {
   }, []);
 
   if (isLoading.value) {
-    return (
-      <div class="loading-screen">
-        <div class="loading-spinner">🎾</div>
-        <p>Loading...</p>
-      </div>
-    );
+    return <TennisLoadingScreen text="Loading..." />;
   }
 
   return (

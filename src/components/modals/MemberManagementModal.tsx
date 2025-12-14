@@ -202,7 +202,7 @@ export function MemberManagementModal() {
               <button onClick={() => { editingMember.value = null; }} style="flex: 1; background: #ccc; color: #333;">
                 Cancel
               </button>
-              <button onClick={saveEditMember} style="flex: 1; background: #4CAF50; color: white;">
+              <button onClick={saveEditMember} style="flex: 1; background: var(--color-primary, #2C6E49); color: white;">
                 Save
               </button>
             </div>
@@ -266,7 +266,7 @@ export function MemberManagementModal() {
                       onClick={() => openEditMember(name)}
                       style={{
                         background: 'rgba(76, 175, 80, 0.1)',
-                        color: '#4CAF50',
+                        color: 'var(--color-primary, #2C6E49)',
                         border: 'none',
                         borderRadius: '50%',
                         width: '32px',
@@ -330,7 +330,7 @@ export function MemberManagementModal() {
                   </div>
                 </div>
                 {hasDetails && (
-                  <div style="font-size: 12px; color: #666; margin-top: 8px; padding-left: 12px; border-left: 3px solid #4CAF50;">
+                  <div style="font-size: 12px; color: #666; margin-top: 8px; padding-left: 12px; border-left: 3px solid var(--color-primary, #2C6E49);">
                     {memberDetail?.addedBy && (
                       <div>Added by: <strong>{memberDetail.addedBy}</strong>{addedDate && ` on ${addedDate}`}</div>
                     )}
@@ -350,7 +350,7 @@ export function MemberManagementModal() {
         {!addFormExpanded.value ? (
           <button
             onClick={() => { addFormExpanded.value = true; }}
-            style="width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px;"
+            style="width: 100%; padding: 12px; background: var(--color-primary, #2C6E49); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px;"
           >
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
               <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
@@ -407,7 +407,7 @@ export function MemberManagementModal() {
               </button>
               <button
                 onClick={handleAddMember}
-                style="flex: 2; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;"
+                style="flex: 2; padding: 10px; background: var(--color-primary, #2C6E49); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;"
               >
                 Add Member
               </button>

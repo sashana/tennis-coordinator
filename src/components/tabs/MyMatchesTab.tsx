@@ -3,7 +3,7 @@ import { allCheckins, sessionUser, selectedDate, memberDetails, currentGroupId, 
 import { organizeMatches } from '../../utils/matching';
 import { formatDate, formatTimeRange } from '../../utils/helpers';
 import { activeTab } from '../navigation/BottomTabBar';
-import { groupSettings, matchNotes } from '../../hooks/useFirebase';
+import { groupSettings, matchNotes, allMatchNotes, useAllMatchNotes } from '../../hooks/useFirebase';
 import { createCalendarEventFromMatch, downloadICSFile } from '../../utils/calendar';
 
 // State for inline share dropdown
@@ -302,10 +302,16 @@ function shareSelectedGames(method: 'whatsapp' | 'sms' | 'copy' | 'native', sche
     });
   }
 
+  // Exit selection mode after sharing
   showShareOptions.value = false;
+  isSelectionMode.value = false;
+  selectedGames.value = new Set();
 }
 
 export function MyMatchesTab() {
+  // Load all match notes for upcoming games
+  useAllMatchNotes();
+
   const schedule = userSchedule.value;
   const isAdmin = isGroupAdmin();
   const currentViewUser = viewingUser.value || sessionUser.value;
@@ -357,7 +363,7 @@ export function MyMatchesTab() {
               onClick={() => { showShareOptions.value = !showShareOptions.value; }}
               disabled={selectionCount === 0}
               style={{
-                background: selectionCount > 0 ? '#4CAF50' : '#ccc',
+                background: selectionCount > 0 ? 'var(--color-primary, #2C6E49)' : '#ccc',
                 border: 'none',
                 borderRadius: '20px',
                 padding: '8px 16px',
@@ -403,7 +409,7 @@ export function MyMatchesTab() {
                       color: '#333',
                     }}
                   >
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="#4CAF50">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-primary, #2C6E49)">
                       <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
                     </svg>
                     Share...
@@ -598,7 +604,7 @@ export function MyMatchesTab() {
                   background: match.isForming ? '#FFF8E1' : '#E8F5E9',
                   borderRadius: '12px',
                   border: inSelectionMode && isSelected
-                    ? '2px solid #4CAF50'
+                    ? '2px solid var(--color-primary, #2C6E49)'
                     : match.isForming ? '1px solid #FFE082' : '1px solid #A5D6A7',
                   cursor: inSelectionMode ? 'pointer' : 'default',
                   position: 'relative',
@@ -614,7 +620,7 @@ export function MyMatchesTab() {
                     height: '24px',
                     borderRadius: '6px',
                     border: isSelected ? 'none' : '2px solid #ccc',
-                    background: isSelected ? '#4CAF50' : 'white',
+                    background: isSelected ? 'var(--color-primary, #2C6E49)' : 'white',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -658,7 +664,7 @@ export function MyMatchesTab() {
                       {getMatchTypeLabel(match.type)}
                     </span>
                   </div>
-                  {/* Status badge with calendar icon */}
+                  {/* Status badge with invite and calendar icons */}
                   <div style="display: flex; align-items: center; gap: 8px;">
                     {match.isForming ? (
                       <span style="display: flex; align-items: center; gap: 4px; color: #F57C00; font-size: 12px; font-weight: 600;">
@@ -668,98 +674,41 @@ export function MyMatchesTab() {
                         Need {needed}
                       </span>
                     ) : (
-                      <span style="display: flex; align-items: center; gap: 4px; color: #4CAF50; font-size: 12px; font-weight: 600;">
+                      <span style="display: flex; align-items: center; gap: 4px; color: var(--color-primary, #2C6E49); font-size: 12px; font-weight: 600;">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                         </svg>
                         Ready
                       </span>
                     )}
-                    {/* Small calendar icon */}
-                    {!inSelectionMode && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddToCalendar(match);
-                        }}
-                        title="Add to Calendar"
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          padding: '4px',
-                          cursor: 'pointer',
-                          color: '#888',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          borderRadius: '4px',
-                          transition: 'color 0.2s',
-                        }}
-                        onMouseOver={(e) => { (e.currentTarget as HTMLElement).style.color = '#4CAF50'; }}
-                        onMouseOut={(e) => { (e.currentTarget as HTMLElement).style.color = '#888'; }}
-                      >
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                          <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/>
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Players info */}
-                <div
-                  onClick={(e) => {
-                    if (!inSelectionMode) {
-                      e.stopPropagation();
-                      handleDateClick(match.date);
-                    }
-                  }}
-                  style={{
-                    fontSize: '15px',
-                    color: '#555',
-                    cursor: inSelectionMode ? 'pointer' : 'pointer',
-                    paddingRight: inSelectionMode ? '32px' : '0',
-                  }}
-                >
-                  {otherPlayers.length > 0 ? (
-                    <>
-                      <span style="color: #888;">Playing with </span>
-                      <span style="font-weight: 500;">{otherPlayers.map(p => p.name).join(', ')}</span>
-                    </>
-                  ) : (
-                    <span style="color: #888; font-style: italic;">
-                      Waiting for {needed} more player{needed > 1 ? 's' : ''}
-                    </span>
-                  )}
-                </div>
-
-                {/* Action buttons - hidden in selection mode, only show for forming games */}
-                {!inSelectionMode && match.isForming && (
-                  <div style="margin-top: 12px; display: flex; gap: 8px; align-items: center; position: relative;">
-                    <button
+                    {/* Invite button for forming games */}
+                    {!inSelectionMode && match.isForming && (
+                      <div style="position: relative;">
+                        <button
                           data-share-button
                           onClick={(e) => {
                             e.stopPropagation();
                             activeShareDropdown.value = isDropdownOpen ? null : matchKey;
                           }}
+                          title="Invite players"
                           style={{
                             background: isDropdownOpen ? '#e65100' : '#ff9800',
                             border: 'none',
-                            borderRadius: '16px',
-                            padding: '6px 14px',
-                            fontSize: '13px',
+                            borderRadius: '12px',
+                            padding: '4px 10px',
+                            fontSize: '11px',
                             fontWeight: '600',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '6px',
+                            gap: '4px',
                             color: 'white',
                             transition: 'all 0.2s',
-                            boxShadow: '0 2px 6px rgba(255, 152, 0, 0.4)',
+                            boxShadow: '0 1px 4px rgba(255, 152, 0, 0.3)',
                           }}
                         >
                           <span>Invite</span>
-                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
                             <path d="M7 10l5 5 5-5z"/>
                           </svg>
                         </button>
@@ -769,9 +718,9 @@ export function MyMatchesTab() {
                             class="share-dropdown"
                             style={{
                               position: 'absolute',
-                              bottom: '100%',
-                              left: '0',
-                              marginBottom: '4px',
+                              top: '100%',
+                              right: '0',
+                              marginTop: '4px',
                               background: 'white',
                               borderRadius: '8px',
                               boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
@@ -844,8 +793,90 @@ export function MyMatchesTab() {
                             </button>
                           </div>
                         )}
+                      </div>
+                    )}
+                    {/* Small calendar icon */}
+                    {!inSelectionMode && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCalendar(match);
+                        }}
+                        title="Add to Calendar"
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          padding: '4px',
+                          cursor: 'pointer',
+                          color: '#888',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '4px',
+                          transition: 'color 0.2s',
+                        }}
+                        onMouseOver={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-primary, #2C6E49)'; }}
+                        onMouseOut={(e) => { (e.currentTarget as HTMLElement).style.color = '#888'; }}
+                      >
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                          <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/>
+                        </svg>
+                      </button>
+                    )}
                   </div>
-                )}
+                </div>
+
+                {/* Players info */}
+                <div
+                  onClick={(e) => {
+                    if (!inSelectionMode) {
+                      e.stopPropagation();
+                      handleDateClick(match.date);
+                    }
+                  }}
+                  style={{
+                    fontSize: '15px',
+                    color: '#555',
+                    cursor: inSelectionMode ? 'pointer' : 'pointer',
+                    paddingRight: inSelectionMode ? '32px' : '0',
+                  }}
+                >
+                  {otherPlayers.length > 0 ? (
+                    <>
+                      <span style="color: #888;">Playing with </span>
+                      <span style="font-weight: 500;">{otherPlayers.map(p => p.name).join(', ')}</span>
+                    </>
+                  ) : (
+                    <span style="color: #888; font-style: italic;">
+                      Waiting for {needed} more player{needed > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+
+                {/* Match notes - show if there's a note for this match */}
+                {(() => {
+                  const noteMatchKey = `${match.type.replace('-forming', '')}-${match.matchNumber}`;
+                  const noteForMatch = allMatchNotes.value[match.date]?.[noteMatchKey];
+                  if (noteForMatch) {
+                    return (
+                      <div style={{
+                        marginTop: '8px',
+                        padding: '8px 10px',
+                        background: match.isForming ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.6)',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        color: '#666',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '6px',
+                      }}>
+                        <span style={{ color: '#999', flexShrink: 0 }}>📝</span>
+                        <span>{noteForMatch}</span>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             );
           })}

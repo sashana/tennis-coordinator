@@ -54,12 +54,12 @@ export function DateSelector() {
     return () => clearTimeout(timeoutId);
   }, []); // Only run once on mount
 
-  // Generate dates: 14 days in past + today + 14 days in future
+  // Generate dates: 14 days in past + today + 21 days in future
   const dates = [];
   const today = new Date();
   const todayStr = formatLocalDate(today);
 
-  for (let i = -14; i <= 14; i++) {
+  for (let i = -14; i <= 21; i++) {
     const date = new Date(today);
     date.setDate(today.getDate() + i);
     const dateStr = formatLocalDate(date);

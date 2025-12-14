@@ -258,7 +258,7 @@ export function NotificationsModal() {
               {notifications.value.length > 0 && (
                 <button
                   onClick={clearAllNotifications}
-                  style="background: none; border: none; color: #4CAF50; font-size: 14px; cursor: pointer; font-weight: 500;"
+                  style="background: none; border: none; color: var(--color-primary, #2C6E49); font-size: 14px; cursor: pointer; font-weight: 500;"
                 >
                   Clear all
                 </button>
@@ -312,7 +312,7 @@ export function NotificationsModal() {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        backgroundColor: activityAlertsEnabled.value ? '#4CAF50' : '#ccc',
+                        backgroundColor: activityAlertsEnabled.value ? 'var(--color-primary, #2C6E49)' : '#ccc',
                         transition: '0.3s',
                         borderRadius: '26px',
                       }}
@@ -357,7 +357,7 @@ export function NotificationsModal() {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        backgroundColor: matchConfirmationsEnabled.value ? '#4CAF50' : '#ccc',
+                        backgroundColor: matchConfirmationsEnabled.value ? 'var(--color-primary, #2C6E49)' : '#ccc',
                         transition: '0.3s',
                         borderRadius: '26px',
                       }}
@@ -457,12 +457,12 @@ export function NotificationsModal() {
                       <div style="font-size: 12px; color: #999; margin-top: 4px; display: flex; align-items: center; gap: 8px;">
                         <span>{formatTimestamp(notif.timestamp)}</span>
                         {notif.date && (
-                          <span style="color: #4CAF50; font-weight: 500;">View date →</span>
+                          <span style="color: var(--color-primary, #2C6E49); font-weight: 500;">View date →</span>
                         )}
                       </div>
                     </div>
                     {!notif.read && (
-                      <span style="width: 8px; height: 8px; background: #4CAF50; border-radius: 50%; margin-top: 6px; flex-shrink: 0;" />
+                      <span style="width: 8px; height: 8px; background: var(--color-primary, #2C6E49); border-radius: 50%; margin-top: 6px; flex-shrink: 0;" />
                     )}
                   </div>
                 </div>

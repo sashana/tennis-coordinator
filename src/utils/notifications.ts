@@ -123,6 +123,29 @@ export function formatMatchFormedNotification(
 }
 
 /**
+ * Format match dissolved notification message
+ */
+export function formatMatchDissolvedNotification(
+  _playerName: string,
+  date: string,
+  matchType: 'doubles' | 'singles',
+  droppedPlayers: string[],
+  remainingCount: number
+): string {
+  const formattedDate = formatDateForNotification(date);
+  const matchLabel = matchType === 'doubles' ? 'Doubles' : 'Singles';
+  const playersNeeded = (matchType === 'doubles' ? 4 : 2) - remainingCount;
+
+  if (droppedPlayers.length > 0) {
+    const droppedNames = droppedPlayers.join(', ');
+    const neededText = playersNeeded === 1 ? 'Need 1 more player' : `Need ${playersNeeded} more players`;
+    return `⚠️ Your ${matchLabel} for ${formattedDate} is no longer confirmed - ${droppedNames} dropped out. ${neededText}.`;
+  } else {
+    return `⚠️ Your ${matchLabel} for ${formattedDate} is no longer confirmed.`;
+  }
+}
+
+/**
  * Format member added notification message
  */
 export function formatMemberAddedNotification(

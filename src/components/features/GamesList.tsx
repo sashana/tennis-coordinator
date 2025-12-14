@@ -1,11 +1,14 @@
 import { signal } from '@preact/signals';
+import { useState, useEffect } from 'preact/hooks';
 import { currentCheckins, sessionUser, currentGroupId, selectedDate, currentGroupName, showToast } from '../App';
 import { removeCheckin, updateCheckin, canRemoveCheckin, matchNotes, saveMatchNote, resetDay, groupSettings, matchArrangement, saveMatchArrangement, clearMatchArrangement, useMatchArrangement } from '../../hooks/useFirebase';
-import { formatTime, formatTimeRange, formatDate, debounce } from '../../utils/helpers';
+import { formatTime, formatTimeRange, formatDate } from '../../utils/helpers';
 import { Modal } from '../ui/Modal';
 import { showSharePrompt, sharePromptData } from '../pages/MainApp';
 import { organizeMatches } from '../../utils/matching';
 import { weatherCache, getWeatherDescription } from './WeatherWidget';
+import { openCheckInDrawer } from './CheckInDrawer';
+import { TennisEmptyState } from '../ui/TennisEffects';
 import type { CheckinData } from '../../types';
 
 function normalizeName(name: string): string {
@@ -40,6 +43,9 @@ const removeGroupName = signal('');
 // State for inline share dropdown
 const activeShareDropdown = signal<string | null>(null);
 
+// State for main games share dropdown
+const mainShareDropdownOpen = signal(false);
+
 // Arrange mode state
 const arrangeMode = signal(false);
 const selectedPlayer = signal<{ name: string; matchKey: string } | null>(null);
@@ -51,10 +57,13 @@ const tempArrangement = signal<{
 // Close dropdown when clicking outside
 if (typeof document !== 'undefined') {
   document.addEventListener('click', (e) => {
-    if (activeShareDropdown.value) {
-      const target = e.target as HTMLElement;
-      if (!target.closest('.share-dropdown') && !target.closest('[data-share-button]')) {
+    const target = e.target as HTMLElement;
+    if (!target.closest('.share-dropdown') && !target.closest('[data-share-button]')) {
+      if (activeShareDropdown.value) {
         activeShareDropdown.value = null;
+      }
+      if (mainShareDropdownOpen.value) {
+        mainShareDropdownOpen.value = false;
       }
     }
   });
@@ -155,32 +164,43 @@ function canEdit(checkin: { name?: string; addedBy?: string }): boolean {
   return !!(isOwner || isAdder || isAdmin);
 }
 
-// Debounced save function for match notes
-const saveMatchNoteDebounced = debounce((...args: unknown[]) => {
-  const [matchKey, note] = args as [string, string];
-  saveMatchNote(matchKey, note);
-}, 500);
-
+// Per-match booking details input (uses matchKey prop for stable storage)
 function MatchNoteInput({ matchKey }: { matchKey: string }) {
   const existingNote = matchNotes.value[matchKey] || '';
+  const [localValue, setLocalValue] = useState(existingNote);
+
+  // Sync local value when external note changes
+  useEffect(() => {
+    setLocalValue(matchNotes.value[matchKey] || '');
+  }, [matchNotes.value[matchKey]]);
+
+  const handleBlur = () => {
+    const trimmedValue = localValue.trim();
+    const currentNote = matchNotes.value[matchKey] || '';
+    // Only save if value actually changed
+    if (trimmedValue !== currentNote) {
+      saveMatchNote(matchKey, trimmedValue);
+    }
+  };
 
   return (
-    <div style="padding: 8px 12px;">
+    <div style="padding: 8px 12px; background: var(--color-bg-muted, #f9f9f9); border-radius: var(--radius-lg, 8px); margin-top: 8px;">
+      <div style="font-size: 11px; color: #666; margin-bottom: 4px; font-weight: 500;">Booking Details</div>
       <input
         type="text"
-        placeholder="Add note (court, time, etc.)"
-        value={existingNote}
+        placeholder="e.g. Courtside Court 1, 12PM"
+        value={localValue}
         onInput={(e) => {
-          const value = (e.target as HTMLInputElement).value;
-          saveMatchNoteDebounced(matchKey, value);
+          setLocalValue((e.target as HTMLInputElement).value);
         }}
+        onBlur={handleBlur}
         style={{
           width: '100%',
           padding: '8px 12px',
           border: '1px solid #e0e0e0',
           borderRadius: '6px',
           fontSize: '14px',
-          background: '#fafafa',
+          background: 'white',
         }}
       />
     </div>
@@ -204,6 +224,11 @@ function CheckinTile({ checkin, globalIndex }: { checkin: any; globalIndex: numb
     ? formatTimeRange(checkin.timeRange.start, checkin.timeRange.end)
     : '';
 
+  const handleEditClick = () => {
+    // Open the drawer in edit mode for this user
+    openCheckInDrawer(checkin.name, true);
+  };
+
   return (
     <div class={isCurrentUser ? 'checkin-item current-user' : 'checkin-item'}>
       <span>
@@ -222,52 +247,30 @@ function CheckinTile({ checkin, globalIndex }: { checkin: any; globalIndex: numb
         <span class="checkin-time">{formatTime(checkin.timestamp)}</span>
       </span>
       {showEditButton && (
-        <div style="display: flex; gap: 4px;">
-          <button
-            class="edit-btn"
-            onClick={() => openEditModal(globalIndex)}
-            title="Edit preferences"
-            style={{
-              background: 'rgba(76, 175, 80, 0.1)',
-              color: '#4CAF50',
-              border: 'none',
-              borderRadius: '50%',
-              padding: '0',
-              width: '28px',
-              height: '28px',
-              fontSize: '14px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            ✏️
-          </button>
-          <button
-            class="remove-btn"
-            onClick={() => openRemoveModal(globalIndex)}
-            title="Remove check-in"
-            style={{
-              background: 'rgba(255, 82, 82, 0.1)',
-              color: '#e57373',
-              border: 'none',
-              borderRadius: '50%',
-              padding: '0',
-              width: '28px',
-              height: '28px',
-              fontSize: '18px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            ×
-          </button>
-        </div>
+        <button
+          class="edit-btn"
+          onClick={handleEditClick}
+          title="Edit check-in"
+          style={{
+            background: 'white',
+            color: 'var(--color-primary, #2C6E49)',
+            border: '1px solid #e0e0e0',
+            borderRadius: '8px',
+            padding: '0',
+            width: '32px',
+            height: '32px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            transition: 'all 0.2s',
+          }}
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+          </svg>
+        </button>
       )}
     </div>
   );
@@ -347,21 +350,21 @@ function NeedPlayersButton({ match, matchKey }: { match: any; matchKey: string; 
         style={{
           background: isOpen ? '#e65100' : '#ff9800',
           border: 'none',
-          borderRadius: '16px',
-          padding: '6px 14px',
-          fontSize: '13px',
+          borderRadius: '12px',
+          padding: '4px 10px',
+          fontSize: '11px',
           fontWeight: '600',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
-          gap: '6px',
+          gap: '4px',
           color: 'white',
           transition: 'all 0.2s',
-          boxShadow: '0 2px 6px rgba(255, 152, 0, 0.4)',
+          boxShadow: '0 1px 4px rgba(255, 152, 0, 0.3)',
         }}
       >
         <span>Invite</span>
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
           <path d="M7 10l5 5 5-5z"/>
         </svg>
       </button>
@@ -584,6 +587,26 @@ function shareToWhatsApp(matches: any[], checkins: any[], date: string) {
   window.open(`https://wa.me/?text=${encoded}`, '_blank');
 }
 
+function shareGames(matches: any[], checkins: any[], date: string, method: 'whatsapp' | 'sms' | 'copy') {
+  const message = generateWhatsAppMessage(matches, checkins, date);
+
+  if (method === 'whatsapp') {
+    const encoded = encodeURIComponent(message);
+    window.open(`https://wa.me/?text=${encoded}`, '_blank');
+  } else if (method === 'sms') {
+    const encoded = encodeURIComponent(message);
+    window.open(`sms:?body=${encoded}`, '_blank');
+  } else if (method === 'copy') {
+    navigator.clipboard.writeText(message).then(() => {
+      showToast('Message copied!', 'success');
+    }).catch(() => {
+      showToast('Failed to copy', 'error');
+    });
+  }
+
+  mainShareDropdownOpen.value = false;
+}
+
 function handleResetDay() {
   const date = selectedDate.value;
   if (!date) return;
@@ -787,10 +810,10 @@ export function GamesList() {
                   style={{
                     flex: 1,
                     padding: '10px',
-                    border: editPlayStyle.value === style ? '2px solid #4CAF50' : '2px solid #e0e0e0',
+                    border: editPlayStyle.value === style ? '2px solid var(--color-primary, #2C6E49)' : '2px solid #e0e0e0',
                     borderRadius: '8px',
-                    background: editPlayStyle.value === style ? '#E8F5E9' : '#fff',
-                    color: editPlayStyle.value === style ? '#2E7D32' : '#666',
+                    background: editPlayStyle.value === style ? 'var(--color-primary-light, #E8F5E9)' : '#fff',
+                    color: editPlayStyle.value === style ? 'var(--color-primary, #2E7D32)' : '#666',
                     cursor: 'pointer',
                     fontWeight: editPlayStyle.value === style ? '600' : '400',
                   }}
@@ -840,7 +863,7 @@ export function GamesList() {
             onClick={saveEdit}
             style={{
               padding: '12px',
-              background: '#4CAF50',
+              background: 'var(--color-primary, #2C6E49)',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
@@ -1026,7 +1049,7 @@ export function GamesList() {
                 style={{
                   width: '100%',
                   padding: '12px',
-                  background: '#4CAF50',
+                  background: 'var(--color-primary, #2C6E49)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
@@ -1048,7 +1071,7 @@ export function GamesList() {
   if (checkins.length === 0) {
     return (
       <>
-        <div class="empty-state">No check-ins yet</div>
+        <TennisEmptyState message="No check-ins yet" subtext="Be the first to check in for this date!" />
         {modals}
       </>
     );
@@ -1060,7 +1083,7 @@ export function GamesList() {
   if (!hasMatches && warnings.length === 0) {
     return (
       <>
-        <div class="empty-state">No check-ins yet</div>
+        <TennisEmptyState message="No check-ins yet" subtext="Be the first to check in for this date!" />
         {modals}
       </>
     );
@@ -1074,7 +1097,9 @@ export function GamesList() {
       <div class="games-list" style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #f0f0f0;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <h2 style="margin: 0;">Games ({checkins.length} checked in)</h2>
+            <h2 style="margin: 0; font-size: var(--font-size-xl, 18px); font-weight: 600;">
+              Games <span style="font-size: var(--font-size-sm, 13px); font-weight: 500; color: var(--color-text-secondary, #666);">({checkins.length} checked in)</span>
+            </h2>
             {hasCustomArrangement && !isArrangeMode && (
               <span style={{
                 fontSize: '11px',
@@ -1095,7 +1120,7 @@ export function GamesList() {
                 <button
                   onClick={saveArrangement}
                   style={{
-                    background: '#4CAF50',
+                    background: 'var(--color-primary, #2C6E49)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
@@ -1143,29 +1168,109 @@ export function GamesList() {
             ) : (
               <>
                 {hasMatches && (
-                  <button
-                    onClick={() => shareToWhatsApp(matches, checkins, date)}
-                    title="Share to WhatsApp"
-                    style={{
-                      background: '#25D366',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '50%',
-                      padding: '0',
-                      width: '36px',
-                      height: '36px',
-                      fontSize: '16px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                    </svg>
-                  </button>
+                  <div style="position: relative;">
+                    <button
+                      data-share-button
+                      onClick={() => { mainShareDropdownOpen.value = !mainShareDropdownOpen.value; }}
+                      title="Share Games"
+                      style={{
+                        background: mainShareDropdownOpen.value ? 'var(--color-primary-dark, #1a402b)' : 'var(--color-primary, #2C6E49)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '20px',
+                        padding: '8px 16px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      Share
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                        <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+                      </svg>
+                    </button>
+                    {mainShareDropdownOpen.value && (
+                      <div
+                        class="share-dropdown"
+                        style={{
+                          position: 'absolute',
+                          top: '100%',
+                          right: '0',
+                          marginTop: '8px',
+                          background: 'white',
+                          borderRadius: '12px',
+                          boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+                          zIndex: 100,
+                          overflow: 'hidden',
+                          minWidth: '160px',
+                        }}
+                      >
+                        <button
+                          onClick={() => shareGames(matches, checkins, date, 'whatsapp')}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            padding: '12px 16px',
+                            width: '100%',
+                            border: 'none',
+                            background: 'white',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            color: '#333',
+                          }}
+                        >
+                          <svg viewBox="0 0 24 24" width="20" height="20" fill="#25D366">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                          </svg>
+                          WhatsApp
+                        </button>
+                        <button
+                          onClick={() => shareGames(matches, checkins, date, 'sms')}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            padding: '12px 16px',
+                            width: '100%',
+                            border: 'none',
+                            background: 'white',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            color: '#333',
+                          }}
+                        >
+                          <svg viewBox="0 0 24 24" width="20" height="20" fill="#2196F3">
+                            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                          </svg>
+                          SMS
+                        </button>
+                        <button
+                          onClick={() => shareGames(matches, checkins, date, 'copy')}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            padding: '12px 16px',
+                            width: '100%',
+                            border: 'none',
+                            background: 'white',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            color: '#333',
+                          }}
+                        >
+                          <svg viewBox="0 0 24 24" width="20" height="20" fill="#666">
+                            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                          </svg>
+                          Copy
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
                 {isAdmin && checkins.length >= 2 && (
                   <button
@@ -1355,7 +1460,7 @@ export function GamesList() {
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <h3 style="margin: 0;">{isDoubles ? 'Doubles' : 'Singles'} {matchNum}</h3>
                     {isComplete ? (
-                      <span style="display: flex; align-items: center; gap: 4px; color: #4CAF50; font-size: 13px; font-weight: 600;">
+                      <span style="display: flex; align-items: center; gap: 4px; color: var(--color-primary, #2C6E49); font-size: 13px; font-weight: 600;">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                         </svg>
@@ -1405,7 +1510,7 @@ export function GamesList() {
               <div key={idx} class="match-group" style="margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                   <h3 style="margin: 0;">Doubles {match.number}</h3>
-                  <span style="display: flex; align-items: center; gap: 4px; color: #4CAF50; font-size: 13px; font-weight: 600;">
+                  <span style="display: flex; align-items: center; gap: 4px; color: #2C6E49; font-size: 13px; font-weight: 600;">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                     </svg>
@@ -1435,7 +1540,7 @@ export function GamesList() {
               <div key={idx} class="match-group singles-group" style="margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                   <h3 style="margin: 0;">Singles{singlesCount > 1 ? ` ${singlesCount}` : ''}</h3>
-                  <span style="display: flex; align-items: center; gap: 4px; color: #4CAF50; font-size: 13px; font-weight: 600;">
+                  <span style="display: flex; align-items: center; gap: 4px; color: #2C6E49; font-size: 13px; font-weight: 600;">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                     </svg>
@@ -1466,7 +1571,7 @@ export function GamesList() {
               <div key={idx} class="match-group singles-group" style="margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                   <h3 style="margin: 0;">Rotation (3 players)</h3>
-                  <span style="display: flex; align-items: center; gap: 4px; color: #4CAF50; font-size: 13px; font-weight: 600;">
+                  <span style="display: flex; align-items: center; gap: 4px; color: #2C6E49; font-size: 13px; font-weight: 600;">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                     </svg>
@@ -1500,16 +1605,16 @@ export function GamesList() {
             return (
               <div key={idx} class="match-group forming-group" style="margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h3 style="margin: 0;">Doubles</h3>
                   <div style="display: flex; align-items: center; gap: 8px;">
-                    <h3 style="margin: 0;">Doubles</h3>
                     <span style="display: flex; align-items: center; gap: 4px; color: #F57C00; font-size: 12px; font-weight: 600;">
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                         <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
                       </svg>
                       Need {needed}
                     </span>
+                    <NeedPlayersButton match={match} matchKey={matchKey} needed={needed} />
                   </div>
-                  <NeedPlayersButton match={match} matchKey={matchKey} needed={needed} />
                 </div>
                 <div id="checkinList">
                   {match.players.map((player: any) => {
@@ -1532,16 +1637,16 @@ export function GamesList() {
             return (
               <div key={idx} class="match-group forming-group" style="margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h3 style="margin: 0;">Singles</h3>
                   <div style="display: flex; align-items: center; gap: 8px;">
-                    <h3 style="margin: 0;">Singles</h3>
                     <span style="display: flex; align-items: center; gap: 4px; color: #F57C00; font-size: 12px; font-weight: 600;">
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                         <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
                       </svg>
                       Need 1
                     </span>
+                    <NeedPlayersButton match={match} matchKey={matchKey} needed={1} />
                   </div>
-                  <NeedPlayersButton match={match} matchKey={matchKey} needed={1} />
                 </div>
                 <div id="checkinList">
                   {match.players.map((player: any) => {
@@ -1549,6 +1654,7 @@ export function GamesList() {
                     return <CheckinTile key={globalIndex} checkin={player} globalIndex={globalIndex} />;
                   })}
                 </div>
+                <MatchNoteInput matchKey={matchKey} />
               </div>
             );
           }

@@ -509,7 +509,7 @@ export function MatchList() {
             <div key={idx} class="match-group">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <h3 style="margin: 0;">Doubles {match.number}</h3>
-                <span style="display: flex; align-items: center; gap: 4px; color: #4CAF50; font-size: 13px; font-weight: 600;">
+                <span style="display: flex; align-items: center; gap: 4px; color: #2C6E49; font-size: 13px; font-weight: 600;">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                   </svg>
@@ -534,7 +534,7 @@ export function MatchList() {
             <div key={idx} class="match-group singles-group">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <h3 style="margin: 0;">Singles{singlesCount > 1 ? ` ${singlesCount}` : ''}</h3>
-                <span style="display: flex; align-items: center; gap: 4px; color: #4CAF50; font-size: 13px; font-weight: 600;">
+                <span style="display: flex; align-items: center; gap: 4px; color: #2C6E49; font-size: 13px; font-weight: 600;">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                   </svg>
@@ -560,7 +560,7 @@ export function MatchList() {
             <div key={idx} class="match-group singles-group">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <h3 style="margin: 0;">Rotation (3 players) - 1v1 or 1v2</h3>
-                <span style="display: flex; align-items: center; gap: 4px; color: #4CAF50; font-size: 13px; font-weight: 600;">
+                <span style="display: flex; align-items: center; gap: 4px; color: #2C6E49; font-size: 13px; font-weight: 600;">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                   </svg>

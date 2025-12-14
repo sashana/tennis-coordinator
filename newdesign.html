@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Midday Tennis - Fairness Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2C6E49',      /* Wimbledon Green */
+                        secondary: '#6C5CE7',    /* Action Purple */
+                        surface: '#F3F4F6',
+                        'card-bg': '#FFFFFF',
+                        text: '#1F2937',
+                        'text-muted': '#6B7280',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        header: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 pb-24">
+
+    <div class="px-5 pt-12 pb-4 flex justify-between items-center bg-white shadow-sm sticky top-0 z-50">
+        <div>
+            <p class="text-xs font-bold text-green-700 uppercase tracking-wider mb-0.5">Midday Tennis</p>
+            <h1 class="text-xl font-header font-bold text-gray-900">
+                Sat, Dec 13
+            </h1>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
+                <i class="fas fa-user-circle mr-1"></i> Alex
+            </span>
+        </div>
+    </div>
+
+    <div class="px-5 mt-6">
+        
+        <div class="flex space-x-2 mb-3 overflow-x-auto pb-1 no-scrollbar">
+            <button class="flex-shrink-0 px-4 py-2 rounded-full bg-green-700 text-white text-sm font-bold shadow-md ring-2 ring-offset-1 ring-green-700">
+                12:00 - 2:00 PM
+            </button>
+            <button class="flex-shrink-0 px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 text-sm font-medium">
+                1:00 - 3:00 PM
+            </button>
+            <button class="flex-shrink-0 px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 text-sm font-medium">
+                Custom
+            </button>
+        </div>
+
+        <div class="grid grid-cols-[1fr,auto] gap-3">
+            <button class="h-14 bg-green-700 rounded-xl flex items-center justify-center text-white shadow-lg active:scale-95 transition-transform">
+                <div class="flex flex-col leading-none items-center">
+                    <span class="font-bold text-lg">Check In</span>
+                    <span class="text-[10px] opacity-80 font-medium tracking-wide">AS ALEX</span>
+                </div>
+            </button>
+
+            <button class="h-14 w-14 bg-white border-2 border-green-100 rounded-xl flex items-center justify-center text-green-700 shadow-sm active:bg-gray-50 transition-colors">
+                <i class="fas fa-user-plus text-xl"></i>
+            </button>
+        </div>
+        
+        <p class="text-[10px] text-gray-400 mt-2 text-center">
+            <i class="fas fa-history mr-1"></i> You last played on Tuesday (3 days ago)
+        </p>
+    </div>
+
+    <div class="px-5 mt-8">
+        <div class="flex justify-between items-end mb-3">
+            <h2 class="font-header text-lg font-bold text-gray-900">
+                Court 1 (Doubles)
+            </h2>
+            <span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-1 rounded border border-green-200 uppercase tracking-wide">
+                Confirmed
+            </span>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-100 flex justify-between items-center">
+                <span class="text-xs font-bold text-gray-500">12:00 PM START</span>
+                <span class="text-xs font-bold text-gray-400"># PRIORITY</span>
+            </div>
+
+            <div class="flex items-center p-3 border-b border-gray-50 relative">
+                <div class="w-6 text-sm font-bold text-green-700">1.</div>
+                
+                <img src="https://i.pravatar.cc/150?u=1" class="w-8 h-8 rounded-full border border-gray-200 mr-3">
+                
+                <div class="flex-1">
+                    <div class="text-sm font-bold text-gray-900">Dan Nguyen</div>
+                    <div class="text-[10px] text-gray-400">
+                        <span class="bg-gray-100 px-1 rounded">Either</span>
+                    </div>
+                </div>
+
+                <div class="text-[10px] font-mono text-gray-400">
+                    09:02 AM
+                </div>
+            </div>
+
+            <div class="flex items-center p-3 border-b border-gray-50">
+                <div class="w-6 text-sm font-bold text-green-700">2.</div>
+                <img src="https://i.pravatar.cc/150?u=2" class="w-8 h-8 rounded-full border border-gray-200 mr-3">
+                <div class="flex-1">
+                    <div class="text-sm font-bold text-gray-900">Chris Abate</div>
+                    <div class="text-[10px] text-gray-400">
+                         <span class="bg-purple-50 text-purple-700 px-1 rounded">Doubles</span>
+                    </div>
+                </div>
+                <div class="text-[10px] font-mono text-gray-400">
+                    09:15 AM
+                </div>
+            </div>
+
+            <div class="flex items-center p-3 border-b border-gray-50">
+                <div class="w-6 text-sm font-bold text-green-700">3.</div>
+                <div class="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center border border-green-100 mr-3 text-green-700 text-xs font-bold">HM</div>
+                <div class="flex-1">
+                    <div class="text-sm font-bold text-gray-900">Harshit Mehta</div>
+                    <div class="text-[10px] text-gray-400">
+                         <span class="bg-gray-100 px-1 rounded">Either</span>
+                    </div>
+                </div>
+                <div class="text-[10px] font-mono text-gray-400">
+                    10:30 AM
+                </div>
+            </div>
+
+            <div class="flex items-center p-3 bg-yellow-50/50">
+                <div class="w-6 text-sm font-bold text-green-700">4.</div>
+                <div class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center border border-yellow-200 mr-3 text-yellow-700 text-xs font-bold">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="text-sm font-bold text-gray-900">Diego Arce</div>
+                    <div class="text-[10px] text-gray-500 italic">
+                        Guest of Harshit
+                    </div>
+                </div>
+                <div class="text-[10px] font-mono text-gray-400">
+                    10:31 AM
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4 opacity-75">
+             <div class="flex justify-between items-end mb-2">
+                <h2 class="font-header text-sm font-bold text-gray-500">
+                    Waitlist / Court 2
+                </h2>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-3 flex items-center border-l-4 border-l-orange-300">
+                <div class="w-6 text-sm font-bold text-gray-400">5.</div>
+                <div class="flex-1 text-sm text-gray-600 italic">
+                    Waiting for players...
+                </div>
+                <button class="text-xs font-bold text-green-700 uppercase">Join</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
