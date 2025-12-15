@@ -22,19 +22,19 @@ function updateManifestForGroup() {
       icons: [
         {
           src: "/dist/assets/icon-192.png",
-          sizes: "128x192",
+          sizes: "192x192",
           type: "image/png",
           purpose: "any"
         },
         {
           src: "/dist/assets/icon-512.png",
-          sizes: "341x512",
+          sizes: "512x512",
           type: "image/png",
           purpose: "any"
         },
         {
           src: "/dist/assets/apple-touch-icon.png",
-          sizes: "120x180",
+          sizes: "180x180",
           type: "image/png",
           purpose: "any"
         }
