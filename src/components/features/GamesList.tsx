@@ -1713,6 +1713,7 @@ export function GamesList() {
 
           if (match.type === 'singles-forming') {
             const matchKey = 'singles-forming-1';
+            const isCompact = compactViewMode.value;
             return (
               <div key={idx} class="match-group forming-group" style="margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -1727,27 +1728,36 @@ export function GamesList() {
                     <NeedPlayersButton match={match} matchKey={matchKey} needed={1} />
                   </div>
                 </div>
-                <div id="checkinList">
-                  {match.players.map((player: any) => {
-                    const globalIndex = findGlobalIndex(checkins, player);
-                    return <CheckinTile key={globalIndex} checkin={player} globalIndex={globalIndex} />;
-                  })}
-                </div>
-                <MatchNoteInput matchKey={matchKey} />
+                {isCompact ? (
+                  <CompactPlayerList players={match.players} checkins={checkins} />
+                ) : (
+                  <div id="checkinList">
+                    {match.players.map((player: any) => {
+                      const globalIndex = findGlobalIndex(checkins, player);
+                      return <CheckinTile key={globalIndex} checkin={player} globalIndex={globalIndex} />;
+                    })}
+                  </div>
+                )}
+                {!isCompact && <MatchNoteInput matchKey={matchKey} />}
               </div>
             );
           }
 
           if (match.type === 'waiting') {
+            const isCompact = compactViewMode.value;
             return (
               <div key={idx} class="match-group waiting-group" style="margin-bottom: 16px;">
                 <h3 style="margin: 0 0 8px 0;">Waiting for Match</h3>
-                <div id="checkinList">
-                  {match.players.map((player: any) => {
-                    const globalIndex = findGlobalIndex(checkins, player);
-                    return <CheckinTile key={globalIndex} checkin={player} globalIndex={globalIndex} />;
-                  })}
-                </div>
+                {isCompact ? (
+                  <CompactPlayerList players={match.players} checkins={checkins} />
+                ) : (
+                  <div id="checkinList">
+                    {match.players.map((player: any) => {
+                      const globalIndex = findGlobalIndex(checkins, player);
+                      return <CheckinTile key={globalIndex} checkin={player} globalIndex={globalIndex} />;
+                    })}
+                  </div>
+                )}
               </div>
             );
           }
