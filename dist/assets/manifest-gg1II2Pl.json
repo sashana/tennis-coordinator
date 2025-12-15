@@ -1,6 +1,6 @@
 {
-  "name": "Tennis Coordinator",
-  "short_name": "Tennis",
+  "name": "Midday Tennis",
+  "short_name": "Midday Tennis",
   "description": "Tennis match coordination and check-in system",
   "display": "standalone",
   "background_color": "#ffffff",
