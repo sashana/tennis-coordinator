@@ -199,6 +199,38 @@ function MatchNoteInput({ matchKey }: { matchKey: string }) {
   );
 }
 
+// Compact player list - just names, one line per match
+function CompactPlayerList({ players, checkins }: { players: any[]; checkins: any[] }) {
+  const currentUserName = sessionUser.value ? normalizeName(sessionUser.value) : '';
+
+  return (
+    <div style="padding: 8px 12px; font-size: 14px; line-height: 1.6;">
+      {players.map((player: any, idx: number) => {
+        const isCurrentUser = currentUserName && normalizeName(player.name) === currentUserName;
+        const globalIdx = checkins.findIndex(c =>
+          normalizeName(c.name) === normalizeName(player.name) && c.timestamp === player.timestamp
+        );
+        return (
+          <span key={player.name}>
+            {idx > 0 && <span style="color: var(--color-text-muted, #999);"> &bull; </span>}
+            <span style={isCurrentUser ? { fontWeight: 600, color: 'var(--color-primary, #2C6E49)' } : {}}>
+              {globalIdx >= 0 ? `${globalIdx + 1}. ` : ''}{player.name}
+              {isCurrentUser && <span style="font-size: 10px; background: var(--color-primary-light, #E8F5E9); color: var(--color-primary, #2C6E49); padding: 1px 4px; border-radius: 4px; margin-left: 4px;">YOU</span>}
+            </span>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+// Toggle compact/detailed view
+function toggleCompactView() {
+  const newValue = !compactViewMode.value;
+  compactViewMode.value = newValue;
+  localStorage.setItem('games_compact_view', String(newValue));
+}
+
 // Check-in tile component - reuses exact styling from CheckinList
 function CheckinTile({ checkin, globalIndex }: { checkin: any; globalIndex: number }) {
   const isCurrentUser = sessionUser.value &&
@@ -1106,6 +1138,41 @@ export function GamesList() {
             )}
           </div>
           <div style="display: flex; gap: 8px; align-items: center;">
+            {/* Compact/Detailed toggle */}
+            {!isArrangeMode && (
+              <button
+                onClick={toggleCompactView}
+                title={compactViewMode.value ? 'Show details' : 'Compact view'}
+                style={{
+                  background: 'var(--color-bg-subtle, #f5f5f5)',
+                  border: '1px solid var(--color-border, #e0e0e0)',
+                  borderRadius: '6px',
+                  padding: '6px 10px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  color: 'var(--color-text-secondary, #666)',
+                }}
+              >
+                {compactViewMode.value ? (
+                  <>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                      <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+                    </svg>
+                    Details
+                  </>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                      <path d="M3 4h18v2H3V4zm2 4h14v2H5V8zm-2 4h18v2H3v-2zm2 4h14v2H5v-2z"/>
+                    </svg>
+                    Compact
+                  </>
+                )}
+              </button>
+            )}
             {/* Arrange mode controls */}
             {isArrangeMode ? (
               <>
@@ -1498,6 +1565,7 @@ export function GamesList() {
         {!isArrangeMode && !hasCustomArrangement && matches.map((match, idx) => {
           if (match.type === 'doubles') {
             const matchKey = `doubles-${match.number}`;
+            const isCompact = compactViewMode.value;
             return (
               <div key={idx} class="match-group" style="margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -1509,13 +1577,17 @@ export function GamesList() {
                     Ready
                   </span>
                 </div>
-                <div id="checkinList">
-                  {match.players.map((player: any) => {
-                    const globalIndex = findGlobalIndex(checkins, player);
-                    return <CheckinTile key={globalIndex} checkin={player} globalIndex={globalIndex} />;
-                  })}
-                </div>
-                <MatchNoteInput matchKey={matchKey} />
+                {isCompact ? (
+                  <CompactPlayerList players={match.players} checkins={checkins} />
+                ) : (
+                  <div id="checkinList">
+                    {match.players.map((player: any) => {
+                      const globalIndex = findGlobalIndex(checkins, player);
+                      return <CheckinTile key={globalIndex} checkin={player} globalIndex={globalIndex} />;
+                    })}
+                  </div>
+                )}
+                {!isCompact && <MatchNoteInput matchKey={matchKey} />}
               </div>
             );
           }
@@ -1523,6 +1595,7 @@ export function GamesList() {
           if (match.type === 'singles') {
             singlesCount++;
             const matchKey = `singles-${singlesCount}`;
+            const isCompact = compactViewMode.value;
 
             const bothFlexible = match.players.every((p: any) => (p.playStyle || 'both') === 'both');
             const anyOpenToRotation = match.players.some((p: any) => p.allowRotation === true);
@@ -1539,18 +1612,22 @@ export function GamesList() {
                     Ready
                   </span>
                 </div>
-                <div id="checkinList">
-                  {match.players.map((player: any) => {
-                    const globalIndex = findGlobalIndex(checkins, player);
-                    return <CheckinTile key={globalIndex} checkin={player} globalIndex={globalIndex} />;
-                  })}
-                </div>
-                {isProvisional && (
+                {isCompact ? (
+                  <CompactPlayerList players={match.players} checkins={checkins} />
+                ) : (
+                  <div id="checkinList">
+                    {match.players.map((player: any) => {
+                      const globalIndex = findGlobalIndex(checkins, player);
+                      return <CheckinTile key={globalIndex} checkin={player} globalIndex={globalIndex} />;
+                    })}
+                  </div>
+                )}
+                {!isCompact && isProvisional && (
                   <p style="color: var(--color-gray-base, #666); font-size: 13px; margin: 8px 0 4px 0; font-style: italic; padding: 0 12px;">
                     Open to more players
                   </p>
                 )}
-                <MatchNoteInput matchKey={matchKey} />
+                {!isCompact && <MatchNoteInput matchKey={matchKey} />}
               </div>
             );
           }
@@ -1558,6 +1635,7 @@ export function GamesList() {
           if (match.type === 'singles-or-practice') {
             rotationCount++;
             const matchKey = `rotation-${rotationCount}`;
+            const isCompact = compactViewMode.value;
 
             return (
               <div key={idx} class="match-group singles-group" style="margin-bottom: 16px;">
@@ -1570,13 +1648,17 @@ export function GamesList() {
                     Ready
                   </span>
                 </div>
-                <div id="checkinList">
-                  {match.players.map((player: any) => {
-                    const globalIndex = findGlobalIndex(checkins, player);
-                    return <CheckinTile key={globalIndex} checkin={player} globalIndex={globalIndex} />;
-                  })}
-                </div>
-                <MatchNoteInput matchKey={matchKey} />
+                {isCompact ? (
+                  <CompactPlayerList players={match.players} checkins={checkins} />
+                ) : (
+                  <div id="checkinList">
+                    {match.players.map((player: any) => {
+                      const globalIndex = findGlobalIndex(checkins, player);
+                      return <CheckinTile key={globalIndex} checkin={player} globalIndex={globalIndex} />;
+                    })}
+                  </div>
+                )}
+                {!isCompact && <MatchNoteInput matchKey={matchKey} />}
               </div>
             );
           }
@@ -1584,6 +1666,7 @@ export function GamesList() {
           if (match.type === 'doubles-forming') {
             const matchKey = 'doubles-forming-1';
             const needed = match.needed || (4 - match.players.length);
+            const isCompact = compactViewMode.value;
 
             let fallbackText = '';
             if (match.canRotate) {
@@ -1608,18 +1691,22 @@ export function GamesList() {
                     <NeedPlayersButton match={match} matchKey={matchKey} needed={needed} />
                   </div>
                 </div>
-                <div id="checkinList">
-                  {match.players.map((player: any) => {
-                    const globalIndex = findGlobalIndex(checkins, player);
-                    return <CheckinTile key={globalIndex} checkin={player} globalIndex={globalIndex} />;
-                  })}
-                </div>
-                {fallbackText && (
+                {isCompact ? (
+                  <CompactPlayerList players={match.players} checkins={checkins} />
+                ) : (
+                  <div id="checkinList">
+                    {match.players.map((player: any) => {
+                      const globalIndex = findGlobalIndex(checkins, player);
+                      return <CheckinTile key={globalIndex} checkin={player} globalIndex={globalIndex} />;
+                    })}
+                  </div>
+                )}
+                {!isCompact && fallbackText && (
                   <p style="color: var(--color-gray-base, #666); font-size: 13px; margin: 8px 0 4px 0; font-style: italic; padding: 0 12px;">
                     {fallbackText}
                   </p>
                 )}
-                <MatchNoteInput matchKey={matchKey} />
+                {!isCompact && <MatchNoteInput matchKey={matchKey} />}
               </div>
             );
           }
