@@ -199,25 +199,78 @@ function MatchNoteInput({ matchKey }: { matchKey: string }) {
   );
 }
 
-// Compact player list - just names, one line per match
+// Compact player list - each player on separate line with time slot and preference
 function CompactPlayerList({ players, checkins }: { players: any[]; checkins: any[] }) {
   const currentUserName = sessionUser.value ? normalizeName(sessionUser.value) : '';
 
   return (
-    <div style="padding: 8px 12px; font-size: 14px; line-height: 1.6;">
-      {players.map((player: any, idx: number) => {
+    <div style="padding: 4px 0;">
+      {players.map((player: any) => {
         const isCurrentUser = currentUserName && normalizeName(player.name) === currentUserName;
         const globalIdx = checkins.findIndex(c =>
           normalizeName(c.name) === normalizeName(player.name) && c.timestamp === player.timestamp
         );
+
+        const timeInfo = player.timeRange
+          ? formatTimeRange(player.timeRange.start, player.timeRange.end)
+          : '';
+
         return (
-          <span key={player.name}>
-            {idx > 0 && <span style="color: var(--color-text-muted, #999);"> &bull; </span>}
-            <span style={isCurrentUser ? { fontWeight: 600, color: 'var(--color-primary, #2C6E49)' } : {}}>
-              {globalIdx >= 0 ? `${globalIdx + 1}. ` : ''}{player.name}
-              {isCurrentUser && <span style="font-size: 10px; background: var(--color-primary-light, #E8F5E9); color: var(--color-primary, #2C6E49); padding: 1px 4px; border-radius: 4px; margin-left: 4px;">YOU</span>}
+          <div
+            key={player.name}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '6px 12px',
+              borderBottom: '1px solid var(--color-border-light, #f0f0f0)',
+              fontSize: '14px',
+              background: isCurrentUser ? 'var(--color-primary-light, #E8F5E9)' : 'transparent',
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{
+                color: 'var(--color-text-muted, #999)',
+                fontSize: '13px',
+                minWidth: '20px',
+              }}>
+                {globalIdx >= 0 ? `${globalIdx + 1}.` : ''}
+              </span>
+              <span style={isCurrentUser ? { fontWeight: 600, color: 'var(--color-primary, #2C6E49)' } : {}}>
+                {player.name}
+              </span>
+              {isCurrentUser && (
+                <span style={{
+                  fontSize: '10px',
+                  background: 'var(--color-primary, #2C6E49)',
+                  color: 'white',
+                  padding: '1px 4px',
+                  borderRadius: '4px',
+                }}>YOU</span>
+              )}
+              {timeInfo && (
+                <span style={{
+                  fontSize: '12px',
+                  color: 'var(--color-text-muted, #999)',
+                  marginLeft: '4px',
+                }}>{timeInfo}</span>
+              )}
             </span>
-          </span>
+            <span style={{
+              fontSize: '11px',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              background: player.playStyle === 'singles' ? 'var(--color-blue-light, #E3F2FD)'
+                : player.playStyle === 'doubles' ? 'var(--color-orange-light, #FFF3E0)'
+                : 'var(--color-primary-light, #E8F5E9)',
+              color: player.playStyle === 'singles' ? 'var(--color-blue-base, #1976D2)'
+                : player.playStyle === 'doubles' ? 'var(--color-orange-base, #F57C00)'
+                : 'var(--color-primary, #2C6E49)',
+              fontWeight: 500,
+            }}>
+              {getPreferenceLabel(player.playStyle || 'both')}
+            </span>
+          </div>
         );
       })}
     </div>
@@ -1587,7 +1640,7 @@ export function GamesList() {
                     })}
                   </div>
                 )}
-                {!isCompact && <MatchNoteInput matchKey={matchKey} />}
+                <MatchNoteInput matchKey={matchKey} />
               </div>
             );
           }
@@ -1627,7 +1680,7 @@ export function GamesList() {
                     Open to more players
                   </p>
                 )}
-                {!isCompact && <MatchNoteInput matchKey={matchKey} />}
+                <MatchNoteInput matchKey={matchKey} />
               </div>
             );
           }
@@ -1658,7 +1711,7 @@ export function GamesList() {
                     })}
                   </div>
                 )}
-                {!isCompact && <MatchNoteInput matchKey={matchKey} />}
+                <MatchNoteInput matchKey={matchKey} />
               </div>
             );
           }
@@ -1706,7 +1759,7 @@ export function GamesList() {
                     {fallbackText}
                   </p>
                 )}
-                {!isCompact && <MatchNoteInput matchKey={matchKey} />}
+                <MatchNoteInput matchKey={matchKey} />
               </div>
             );
           }
@@ -1738,7 +1791,7 @@ export function GamesList() {
                     })}
                   </div>
                 )}
-                {!isCompact && <MatchNoteInput matchKey={matchKey} />}
+                <MatchNoteInput matchKey={matchKey} />
               </div>
             );
           }
