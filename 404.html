@@ -5,10 +5,10 @@
     <title>Tennis Coordinator</title>
     <script>
         // GitHub Pages SPA redirect
-        // This script takes the current URL and redirects to index.html
-        // while preserving the path so the app can handle routing
-        sessionStorage.setItem('redirect', location.pathname);
-        location.replace(location.origin + location.pathname.split('/').slice(0, -1).join('/') + '/index.html' + location.search + location.hash);
+        // Store the original path so the app can handle routing
+        sessionStorage.setItem('redirect', location.pathname + location.search + location.hash);
+        // Redirect to root index.html
+        location.replace(location.origin + '/index.html');
     </script>
 </head>
 <body>
