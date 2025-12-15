@@ -63,18 +63,32 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        /* PWA standalone mode - add safe area padding for iOS notch/Dynamic Island */
+        /* PWA standalone mode - use safe areas for iOS notch/Dynamic Island */
         @media (display-mode: standalone) {
+            body {
+                /* Remove body padding in PWA - let container handle it */
+                padding: 0;
+            }
             .container {
-                padding-top: calc(16px + env(safe-area-inset-top));
+                /* Only use safe area for top, minimal additional padding */
+                padding-top: env(safe-area-inset-top, 0px);
+                padding-left: 12px;
+                padding-right: 12px;
+                border-radius: 0;
             }
         }
 
         /* Also support iOS Safari standalone detection */
         @supports (-webkit-touch-callout: none) {
             @media (display-mode: standalone) {
+                body {
+                    padding: 0;
+                }
                 .container {
-                    padding-top: calc(16px + env(safe-area-inset-top));
+                    padding-top: env(safe-area-inset-top, 0px);
+                    padding-left: 12px;
+                    padding-right: 12px;
+                    border-radius: 0;
                 }
             }
         }

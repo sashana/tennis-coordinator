@@ -61,8 +61,9 @@ export function BottomTabBar() {
         transform: 'translateX(-50%)',
         width: '100%',
         maxWidth: '480px',
-        // Height includes: nav content (56px) + safe area inset (0 on desktop, ~34px on iPhone with notch)
+        // Use calc to add safe area for devices with home indicator
         height: 'calc(56px + env(safe-area-inset-bottom, 0px))',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         background: '#fff',
         borderTop: '1px solid #e0e0e0',
         display: 'flex',
@@ -70,8 +71,6 @@ export function BottomTabBar() {
         alignItems: 'flex-start',
         paddingTop: '4px',
         zIndex: 1000,
-        // Bottom padding uses safe area inset - this keeps content above the home indicator
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         boxShadow: 'var(--shadow-lg, 0 -2px 10px rgba(0,0,0,0.1))',
       }}
     >
