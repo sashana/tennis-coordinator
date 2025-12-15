@@ -12,11 +12,11 @@
     "rewrites": [
       {
         "source": "/ttmd",
-        "destination": "/index.html"
+        "destination": "/ttmd.html"
       },
       {
         "source": "/ttmd/**",
-        "destination": "/index.html"
+        "destination": "/ttmd.html"
       }
     ]
   }

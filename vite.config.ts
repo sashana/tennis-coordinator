@@ -35,6 +35,7 @@ export default defineConfig({
       input: {
         index: resolve(__dirname, 'new-index.html'),
         app: resolve(__dirname, 'app.html'),
+        ttmd: resolve(__dirname, 'ttmd.html'),
       },
     },
   },
