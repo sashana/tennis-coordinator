@@ -61,15 +61,18 @@ export function BottomTabBar() {
         transform: 'translateX(-50%)',
         width: '100%',
         maxWidth: '480px',
-        height: 'calc(64px + env(safe-area-inset-bottom))',
+        // Height includes: nav content (56px) + safe area + extra buffer (34px for iPhone 15 Pro Max)
+        height: 'calc(56px + env(safe-area-inset-bottom, 34px) + 20px)',
         background: '#fff',
         borderTop: '1px solid #e0e0e0',
         display: 'flex',
         justifyContent: 'space-around',
         alignItems: 'flex-start',
-        paddingTop: '8px',
+        paddingTop: '4px',
         zIndex: 1000,
-        paddingBottom: 'env(safe-area-inset-bottom)',
+        // Large bottom padding to keep tab labels well above the home indicator
+        // iPhone 15 Pro Max has a taller home indicator area (~34px)
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 20px)',
         boxShadow: 'var(--shadow-lg, 0 -2px 10px rgba(0,0,0,0.1))',
       }}
     >

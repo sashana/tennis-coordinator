@@ -315,7 +315,7 @@ export function ProfileTab() {
 
       {/* Version Info */}
       <p style="font-size: var(--font-size-sm, 12px); color: var(--color-text-disabled, #aaa); text-align: center; margin-top: var(--spacing-4xl, 32px);">
-        Tennis Coordinator v0.9.0
+        Tennis Coordinator <a href="/release-notes.html" target="_blank" style="color: var(--color-primary, #2C6E49); text-decoration: none;">v1.0.0</a>
       </p>
 
       {/* Sub-Pages */}
