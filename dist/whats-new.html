@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tennis Coordinator - What's New</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.7;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8f5e9 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            padding: 35px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            color: #2C6E49;
+            font-size: 2.2em;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        h2 {
+            color: #2C6E49;
+            font-size: 1.5em;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            padding-left: 35px;
+            position: relative;
+        }
+
+        h2::before {
+            content: attr(data-emoji);
+            position: absolute;
+            left: 0;
+            font-size: 1.3em;
+        }
+
+        h3 {
+            color: #4A7C59;
+            font-size: 1.2em;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            line-height: 1.7;
+        }
+
+        ul {
+            margin-left: 25px;
+            margin-bottom: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        strong {
+            color: #2C6E49;
+        }
+
+        .highlight-box {
+            background: #fff9e6;
+            border-left: 4px solid #2C6E49;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 6px;
+        }
+
+        .before-after {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .before-after h3 {
+            margin-top: 0;
+        }
+
+        .before-after ol {
+            margin-left: 25px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 35px;
+            padding: 12px 24px;
+            background: #2C6E49;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+            text-align: center;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            background: #245a3a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(44, 110, 73, 0.3);
+        }
+
+        .details-link {
+            color: #2C6E49;
+            text-decoration: none;
+            font-weight: 600;
+            border-bottom: 2px solid #2C6E49;
+        }
+
+        .details-link:hover {
+            border-bottom-color: #4A7C59;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            h2 {
+                font-size: 1.3em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎾 Tennis Coordinator</h1>
+        <div class="subtitle">What's New - December 2025</div>
+
+        <p style="text-align: center; font-size: 1.1em; color: #555; margin-bottom: 30px;">
+            Hi everyone! Your Tennis Coordinator app just got a major upgrade. Here are the key improvements that make coordination even easier:
+        </p>
+
+        <h2 data-emoji="📱">Better Mobile Experience</h2>
+        <p>Your app now works better on your phone:</p>
+        <ul>
+            <li><strong>Bigger buttons</strong> - Easy to tap, no more missed clicks</li>
+            <li><strong>Larger text</strong> - Easier to read without zooming</li>
+            <li><strong>Works with notches</strong> - Safe on all modern iPhones and Androids</li>
+            <li><strong>Smoother scrolling</strong> - Better touch response throughout</li>
+        </ul>
+
+        <h2 data-emoji="⚡">Faster & Smoother</h2>
+        <ul>
+            <li><strong>3x faster loading</strong> - App opens instantly</li>
+            <li><strong>No more page reloads</strong> - Switching tabs is instant</li>
+            <li><strong>Better offline support</strong> - Works even with spotty connection</li>
+        </ul>
+
+        <h2 data-emoji="🔔">Stay Updated</h2>
+        <p><strong>New Notification Center:</strong></p>
+        <ul>
+            <li>See who checked in or dropped out</li>
+            <li>Get alerts when watched members check in</li>
+            <li>Track all group activity in one place</li>
+            <li>Clear notification badge when you've caught up</li>
+        </ul>
+
+        <h2 data-emoji="📊">Activity History</h2>
+        <p><strong>Know what changed:</strong></p>
+        <ul>
+            <li>See who checked in or removed themselves (with timestamps)</li>
+            <li>Track member additions and changes</li>
+            <li>View when matches were manually arranged</li>
+            <li>Filter by activity type (check-ins, notes, members, etc.)</li>
+            <li>Group by play date or when changes happened</li>
+        </ul>
+
+        <div class="highlight-box">
+            <strong>Why this helps:</strong> No more wondering "Who dropped?" or "Did someone check in?" - just open Activity to see everything that happened.
+        </div>
+
+        <h2 data-emoji="👥">Member Management</h2>
+        <p><strong>For everyone:</strong></p>
+        <ul>
+            <li>Add new members yourself (we track who added whom)</li>
+            <li>Edit member details (contact info, notes)</li>
+            <li>See the full member directory</li>
+        </ul>
+
+        <div class="highlight-box">
+            <strong>Why this helps:</strong> Grow the group organically without waiting for admin. Want to bring a friend who plays regularly? Just add them!
+        </div>
+
+        <h2 data-emoji="📝">Match Notes</h2>
+        <ul>
+            <li>Add notes to any match (court assignment, special plans, etc.)</li>
+            <li>Everyone can see notes for their matches</li>
+            <li>Edit notes anytime before the match</li>
+            <li>Notes appear in activity history</li>
+        </ul>
+        <p><strong>Example uses:</strong> "Let's meet at Court 3" • "Bringing extra balls" • "Running 15min late"</p>
+
+        <h2 data-emoji="🌤️">Weather Info</h2>
+        <ul>
+            <li>See current weather for our courts</li>
+            <li>Check temperature, wind, and conditions</li>
+            <li>Plan accordingly (bring jacket, sunscreen, etc.)</li>
+        </ul>
+
+        <h2 data-emoji="📅">Calendar Integration</h2>
+        <ul>
+            <li><strong>Add match to your calendar</strong> with one tap</li>
+            <li>Works with Google Calendar, Apple Calendar, Outlook</li>
+            <li>Automatic reminders from your calendar</li>
+            <li>Match details included</li>
+        </ul>
+
+        <h2 data-emoji="🎯">How These Changes Help YOU</h2>
+
+        <div class="before-after">
+            <h3>Before:</h3>
+            <ol>
+                <li>Open app (slow load)</li>
+                <li>Tap through multiple pages</li>
+                <li>Small buttons (easy to mis-tap)</li>
+                <li>Check WhatsApp to see who dropped</li>
+                <li>Ask admin to add new player</li>
+                <li>No idea what the weather is</li>
+            </ol>
+
+            <h3 style="margin-top: 20px;">Now:</h3>
+            <ol>
+                <li>Open app (instant)</li>
+                <li>Bigger buttons, easier taps</li>
+                <li>Check Activity tab to see all changes</li>
+                <li>Add new members yourself</li>
+                <li>See weather at a glance</li>
+                <li>Add match to calendar with one tap</li>
+                <li>Get notified when specific players check in</li>
+            </ol>
+        </div>
+
+        <h2 data-emoji="📖">Full Details</h2>
+        <p>Want to know more?</p>
+        <ul>
+            <li>Read the complete <a href="release-notes.html" class="details-link">Release Notes</a></li>
+            <li>Check the <strong>Help</strong> tab in the app</li>
+            <li>Ask questions in our WhatsApp group</li>
+        </ul>
+
+        <h2 data-emoji="🙏">Your Feedback Matters</h2>
+        <p>This update was designed specifically for tight-knit groups like ours. If you have:</p>
+        <ul>
+            <li><strong>Issues</strong> - Let us know right away</li>
+            <li><strong>Suggestions</strong> - We're always improving</li>
+            <li><strong>Questions</strong> - Happy to help!</li>
+        </ul>
+
+        <h2 data-emoji="🎾">What's Still the Same</h2>
+        <ul>
+            <li>All your data (members, check-ins, preferences)</li>
+            <li>Core workflow (check in, see matches, share to WhatsApp)</li>
+            <li>Admin PIN protection</li>
+            <li>Private group data</li>
+        </ul>
+
+        <div style="text-align: center; margin-top: 40px; padding: 30px; background: #f0f7f4; border-radius: 12px;">
+            <p style="font-size: 1.3em; color: #2C6E49; font-weight: 600; margin-bottom: 8px;">
+                The goal: Spend less time coordinating, more time on the court!
+            </p>
+            <p style="font-size: 1.1em; color: #666;">Enjoy the upgrade! 🎾</p>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="https://tennis.sportsconnector.com/" class="back-link">Open Tennis Coordinator →</a>
+        </div>
+
+        <p style="text-align: center; margin-top: 25px; color: #999; font-size: 0.95em;">
+            Questions? Check the Help tab in the app or ask in the group.
+        </p>
+    </div>
+</body>
+</html>
