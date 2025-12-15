@@ -3,20 +3,12 @@ import { sessionUser, currentGroupId, showToast, memberDetails } from '../App';
 import { showWelcomeModal } from '../ui/WelcomeModal';
 import { showSettingsModal } from '../layout/Header';
 import { showActivityModal } from '../layout/Header';
-import { groupSettings, applyTheme } from '../../hooks/useFirebase';
-import { getDatabase } from '../../config/firebase';
 import { InsightsTab } from './InsightsTab';
 import { HelpTab } from './HelpTab';
 import { openEditMemberDrawer } from '../features/EditMemberDrawer';
-
-// Available themes - 5 Grand Slam themes
-const THEMES = [
-  { id: 'default', name: 'Classic Green', description: 'Default theme' },
-  { id: 'wimbledon', name: 'Wimbledon', description: 'Grass court elegance' },
-  { id: 'roland-garros', name: 'Roland-Garros', description: 'Clay court warmth' },
-  { id: 'australian-open', name: 'Australian Open', description: 'Melbourne blue' },
-  { id: 'us-open', name: 'US Open', description: 'Flushing Meadows blue' },
-];
+import { SubPage } from '../ui/SubPage';
+import { GroupSettingsContent } from '../features/GroupSettingsContent';
+import { ActivityHistoryContent } from '../features/ActivityHistoryContent';
 
 // Check if user is logged in as group admin
 function isGroupAdmin(): boolean {
@@ -25,10 +17,12 @@ function isGroupAdmin(): boolean {
   return sessionStorage.getItem(`adminAuth_${groupId}`) === 'true';
 }
 
+// Track which sub-page is open
+type SubPageType = 'settings' | 'activity' | 'insights' | 'help' | null;
+
 export function ProfileTab() {
   const [adminStatus, setAdminStatus] = useState(isGroupAdmin());
-  const [showInsights, setShowInsights] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
+  const [activeSubPage, setActiveSubPage] = useState<SubPageType>(null);
 
   // Re-check admin status periodically (for when user logs in as admin)
   useEffect(() => {
@@ -110,66 +104,8 @@ export function ProfileTab() {
         {/* Admin Settings (for admins only) */}
         {adminStatus && (
           <>
-            {/* Theme Selector */}
-            <div
-              style={{
-                background: 'var(--color-bg-card, #fff)',
-                border: '1px solid var(--color-border, #e0e0e0)',
-                borderRadius: 'var(--radius-xl, 12px)',
-                padding: 'var(--spacing-2xl, 16px)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md, 8px)', marginBottom: 'var(--spacing-xl, 12px)' }}>
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-primary, #2C6E49)">
-                  <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-                </svg>
-                <span style={{ fontWeight: 500, color: 'var(--color-text-primary, #333)', fontSize: 'var(--font-size-lg, 16px)' }}>Theme</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--spacing-md, 8px)' }}>
-                {THEMES.map((theme) => {
-                  const currentTheme = groupSettings.value?.theme || 'default';
-                  const isSelected = currentTheme === theme.id;
-                  return (
-                    <button
-                      key={theme.id}
-                      onClick={async () => {
-                        applyTheme(theme.id === 'default' ? undefined : theme.id);
-                        const groupId = currentGroupId.value;
-                        if (groupId) {
-                          try {
-                            const db = getDatabase();
-                            await db.ref(`groups/${groupId}/settings/theme`).set(theme.id === 'default' ? null : theme.id);
-                            groupSettings.value = { ...groupSettings.value, theme: theme.id === 'default' ? undefined : theme.id };
-                            showToast(`Theme: ${theme.name}`, 'success');
-                          } catch (error) {
-                            console.error('Error saving theme:', error);
-                          }
-                        }
-                      }}
-                      style={{
-                        padding: 'var(--spacing-lg, 10px) var(--spacing-md, 8px)',
-                        background: isSelected ? 'var(--color-primary-light, #e8f5e9)' : 'var(--color-bg-card, white)',
-                        border: isSelected ? '2px solid var(--color-primary, #2C6E49)' : '1px solid var(--color-border, #e0e0e0)',
-                        borderRadius: 'var(--radius-lg, 8px)',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      <div style={{ fontWeight: 500, fontSize: 'var(--font-size-sm, 13px)', color: 'var(--color-text-primary, #333)' }}>
-                        {theme.name}
-                      </div>
-                      <div style={{ fontSize: 'var(--font-size-2xs, 10px)', color: 'var(--color-text-secondary, #666)' }}>
-                        {theme.description}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
             <button
-              onClick={() => { showSettingsModal.value = true; }}
+              onClick={() => setActiveSubPage('settings')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -198,7 +134,7 @@ export function ProfileTab() {
             </button>
 
             <button
-              onClick={() => { showActivityModal.value = true; }}
+              onClick={() => setActiveSubPage('activity')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -227,14 +163,14 @@ export function ProfileTab() {
             </button>
 
             <button
-              onClick={() => setShowInsights(!showInsights)}
+              onClick={() => setActiveSubPage('insights')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 'var(--spacing-xl, 12px)',
                 padding: 'var(--spacing-2xl, 16px)',
-                background: showInsights ? 'var(--color-info-light, #E3F2FD)' : 'var(--color-bg-card, #fff)',
-                border: showInsights ? '1px solid var(--color-info-border, #90CAF9)' : '1px solid var(--color-border, #e0e0e0)',
+                background: 'var(--color-bg-card, #fff)',
+                border: '1px solid var(--color-border, #e0e0e0)',
                 borderRadius: 'var(--radius-xl, 12px)',
                 cursor: 'pointer',
                 width: '100%',
@@ -250,22 +186,10 @@ export function ProfileTab() {
                 <div style="font-size: var(--font-size-lg, 16px); font-weight: 500; color: var(--color-text-primary, #333);">Group Insights</div>
                 <div style="font-size: var(--font-size-sm, 13px); color: var(--color-text-muted, #888);">Game stats, player activity, and trends</div>
               </div>
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-text-disabled, #ccc)" style={{ transform: showInsights ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-text-disabled, #ccc)">
                 <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
               </svg>
             </button>
-
-            {/* Insights Panel */}
-            {showInsights && (
-              <div style={{
-                background: 'var(--color-bg-card, #fff)',
-                border: '1px solid var(--color-border, #e0e0e0)',
-                borderRadius: 'var(--radius-xl, 12px)',
-                overflow: 'hidden',
-              }}>
-                <InsightsTab />
-              </div>
-            )}
 
             <button
               onClick={handleLogoutAdmin}
@@ -329,14 +253,14 @@ export function ProfileTab() {
 
         {/* Help & Support - available to all users */}
         <button
-          onClick={() => setShowHelp(!showHelp)}
+          onClick={() => setActiveSubPage('help')}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 'var(--spacing-xl, 12px)',
             padding: 'var(--spacing-2xl, 16px)',
-            background: showHelp ? 'var(--color-info-light, #E3F2FD)' : 'var(--color-bg-card, #fff)',
-            border: showHelp ? '1px solid var(--color-info-border, #90CAF9)' : '1px solid var(--color-border, #e0e0e0)',
+            background: 'var(--color-bg-card, #fff)',
+            border: '1px solid var(--color-border, #e0e0e0)',
             borderRadius: 'var(--radius-xl, 12px)',
             cursor: 'pointer',
             width: '100%',
@@ -352,22 +276,10 @@ export function ProfileTab() {
             <div style="font-size: var(--font-size-lg, 16px); font-weight: 500; color: var(--color-text-primary, #333);">Help & Support</div>
             <div style="font-size: var(--font-size-sm, 13px); color: var(--color-text-muted, #888);">How to use the app and get support</div>
           </div>
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-text-disabled, #ccc)" style={{ transform: showHelp ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-text-disabled, #ccc)">
             <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
           </svg>
         </button>
-
-        {/* Help Panel */}
-        {showHelp && (
-          <div style={{
-            background: 'var(--color-bg-card, #fff)',
-            border: '1px solid var(--color-border, #e0e0e0)',
-            borderRadius: 'var(--radius-xl, 12px)',
-            overflow: 'hidden',
-          }}>
-            <HelpTab />
-          </div>
-        )}
 
         {/* Change User - available to all */}
         <button
@@ -405,6 +317,39 @@ export function ProfileTab() {
       <p style="font-size: var(--font-size-sm, 12px); color: var(--color-text-disabled, #aaa); text-align: center; margin-top: var(--spacing-4xl, 32px);">
         Tennis Coordinator v0.9.0
       </p>
+
+      {/* Sub-Pages */}
+      <SubPage
+        title="Group Settings"
+        isOpen={activeSubPage === 'settings'}
+        onBack={() => setActiveSubPage(null)}
+      >
+        <GroupSettingsContent />
+      </SubPage>
+
+      <SubPage
+        title="Activity History"
+        isOpen={activeSubPage === 'activity'}
+        onBack={() => setActiveSubPage(null)}
+      >
+        <ActivityHistoryContent />
+      </SubPage>
+
+      <SubPage
+        title="Group Insights"
+        isOpen={activeSubPage === 'insights'}
+        onBack={() => setActiveSubPage(null)}
+      >
+        <InsightsTab />
+      </SubPage>
+
+      <SubPage
+        title="Help & Support"
+        isOpen={activeSubPage === 'help'}
+        onBack={() => setActiveSubPage(null)}
+      >
+        <HelpTab />
+      </SubPage>
     </div>
   );
 }
