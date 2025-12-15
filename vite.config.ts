@@ -1,7 +1,8 @@
-import { defineConfig, Plugin } from 'vite';
+import { defineConfig, Plugin, Connect } from 'vite';
 import { resolve } from 'path';
 import { rename } from 'fs/promises';
 import preact from '@preact/preset-vite';
+import { readFileSync } from 'fs';
 
 // Plugin to rename new-index.html to index.html after build
 function renameIndexHtml(): Plugin {
@@ -41,6 +42,18 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    open: '/app.html',
+    open: true,
+    middlewares: [
+      // Serve app.html for root path in development
+      (req, res, next) => {
+        if (req.url === '/') {
+          req.url = '/app.html';
+        }
+        next();
+      },
+    ],
+  },
+  preview: {
+    port: 3000,
   },
 });
