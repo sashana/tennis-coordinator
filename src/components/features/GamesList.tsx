@@ -11,6 +11,9 @@ import { openCheckInDrawer } from './CheckInDrawer';
 import { TennisEmptyState } from '../ui/TennisEffects';
 import type { CheckinData } from '../../types';
 
+// Compact view mode - stored in localStorage
+const compactViewMode = signal(localStorage.getItem('games_compact_view') === 'true');
+
 
 // Edit modal state
 const editModalOpen = signal(false);
