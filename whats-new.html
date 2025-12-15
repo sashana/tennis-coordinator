@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tennis Coordinator - What's New</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8f5e9 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            color: #2C6E49;
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1em;
+            margin-bottom: 35px;
+        }
+
+        .intro {
+            text-align: center;
+            font-size: 1.15em;
+            color: #555;
+            margin-bottom: 40px;
+            padding: 25px;
+            background: #f0f7f4;
+            border-radius: 12px;
+            line-height: 1.7;
+        }
+
+        .feature {
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .feature:last-of-type {
+            border-bottom: none;
+        }
+
+        .feature h2 {
+            color: #2C6E49;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-emoji {
+            font-size: 1.4em;
+        }
+
+        .feature-desc {
+            color: #555;
+            font-size: 1.05em;
+            line-height: 1.7;
+        }
+
+        .why-box {
+            background: #fff9e6;
+            padding: 15px 18px;
+            margin-top: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #2C6E49;
+        }
+
+        .why-box strong {
+            color: #2C6E49;
+        }
+
+        .default-badge {
+            display: inline-block;
+            background: #2C6E49;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .opt-in-note {
+            font-size: 0.9em;
+            color: #888;
+            font-style: italic;
+            margin-top: 8px;
+        }
+
+        .cta-box {
+            text-align: center;
+            margin: 40px 0 30px 0;
+            padding: 30px;
+            background: #f0f7f4;
+            border-radius: 12px;
+        }
+
+        .cta-box p {
+            font-size: 1.2em;
+            color: #2C6E49;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 14px 32px;
+            background: #2C6E49;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+
+        .back-link:hover {
+            background: #245a3a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(44, 110, 73, 0.3);
+        }
+
+        .details-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.95em;
+        }
+
+        .details-link a {
+            color: #2C6E49;
+            text-decoration: none;
+            border-bottom: 1px solid #2C6E49;
+        }
+
+        .details-link a:hover {
+            border-bottom-color: #4A7C59;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px 20px;
+            }
+
+            h1 {
+                font-size: 1.7em;
+            }
+
+            .intro {
+                font-size: 1.05em;
+                padding: 20px;
+            }
+
+            .feature h2 {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎾 Tennis Coordinator Update</h1>
+        <div class="subtitle">December 2025</div>
+
+        <div class="intro">
+            Your app now works better on your phone and keeps you updated automatically when games change.
+        </div>
+
+        <div class="feature">
+            <h2><span class="feature-emoji">📱</span> Works Better on Your Phone</h2>
+            <div class="feature-desc">
+                Bigger buttons, easier to read, 3x faster loading. Less friction when checking in on mobile.
+            </div>
+            <div class="why-box">
+                <strong>Quick check-ins on the go.</strong> No more fumbling with tiny buttons or waiting for pages to load.
+            </div>
+        </div>
+
+        <div class="feature">
+            <h2><span class="feature-emoji">🔔</span> Game Status Notifications<span class="default-badge">ON BY DEFAULT</span></h2>
+            <div class="feature-desc">
+                Get notified when games are confirmed (4 players) or dissolved (someone drops out). No more checking constantly.
+            </div>
+            <div class="why-box">
+                <strong>Know immediately when games change.</strong> If someone can no longer play, you'll know right away so you can adjust your plans.
+            </div>
+        </div>
+
+        <div class="feature">
+            <h2><span class="feature-emoji">🔔</span> Follow Other Members</h2>
+            <div class="feature-desc">
+                Want to know when specific members check in or remove themselves? Turn on alerts to follow your regular partners.
+            </div>
+            <div class="why-box">
+                <strong>Coordinate with your doubles partners.</strong> Enable alerts for the players you usually play with and you'll know the moment they check in.
+            </div>
+            <div class="opt-in-note">Enable in Alerts tab → Notification Settings</div>
+        </div>
+
+        <div class="feature">
+            <h2><span class="feature-emoji">👥</span> Team Directory & Contact Info</h2>
+            <div class="feature-desc">
+                Add members to the team directory and share contact info (phone, email). Everyone can invite. Get in touch with other players without searching for their contact info.
+            </div>
+            <div class="why-box">
+                <strong>Connect with your group.</strong> Share your contact info so others can reach you, or find contact details for members you want to coordinate with.
+            </div>
+            <div class="opt-in-note">Contact sharing is off by default - enable in your profile</div>
+        </div>
+
+        <div class="feature">
+            <h2><span class="feature-emoji">🎾</span> See All Your Games</h2>
+            <div class="feature-desc">
+                View formed or still-forming games under "My Games". Add confirmed matches to your calendar or invite more members to help form incomplete games.
+            </div>
+            <div class="why-box">
+                <strong>One place for all your matches.</strong> Quickly see which games are set and which need more players.
+            </div>
+        </div>
+
+        <div class="feature">
+            <h2><span class="feature-emoji">🇦🇺</span> Australian Open Theme</h2>
+            <div class="feature-desc">
+                App now features Australian Open colors and styling with the tournament coming up! Themes automatically update as we approach major Grand Slams (Wimbledon, Roland-Garros, US Open).
+            </div>
+            <div class="why-box">
+                <strong>Get in the tournament spirit.</strong> Fresh look that celebrates the biggest events in tennis.
+            </div>
+        </div>
+
+        <div class="cta-box">
+            <p>Less time coordinating. More time playing.</p>
+            <a href="https://tennis.sportsconnector.com/ttmd" class="back-link">Open Midday Tennis →</a>
+        </div>
+
+        <p style="text-align: center; margin-top: 30px; color: #999; font-size: 0.9em;">
+            Questions? Check the Help tab in the app or ask in the group.
+        </p>
+
+        <p style="text-align: center; margin-top: 30px; color: #666; font-style: italic;">
+            Built with ❤️ for tennis players who want to spend more time on the court and less time coordinating.
+        </p>
+    </div>
+</body>
+</html>
