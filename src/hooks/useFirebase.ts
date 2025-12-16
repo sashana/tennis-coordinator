@@ -6,6 +6,10 @@ import { createLogger } from '../utils/logger';
 const themeLogger = createLogger('Theme');
 const notificationLogger = createLogger('Notifications');
 const matchLogger = createLogger('MatchFormations');
+const checkinLogger = createLogger('Checkins');
+const memberLogger = createLogger('Members');
+const arrangementLogger = createLogger('Arrangements');
+const activityLogger = createLogger('Activity');
 import {
   currentGroupId,
   currentGroupName,
@@ -129,7 +133,7 @@ export function useGroupData() {
           document.title = `${settings.groupName || 'Tennis'} - Tennis Coordinator`;
         })
         .catch((error: unknown) => {
-          console.error('Error loading group settings:', error);
+          checkinLogger.error('Error loading group settings:', error);
           showToast('Failed to load group data', 'error');
         });
     });
@@ -302,23 +306,23 @@ export async function addCheckin(checkin: {
     await logActivity(groupId, date, 'checkin', checkin.name, checkin.addedBy);
 
     // Notify users with activity alerts
-    console.log('[addCheckin] About to call notifyCheckinAlert for:', checkin.name);
+    checkinLogger.debug('About to call notifyCheckinAlert for:', checkin.name);
     try {
       await notifyCheckinAlert(groupId, checkin.name, date, checkin.addedBy, {
         playStyle: checkin.playStyle,
         timeRange: checkin.timeRange,
         allowRotation: checkin.allowRotation,
       });
-      console.log('[addCheckin] notifyCheckinAlert completed');
+      checkinLogger.debug('notifyCheckinAlert completed');
     } catch (notifyError) {
-      console.error('[addCheckin] Error in notifyCheckinAlert:', notifyError);
+      checkinLogger.error('Error in notifyCheckinAlert:', notifyError);
     }
 
     // Check if any new matches were formed and notify players
     // Use setTimeout to allow Firebase to update before checking
     setTimeout(() => checkAndNotifyMatchFormations(groupId, date), 500);
   } catch (error) {
-    console.error('Error adding check-in:', error);
+    checkinLogger.error('Error adding check-in:', error);
     showToast('Failed to check in', 'error');
   }
 }
@@ -376,7 +380,7 @@ export async function updateCheckin(
     await checkinsRef.set(updatedCheckins);
     showToast(`${personName}'s preferences updated`, 'success');
   } catch (error) {
-    console.error('Error updating check-in:', error);
+    checkinLogger.error('Error updating check-in:', error);
     showToast('Failed to update check-in', 'error');
   }
 }
@@ -411,7 +415,7 @@ async function removePlayerFromArrangement(groupId: string, date: string, player
       await getRef(`groups/${groupId}/matchArrangements/${date}`).remove();
       matchArrangement.value = null;
     } catch (error) {
-      console.error('Error clearing arrangement after removal:', error);
+      arrangementLogger.error('Error clearing arrangement after removal:', error);
     }
     return;
   }
@@ -426,7 +430,7 @@ async function removePlayerFromArrangement(groupId: string, date: string, player
     await getRef(`groups/${groupId}/matchArrangements/${date}`).set(updatedArrangement);
     matchArrangement.value = updatedArrangement;
   } catch (error) {
-    console.error('Error updating arrangement after removal:', error);
+    arrangementLogger.error('Error updating arrangement after removal:', error);
   }
 }
 
@@ -502,19 +506,19 @@ export async function removeCheckin(index: number, sessionUserName: string) {
     await logActivity(groupId, date, 'removal', personName, sessionUserName);
 
     // Notify users with activity alerts
-    console.log('[removeCheckin] About to call notifyRemovalAlert for:', personName);
+    checkinLogger.debug('About to call notifyRemovalAlert for:', personName);
     try {
       await notifyRemovalAlert(groupId, personName, date, sessionUserName);
-      console.log('[removeCheckin] notifyRemovalAlert completed');
+      checkinLogger.debug('notifyRemovalAlert completed');
     } catch (notifyError) {
-      console.error('[removeCheckin] Error in notifyRemovalAlert:', notifyError);
+      checkinLogger.error('Error in notifyRemovalAlert:', notifyError);
     }
 
     // Check if any matches were dissolved and notify players
     // Use setTimeout to allow Firebase to update before checking
     setTimeout(() => checkAndNotifyMatchFormations(groupId, date), 500);
   } catch (error) {
-    console.error('Error removing check-in:', error);
+    checkinLogger.error('Error removing check-in:', error);
     showToast('Failed to remove check-in', 'error');
   }
 }
@@ -548,7 +552,7 @@ async function logActivity(
     const activityRef = db.ref(`groups/${groupId}/activity/${date}`);
     await activityRef.push(activityEntry);
   } catch (error) {
-    console.error('Error logging activity:', error);
+    activityLogger.error('Error logging activity:', error);
   }
 }
 
@@ -606,7 +610,7 @@ async function notifyRemovalAlert(
       }
     }
   } catch (error) {
-    console.error('Error sending removal notifications:', error);
+    notificationLogger.error('Error sending removal notifications:', error);
   }
 }
 
@@ -658,7 +662,7 @@ async function notifyCheckinAlert(
     ? `🎾 ${playerName} checked in for ${date}${detailsStr}`
     : `🎾 ${playerName} was added for ${date} by ${addedBy}${detailsStr}`;
 
-  console.log('[notifyCheckinAlert] Starting notification for:', { playerName, date, addedBy });
+  notificationLogger.debug('Starting notification for:', { playerName, date, addedBy });
 
   try {
     const db = getDatabase();
@@ -674,14 +678,14 @@ async function notifyCheckinAlert(
       }
     >;
 
-    console.log(
-      '[notifyCheckinAlert] Found userNotifications entries:',
+    notificationLogger.debug(
+      'Found userNotifications entries:',
       Object.keys(allUserNotifications)
     );
 
     for (const [normalizedName, userData] of Object.entries(allUserNotifications)) {
       const prefs = userData.preferences || {};
-      console.log(`[notifyCheckinAlert] User ${normalizedName}:`, {
+      notificationLogger.debug(`User ${normalizedName}:`, {
         activityAlerts: prefs.activityAlerts,
         unwatchedMembers: prefs.unwatchedMembers || prefs.mutedMembers,
       });
@@ -689,25 +693,25 @@ async function notifyCheckinAlert(
       if (prefs.activityAlerts) {
         // Don't notify the person who checked in or added
         if (normalizedName === normalizeName(addedBy)) {
-          console.log(`[notifyCheckinAlert] Skipping ${normalizedName} - is addedBy`);
+          notificationLogger.debug(`Skipping ${normalizedName} - is addedBy`);
           continue;
         }
         if (normalizedName === normalizeName(playerName)) {
-          console.log(`[notifyCheckinAlert] Skipping ${normalizedName} - is player`);
+          notificationLogger.debug(`Skipping ${normalizedName} - is player`);
           continue;
         }
 
         // Check if either the player or adder is unwatched (support both old mutedMembers and new unwatchedMembers)
         const unwatchedMembers = prefs.unwatchedMembers || prefs.mutedMembers || [];
         if (unwatchedMembers.includes(playerName) || unwatchedMembers.includes(addedBy)) {
-          console.log(
-            `[notifyCheckinAlert] Skipping ${normalizedName} - player/adder is unwatched`
+          notificationLogger.debug(
+            `Skipping ${normalizedName} - player/adder is unwatched`
           );
           continue;
         }
 
         // Add notification
-        console.log(`[notifyCheckinAlert] Sending notification to ${normalizedName}`);
+        notificationLogger.debug(`Sending notification to ${normalizedName}`);
         const notifRef = db
           .ref(`groups/${groupId}/userNotifications/${normalizedName}/items`)
           .push();
@@ -717,11 +721,11 @@ async function notifyCheckinAlert(
           read: false,
           date,
         });
-        console.log(`[notifyCheckinAlert] Notification sent to ${normalizedName}`);
+        notificationLogger.debug(`Notification sent to ${normalizedName}`);
       }
     }
   } catch (error) {
-    console.error('Error sending check-in notifications:', error);
+    notificationLogger.error('Error sending check-in notifications:', error);
   }
 }
 
@@ -752,7 +756,7 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
 
   const prevState = previousMatchState[date] || {};
 
-  console.log('[checkAndNotifyMatchFormations] Match state comparison:', {
+  matchLogger.debug('Match state comparison:', {
     date,
     previousMatches: Object.keys(prevState).length,
     currentMatches: Object.keys(currentState).length,
@@ -763,7 +767,7 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
   // Find new matches (in current but not in previous)
   for (const [key, matchData] of Object.entries(currentState)) {
     if (!prevState[key]) {
-      console.log(`[checkAndNotifyMatchFormations] 🎾 NEW MATCH FORMED: ${key}`, matchData);
+      matchLogger.info(`🎾 NEW MATCH FORMED: ${key}`, matchData);
       // This is a new complete match - notify all players
       const formattedDate = formatDateForNotification(date);
       const matchType = matchData.type === 'doubles' ? 'Doubles' : 'Singles';
@@ -781,7 +785,7 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
             .once('value');
           const prefs = (snapshot.val() || {}) as { matchConfirmations?: boolean };
 
-          console.log(`[checkAndNotifyMatchFormations] Player "${playerName}" prefs:`, {
+          matchLogger.debug(`Player "${playerName}" prefs:`, {
             matchConfirmations: prefs.matchConfirmations,
             willSend: prefs.matchConfirmations !== false,
           });
@@ -799,27 +803,27 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
               type: 'match_formed',
               matchType,
             });
-            console.log(
-              `[checkAndNotifyMatchFormations] ✅ Sent notification to ${playerName}: "${message}"`
+            matchLogger.info(
+              `✅ Sent notification to ${playerName}: "${message}"`
             );
           } else {
-            console.log(
-              `[checkAndNotifyMatchFormations] ❌ Skipped ${playerName} - matchConfirmations disabled`
+            matchLogger.debug(
+              `❌ Skipped ${playerName} - matchConfirmations disabled`
             );
           }
         } catch (error) {
-          console.error(`Error sending match notification to ${playerName}:`, error);
+          matchLogger.error(`Error sending match notification to ${playerName}:`, error);
         }
       }
     } else {
-      console.log(`[checkAndNotifyMatchFormations] Match ${key} already exists (not new)`);
+      matchLogger.debug(`Match ${key} already exists (not new)`);
     }
   }
 
   // Find dissolved matches (in previous but not in current)
   for (const [key, prevMatchData] of Object.entries(prevState)) {
     if (!currentState[key]) {
-      console.log(`[checkAndNotifyMatchFormations] 💔 MATCH DISSOLVED: ${key}`, prevMatchData);
+      matchLogger.info(`💔 MATCH DISSOLVED: ${key}`, prevMatchData);
       // This match no longer exists - notify ALL players who were in this match
       const formattedDate = formatDateForNotification(date);
       const matchType = prevMatchData.type === 'doubles' ? 'Doubles' : 'Singles';
@@ -851,7 +855,7 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
             .once('value');
           const prefs = (snapshot.val() || {}) as { matchConfirmations?: boolean };
 
-          console.log(`[checkAndNotifyMatchFormations] Player "${playerName}" prefs:`, {
+          matchLogger.debug(`Player "${playerName}" prefs:`, {
             matchConfirmations: prefs.matchConfirmations,
             willSend: prefs.matchConfirmations !== false,
           });
@@ -869,16 +873,16 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
               type: 'match_dissolved',
               matchType,
             });
-            console.log(
-              `[checkAndNotifyMatchFormations] ✅ Sent dissolved notification to ${playerName}: "${message}"`
+            matchLogger.info(
+              `✅ Sent dissolved notification to ${playerName}: "${message}"`
             );
           } else {
-            console.log(
-              `[checkAndNotifyMatchFormations] ❌ Skipped ${playerName} - matchConfirmations disabled`
+            matchLogger.debug(
+              `❌ Skipped ${playerName} - matchConfirmations disabled`
             );
           }
         } catch (error) {
-          console.error(`Error sending dissolved match notification to ${playerName}:`, error);
+          matchLogger.error(`Error sending dissolved match notification to ${playerName}:`, error);
         }
       }
     }
@@ -957,7 +961,7 @@ async function notifyNoteAlert(
       }
     }
   } catch (error) {
-    console.error('Error sending note notifications:', error);
+    notificationLogger.error('Error sending note notifications:', error);
   }
 }
 
@@ -973,7 +977,7 @@ export async function resetDay() {
     await getRef(`groups/${groupId}/matchNotes/${date}`).remove();
     showToast('Day reset', 'success');
   } catch (error) {
-    console.error('Error resetting day:', error);
+    checkinLogger.error('Error resetting day:', error);
     showToast('Failed to reset day', 'error');
   }
 }
@@ -1021,7 +1025,7 @@ export async function saveMatchNote(matchKey: string, note: string) {
       showToast('Note removed', 'info');
     }
   } catch (error) {
-    console.error('Error saving match note:', error);
+    matchLogger.error('Error saving match note:', error);
     showToast('Failed to save note', 'error');
   }
 }
@@ -1098,7 +1102,7 @@ export async function addMember(member: {
     };
     showSharePrompt.value = true;
   } catch (error) {
-    console.error('Error adding member:', error);
+    memberLogger.error('Error adding member:', error);
     showToast('Failed to add member', 'error');
   }
 }
@@ -1138,7 +1142,7 @@ export async function removeMember(name: string) {
 
     showToast(`${name} removed from members`, 'info');
   } catch (error) {
-    console.error('Error removing member:', error);
+    memberLogger.error('Error removing member:', error);
     showToast('Failed to remove member', 'error');
   }
 }
@@ -1204,7 +1208,7 @@ export async function updateMemberDetails(
     showToast('Profile updated', 'success');
     return true;
   } catch (error) {
-    console.error('Error updating member details:', error);
+    memberLogger.error('Error updating member details:', error);
     showToast('Failed to update profile', 'error');
     return false;
   }
@@ -1312,7 +1316,7 @@ export async function renameMember(oldName: string, newName: string) {
     showToast(`${oldName} renamed to ${trimmedNewName}`, 'success');
     return true;
   } catch (error) {
-    console.error('Error renaming member:', error);
+    memberLogger.error('Error renaming member:', error);
     showToast('Failed to rename member', 'error');
     return false;
   }
@@ -1352,7 +1356,7 @@ export async function loadMatchArrangement() {
     const data = snapshot.val();
     matchArrangement.value = isValidMatchArrangement(data) ? data : null;
   } catch (error) {
-    console.error('Error loading match arrangement:', error);
+    arrangementLogger.error('Error loading match arrangement:', error);
     matchArrangement.value = null;
   }
 }
@@ -1415,7 +1419,7 @@ export async function saveMatchArrangement(arrangement: {
 
     showToast('Match arrangement saved', 'success');
   } catch (error) {
-    console.error('Error saving match arrangement:', error);
+    arrangementLogger.error('Error saving match arrangement:', error);
     showToast('Failed to save arrangement', 'error');
   }
 }
@@ -1439,7 +1443,7 @@ export async function clearMatchArrangement() {
 
     showToast('Arrangement cleared - using auto-organization', 'info');
   } catch (error) {
-    console.error('Error clearing match arrangement:', error);
+    arrangementLogger.error('Error clearing match arrangement:', error);
     showToast('Failed to clear arrangement', 'error');
   }
 }
