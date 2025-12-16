@@ -5,12 +5,7 @@
  * It uses a simple reactive pattern for state updates.
  */
 
-import type {
-  AppState,
-  CheckinData,
-  NotificationPreferences,
-  WeatherLocation,
-} from '@/types';
+import type { AppState, CheckinData, NotificationPreferences, WeatherLocation } from '@/types';
 import { getTodayDate, normalizeName } from '@/utils/helpers';
 
 /**
@@ -132,10 +127,7 @@ export class AppStore {
   /**
    * Subscribe to state changes for a specific key
    */
-  subscribe<K extends keyof AppState>(
-    key: K,
-    listener: StateListener<K>
-  ): () => void {
+  subscribe<K extends keyof AppState>(key: K, listener: StateListener<K>): () => void {
     if (!this.listeners.has(key)) {
       this.listeners.set(key, new Set());
     }
@@ -172,7 +164,9 @@ export class AppStore {
    */
   getCheckinsForSelectedDate(): CheckinData[] {
     const date = this.state.selectedDate;
-    if (!date) return [];
+    if (!date) {
+      return [];
+    }
     return this.state.allCheckins[date] || [];
   }
 
@@ -188,7 +182,9 @@ export class AppStore {
    */
   addCheckin(checkin: CheckinData): void {
     const date = this.state.selectedDate;
-    if (!date) return;
+    if (!date) {
+      return;
+    }
 
     const currentCheckins = this.state.allCheckins[date] || [];
     const newCheckins = {
@@ -203,10 +199,14 @@ export class AppStore {
    */
   removeCheckin(index: number): CheckinData | null {
     const date = this.state.selectedDate;
-    if (!date) return null;
+    if (!date) {
+      return null;
+    }
 
     const currentCheckins = this.state.allCheckins[date] || [];
-    if (index < 0 || index >= currentCheckins.length) return null;
+    if (index < 0 || index >= currentCheckins.length) {
+      return null;
+    }
 
     const removed = currentCheckins[index];
     const newCheckins = {
@@ -239,10 +239,7 @@ export class AppStore {
   /**
    * Set user preference
    */
-  setUserPreference(
-    name: string,
-    prefs: { include: string[]; exclude: string[] }
-  ): void {
+  setUserPreference(name: string, prefs: { include: string[]; exclude: string[] }): void {
     const normalized = normalizeName(name);
     const newPrefs = {
       ...this.state.userPreferences,
@@ -256,16 +253,16 @@ export class AppStore {
    */
   isCoreMember(name: string): boolean {
     const normalized = normalizeName(name);
-    return this.state.coreMembers.some(
-      (m) => normalizeName(m) === normalized
-    );
+    return this.state.coreMembers.some((m) => normalizeName(m) === normalized);
   }
 
   /**
    * Add a core member
    */
   addCoreMember(name: string): void {
-    if (this.isCoreMember(name)) return;
+    if (this.isCoreMember(name)) {
+      return;
+    }
     this.set('coreMembers', [...this.state.coreMembers, name]);
   }
 
@@ -316,9 +313,7 @@ export class AppStore {
 
     let newMutedMembers: string[];
     if (this.isMemberMuted(memberName)) {
-      newMutedMembers = mutedMembers.filter(
-        (m) => normalizeName(m) !== normalized
-      );
+      newMutedMembers = mutedMembers.filter((m) => normalizeName(m) !== normalized);
     } else {
       newMutedMembers = [...mutedMembers, memberName];
     }

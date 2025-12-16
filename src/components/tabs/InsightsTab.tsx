@@ -23,13 +23,16 @@ const insights = computed(() => {
   let last30DaysGames = 0;
   let last7DaysGames = 0;
 
-  const playerStats: Record<string, {
-    gamesPlayed: number;
-    checkIns: number;
-    lastPlayed: string;
-    doublesPlayed: number;
-    singlesPlayed: number;
-  }> = {};
+  const playerStats: Record<
+    string,
+    {
+      gamesPlayed: number;
+      checkIns: number;
+      lastPlayed: string;
+      doublesPlayed: number;
+      singlesPlayed: number;
+    }
+  > = {};
 
   const dayOfWeekCounts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
   const weeklyGames: Record<string, number> = {};
@@ -43,12 +46,16 @@ const insights = computed(() => {
 
   for (const date of sortedDates) {
     const dateCheckins = checkins[date] || [];
-    if (dateCheckins.length === 0) continue;
+    if (dateCheckins.length === 0) {
+      continue;
+    }
 
     const dateObj = new Date(date + 'T00:00:00');
     const isPast = dateObj < today;
 
-    if (!isPast) continue; // Only count past dates for stats
+    if (!isPast) {
+      continue;
+    } // Only count past dates for stats
 
     activeDays++;
     totalCheckIns += dateCheckins.length;
@@ -68,7 +75,11 @@ const insights = computed(() => {
     const { matches } = organizeMatches(dateCheckins);
 
     for (const match of matches) {
-      if (match.type === 'waiting' || match.type === 'doubles-forming' || match.type === 'singles-forming') {
+      if (
+        match.type === 'waiting' ||
+        match.type === 'doubles-forming' ||
+        match.type === 'singles-forming'
+      ) {
         continue; // Don't count forming games
       }
 
@@ -76,8 +87,12 @@ const insights = computed(() => {
       dayOfWeekCounts[dayOfWeek]++;
       weeklyGames[weekKey] = (weeklyGames[weekKey] || 0) + 1;
 
-      if (isLast30Days) last30DaysGames++;
-      if (isLast7Days) last7DaysGames++;
+      if (isLast30Days) {
+        last30DaysGames++;
+      }
+      if (isLast7Days) {
+        last7DaysGames++;
+      }
 
       if (match.type === 'doubles') {
         doublesGames++;
@@ -129,19 +144,19 @@ const insights = computed(() => {
   const topPlayers = Object.entries(playerStats)
     .map(([key, stats]) => {
       // Find display name from core members
-      const displayName = coreMembers.value.find(m => normalizeName(m) === key) || key;
+      const displayName = coreMembers.value.find((m) => normalizeName(m) === key) || key;
       return {
         name: displayName,
         ...stats,
-        participationRate: stats.checkIns > 0 ? Math.round((stats.gamesPlayed / stats.checkIns) * 100) : 0,
+        participationRate:
+          stats.checkIns > 0 ? Math.round((stats.gamesPlayed / stats.checkIns) * 100) : 0,
       };
     })
     .sort((a, b) => b.gamesPlayed - a.gamesPlayed)
     .slice(0, 10);
 
   // Find most popular day
-  const mostPopularDay = Object.entries(dayOfWeekCounts)
-    .sort((a, b) => b[1] - a[1])[0];
+  const mostPopularDay = Object.entries(dayOfWeekCounts).sort((a, b) => b[1] - a[1])[0];
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   // Recent weeks data for trend
@@ -166,48 +181,76 @@ const insights = computed(() => {
     dayOfWeekCounts,
     recentWeeks,
     totalMembers: coreMembers.value.length,
-    activeMembersLast30Days: Object.values(playerStats).filter(p => {
-      if (!p.lastPlayed) return false;
+    activeMembersLast30Days: Object.values(playerStats).filter((p) => {
+      if (!p.lastPlayed) {
+        return false;
+      }
       const lastPlayedDate = new Date(p.lastPlayed + 'T00:00:00');
       return lastPlayedDate >= thirtyDaysAgo;
     }).length,
   };
 });
 
-function StatCard({ label, value, subtext }: { label: string; value: string | number; subtext?: string }) {
+function StatCard({
+  label,
+  value,
+  subtext,
+}: {
+  label: string;
+  value: string | number;
+  subtext?: string;
+}) {
   return (
-    <div style={{
-      background: '#f9f9f9',
-      borderRadius: '12px',
-      padding: '16px',
-      textAlign: 'center',
-      flex: '1',
-      minWidth: '100px',
-    }}>
-      <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--color-primary, #2C6E49)' }}>{value}</div>
+    <div
+      style={{
+        background: '#f9f9f9',
+        borderRadius: '12px',
+        padding: '16px',
+        textAlign: 'center',
+        flex: '1',
+        minWidth: '100px',
+      }}
+    >
+      <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--color-primary, #2C6E49)' }}>
+        {value}
+      </div>
       <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{label}</div>
-      {subtext && <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>{subtext}</div>}
+      {subtext && (
+        <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>{subtext}</div>
+      )}
     </div>
   );
 }
 
-function ProgressBar({ value, max, color = 'var(--color-primary, #2C6E49)' }: { value: number; max: number; color?: string }) {
+function ProgressBar({
+  value,
+  max,
+  color = 'var(--color-primary, #2C6E49)',
+}: {
+  value: number;
+  max: number;
+  color?: string;
+}) {
   const percent = max > 0 ? (value / max) * 100 : 0;
   return (
-    <div style={{
-      background: '#e0e0e0',
-      borderRadius: '4px',
-      height: '8px',
-      flex: '1',
-      overflow: 'hidden',
-    }}>
-      <div style={{
-        background: color,
-        height: '100%',
-        width: `${percent}%`,
+    <div
+      style={{
+        background: '#e0e0e0',
         borderRadius: '4px',
-        transition: 'width 0.3s ease',
-      }} />
+        height: '8px',
+        flex: '1',
+        overflow: 'hidden',
+      }}
+    >
+      <div
+        style={{
+          background: color,
+          height: '100%',
+          width: `${percent}%`,
+          borderRadius: '4px',
+          transition: 'width 0.3s ease',
+        }}
+      />
     </div>
   );
 }
@@ -222,51 +265,73 @@ export function InsightsTab() {
       <h3 style="margin: 0 0 16px 0; font-size: 18px; color: #333;">Group Insights</h3>
 
       {/* Summary Stats */}
-      <div style={{
-        display: 'flex',
-        gap: '12px',
-        marginBottom: '20px',
-        flexWrap: 'wrap',
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '12px',
+          marginBottom: '20px',
+          flexWrap: 'wrap',
+        }}
+      >
         <StatCard label="Total Games" value={data.totalGames} subtext="all time" />
         <StatCard label="Last 30 Days" value={data.last30DaysGames} />
         <StatCard label="Last 7 Days" value={data.last7DaysGames} />
       </div>
 
       {/* Game Types */}
-      <div style={{
-        background: '#f9f9f9',
-        borderRadius: '12px',
-        padding: '16px',
-        marginBottom: '16px',
-      }}>
+      <div
+        style={{
+          background: '#f9f9f9',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '16px',
+        }}
+      >
         <h3 style="margin: 0 0 12px 0; font-size: 16px;">Game Types</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ width: '70px', fontSize: '14px' }}>Doubles</span>
-            <ProgressBar value={data.doublesGames} max={data.totalGames} color="var(--color-primary, #2C6E49)" />
-            <span style={{ width: '40px', textAlign: 'right', fontSize: '14px', fontWeight: '600' }}>{data.doublesGames}</span>
+            <ProgressBar
+              value={data.doublesGames}
+              max={data.totalGames}
+              color="var(--color-primary, #2C6E49)"
+            />
+            <span
+              style={{ width: '40px', textAlign: 'right', fontSize: '14px', fontWeight: '600' }}
+            >
+              {data.doublesGames}
+            </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ width: '70px', fontSize: '14px' }}>Singles</span>
             <ProgressBar value={data.singlesGames} max={data.totalGames} color="#2196F3" />
-            <span style={{ width: '40px', textAlign: 'right', fontSize: '14px', fontWeight: '600' }}>{data.singlesGames}</span>
+            <span
+              style={{ width: '40px', textAlign: 'right', fontSize: '14px', fontWeight: '600' }}
+            >
+              {data.singlesGames}
+            </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ width: '70px', fontSize: '14px' }}>Rotation</span>
             <ProgressBar value={data.rotationGames} max={data.totalGames} color="#FF9800" />
-            <span style={{ width: '40px', textAlign: 'right', fontSize: '14px', fontWeight: '600' }}>{data.rotationGames}</span>
+            <span
+              style={{ width: '40px', textAlign: 'right', fontSize: '14px', fontWeight: '600' }}
+            >
+              {data.rotationGames}
+            </span>
           </div>
         </div>
       </div>
 
       {/* Popular Days */}
-      <div style={{
-        background: '#f9f9f9',
-        borderRadius: '12px',
-        padding: '16px',
-        marginBottom: '16px',
-      }}>
+      <div
+        style={{
+          background: '#f9f9f9',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '16px',
+        }}
+      >
         <h3 style="margin: 0 0 12px 0; font-size: 16px;">Activity by Day</h3>
         <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end', height: '80px' }}>
           {dayNames.map((day, idx) => {
@@ -274,13 +339,21 @@ export function InsightsTab() {
             const height = maxDayCount > 0 ? (count / maxDayCount) * 60 : 0;
             return (
               <div key={day} style={{ flex: '1', textAlign: 'center' }}>
-                <div style={{
-                  background: idx === Number(Object.entries(data.dayOfWeekCounts).sort((a, b) => b[1] - a[1])[0]?.[0]) ? 'var(--color-primary, #2C6E49)' : '#c8e6c9',
-                  height: `${Math.max(height, 4)}px`,
-                  borderRadius: '4px 4px 0 0',
-                  marginBottom: '4px',
-                  transition: 'height 0.3s ease',
-                }} />
+                <div
+                  style={{
+                    background:
+                      idx ===
+                      Number(
+                        Object.entries(data.dayOfWeekCounts).sort((a, b) => b[1] - a[1])[0]?.[0]
+                      )
+                        ? 'var(--color-primary, #2C6E49)'
+                        : '#c8e6c9',
+                    height: `${Math.max(height, 4)}px`,
+                    borderRadius: '4px 4px 0 0',
+                    marginBottom: '4px',
+                    transition: 'height 0.3s ease',
+                  }}
+                />
                 <span style={{ fontSize: '10px', color: '#666' }}>{day}</span>
               </div>
             );
@@ -293,27 +366,31 @@ export function InsightsTab() {
 
       {/* Weekly Trend */}
       {data.recentWeeks.length > 0 && (
-        <div style={{
-          background: '#f9f9f9',
-          borderRadius: '12px',
-          padding: '16px',
-          marginBottom: '16px',
-        }}>
+        <div
+          style={{
+            background: '#f9f9f9',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}
+        >
           <h3 style="margin: 0 0 12px 0; font-size: 16px;">Weekly Trend</h3>
           <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end', height: '60px' }}>
             {data.recentWeeks.map(([week, count]) => {
-              const maxWeekCount = Math.max(...data.recentWeeks.map(w => w[1]));
+              const maxWeekCount = Math.max(...data.recentWeeks.map((w) => w[1]));
               const height = maxWeekCount > 0 ? (count / maxWeekCount) * 50 : 0;
               const weekDate = new Date(week + 'T00:00:00');
               const label = `${weekDate.getMonth() + 1}/${weekDate.getDate()}`;
               return (
                 <div key={week} style={{ flex: '1', textAlign: 'center' }}>
-                  <div style={{
-                    background: 'var(--color-primary, #2C6E49)',
-                    height: `${Math.max(height, 4)}px`,
-                    borderRadius: '4px 4px 0 0',
-                    marginBottom: '4px',
-                  }} />
+                  <div
+                    style={{
+                      background: 'var(--color-primary, #2C6E49)',
+                      height: `${Math.max(height, 4)}px`,
+                      borderRadius: '4px 4px 0 0',
+                      marginBottom: '4px',
+                    }}
+                  />
                   <span style={{ fontSize: '9px', color: '#666' }}>{label}</span>
                 </div>
               );
@@ -323,14 +400,25 @@ export function InsightsTab() {
       )}
 
       {/* Player Stats */}
-      <div style={{
-        background: '#f9f9f9',
-        borderRadius: '12px',
-        padding: '16px',
-        marginBottom: '16px',
-      }}>
+      <div
+        style={{
+          background: '#f9f9f9',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '16px',
+        }}
+      >
         <h3 style="margin: 0 0 12px 0; font-size: 16px;">Most Active Players</h3>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#888', marginBottom: '8px', padding: '0 4px' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            fontSize: '11px',
+            color: '#888',
+            marginBottom: '8px',
+            padding: '0 4px',
+          }}
+        >
           <span>Player</span>
           <span>Games</span>
         </div>
@@ -341,30 +429,48 @@ export function InsightsTab() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {data.topPlayers.map((player, idx) => (
-              <div key={player.name} style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px',
-                background: idx < 3 ? '#E8F5E9' : 'white',
-                borderRadius: '8px',
-              }}>
-                <span style={{
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  background: idx === 0 ? '#FFD700' : idx === 1 ? '#C0C0C0' : idx === 2 ? '#CD7F32' : '#e0e0e0',
+              <div
+                key={player.name}
+                style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '10px',
-                  fontWeight: '600',
-                  color: idx < 3 ? '#333' : '#666',
-                }}>
+                  gap: '8px',
+                  padding: '8px',
+                  background: idx < 3 ? '#E8F5E9' : 'white',
+                  borderRadius: '8px',
+                }}
+              >
+                <span
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    background:
+                      idx === 0
+                        ? '#FFD700'
+                        : idx === 1
+                          ? '#C0C0C0'
+                          : idx === 2
+                            ? '#CD7F32'
+                            : '#e0e0e0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '10px',
+                    fontWeight: '600',
+                    color: idx < 3 ? '#333' : '#666',
+                  }}
+                >
                   {idx + 1}
                 </span>
                 <span style={{ flex: '1', fontSize: '14px' }}>{player.name}</span>
-                <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--color-primary, #2C6E49)' }}>
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: 'var(--color-primary, #2C6E49)',
+                  }}
+                >
                   {player.gamesPlayed}
                 </span>
               </div>
@@ -374,12 +480,14 @@ export function InsightsTab() {
       </div>
 
       {/* Group Health */}
-      <div style={{
-        background: '#E3F2FD',
-        borderRadius: '12px',
-        padding: '16px',
-        marginBottom: '16px',
-      }}>
+      <div
+        style={{
+          background: '#E3F2FD',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '16px',
+        }}
+      >
         <h3 style="margin: 0 0 12px 0; font-size: 16px;">Group Health</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>

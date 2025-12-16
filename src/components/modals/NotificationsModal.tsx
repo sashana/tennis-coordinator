@@ -30,13 +30,22 @@ let notificationsUnsubscribe: (() => void) | null = null;
 async function loadNotificationPrefs() {
   const groupId = currentGroupId.value;
   const user = sessionUser.value;
-  if (!groupId || !user) return;
+  if (!groupId || !user) {
+    return;
+  }
 
   try {
     const db = getDatabase();
-    const prefsRef = db.ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/preferences`);
+    const prefsRef = db.ref(
+      `groups/${groupId}/userNotifications/${normalizeName(user)}/preferences`
+    );
     const snapshot = await prefsRef.once('value');
-    const prefs = snapshot.val() as { activityAlerts?: boolean; matchConfirmations?: boolean; mutedMembers?: string[] } || {};
+    const prefs =
+      (snapshot.val() as {
+        activityAlerts?: boolean;
+        matchConfirmations?: boolean;
+        mutedMembers?: string[];
+      }) || {};
 
     // Activity alerts default OFF (must opt-in), Match confirmations default ON
     activityAlertsEnabled.value = prefs.activityAlerts === true;
@@ -50,7 +59,9 @@ async function loadNotificationPrefs() {
 async function saveNotificationPrefs() {
   const groupId = currentGroupId.value;
   const user = sessionUser.value;
-  if (!groupId || !user) return;
+  if (!groupId || !user) {
+    return;
+  }
 
   const prefs = {
     activityAlerts: activityAlertsEnabled.value,
@@ -60,7 +71,9 @@ async function saveNotificationPrefs() {
 
   try {
     const db = getDatabase();
-    const prefsRef = db.ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/preferences`);
+    const prefsRef = db.ref(
+      `groups/${groupId}/userNotifications/${normalizeName(user)}/preferences`
+    );
     await prefsRef.set(prefs);
     showToast('Notification preferences saved', 'success');
   } catch (error) {
@@ -72,7 +85,9 @@ async function saveNotificationPrefs() {
 function subscribeToNotifications() {
   const groupId = currentGroupId.value;
   const user = sessionUser.value;
-  if (!groupId || !user) return;
+  if (!groupId || !user) {
+    return;
+  }
 
   // Cleanup previous subscription
   if (notificationsUnsubscribe) {
@@ -104,11 +119,15 @@ function subscribeToNotifications() {
 async function markAsRead(notifId: string) {
   const groupId = currentGroupId.value;
   const user = sessionUser.value;
-  if (!groupId || !user) return;
+  if (!groupId || !user) {
+    return;
+  }
 
   try {
     const db = getDatabase();
-    await db.ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/items/${notifId}/read`).set(true);
+    await db
+      .ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/items/${notifId}/read`)
+      .set(true);
   } catch (error) {
     console.error('Error marking notification as read:', error);
   }
@@ -117,7 +136,9 @@ async function markAsRead(notifId: string) {
 async function clearAllNotifications() {
   const groupId = currentGroupId.value;
   const user = sessionUser.value;
-  if (!groupId || !user) return;
+  if (!groupId || !user) {
+    return;
+  }
 
   try {
     const db = getDatabase();
@@ -131,7 +152,7 @@ async function clearAllNotifications() {
 
 function toggleMuteMember(name: string) {
   if (mutedMembers.value.includes(name)) {
-    mutedMembers.value = mutedMembers.value.filter(m => m !== name);
+    mutedMembers.value = mutedMembers.value.filter((m) => m !== name);
   } else {
     mutedMembers.value = [...mutedMembers.value, name];
   }
@@ -139,7 +160,7 @@ function toggleMuteMember(name: string) {
 }
 
 function removeMutedMember(name: string) {
-  mutedMembers.value = mutedMembers.value.filter(m => m !== name);
+  mutedMembers.value = mutedMembers.value.filter((m) => m !== name);
   saveNotificationPrefs();
 }
 
@@ -167,9 +188,15 @@ function formatTimestamp(timestamp: number): string {
   const now = new Date();
   const diff = now.getTime() - timestamp;
 
-  if (diff < 60000) return 'Just now';
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  if (diff < 60000) {
+    return 'Just now';
+  }
+  if (diff < 3600000) {
+    return `${Math.floor(diff / 60000)}m ago`;
+  }
+  if (diff < 86400000) {
+    return `${Math.floor(diff / 3600000)}h ago`;
+  }
 
   return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
@@ -190,7 +217,7 @@ export function NotificationsModal() {
     };
   }, [showNotificationsModal.value]);
 
-  const unreadCount = notifications.value.filter(n => !n.read).length;
+  const unreadCount = notifications.value.filter((n) => !n.read).length;
 
   return (
     <>
@@ -201,8 +228,8 @@ export function NotificationsModal() {
             <h3 style="margin-top: 0; margin-bottom: 16px; color: #333;">Select member to mute</h3>
             <div style="max-height: 300px; overflow-y: auto;">
               {coreMembers.value
-                .filter(name => name !== sessionUser.value && !mutedMembers.value.includes(name))
-                .map(name => (
+                .filter((name) => name !== sessionUser.value && !mutedMembers.value.includes(name))
+                .map((name) => (
                   <button
                     key={name}
                     onClick={() => {
@@ -226,11 +253,12 @@ export function NotificationsModal() {
                   >
                     {name}
                   </button>
-                ))
-              }
+                ))}
             </div>
             <button
-              onClick={() => { showMutePicker.value = false; }}
+              onClick={() => {
+                showMutePicker.value = false;
+              }}
               style="width: 100%; margin-top: 12px; background: #ccc; color: #333;"
             >
               Cancel
@@ -272,13 +300,21 @@ export function NotificationsModal() {
           {/* Collapsible Settings */}
           <div style="border-bottom: 1px solid #e0e0e0;">
             <button
-              onClick={() => { showSettings.value = !showSettings.value; }}
+              onClick={() => {
+                showSettings.value = !showSettings.value;
+              }}
               style="width: 100%; padding: 12px 20px; background: #f9f9f9; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px;"
             >
               <span style="display: flex; align-items: center; gap: 8px; color: #666;">
                 <span>Settings</span>
               </span>
-              <span style={{ color: '#999', transform: showSettings.value ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+              <span
+                style={{
+                  color: '#999',
+                  transform: showSettings.value ? 'rotate(180deg)' : 'none',
+                  transition: 'transform 0.2s',
+                }}
+              >
                 ▼
               </span>
             </button>
@@ -289,9 +325,14 @@ export function NotificationsModal() {
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                   <div>
                     <div style="font-weight: 500; font-size: 14px;">Activity alerts</div>
-                    <div style="font-size: 12px; color: #666;">Check-ins, cancellations, and note changes</div>
+                    <div style="font-size: 12px; color: #666;">
+                      Check-ins, cancellations, and note changes
+                    </div>
                   </div>
-                  <label class="toggle-switch" style="position: relative; display: inline-block; width: 48px; height: 26px;">
+                  <label
+                    class="toggle-switch"
+                    style="position: relative; display: inline-block; width: 48px; height: 26px;"
+                  >
                     <input
                       type="checkbox"
                       checked={activityAlertsEnabled.value}
@@ -309,7 +350,9 @@ export function NotificationsModal() {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        backgroundColor: activityAlertsEnabled.value ? 'var(--color-primary, #2C6E49)' : '#ccc',
+                        backgroundColor: activityAlertsEnabled.value
+                          ? 'var(--color-primary, #2C6E49)'
+                          : '#ccc',
                         transition: '0.3s',
                         borderRadius: '26px',
                       }}
@@ -334,9 +377,14 @@ export function NotificationsModal() {
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                   <div>
                     <div style="font-weight: 500; font-size: 14px;">Game confirmations</div>
-                    <div style="font-size: 12px; color: #666;">When placed in or removed from a confirmed game</div>
+                    <div style="font-size: 12px; color: #666;">
+                      When placed in or removed from a confirmed game
+                    </div>
                   </div>
-                  <label class="toggle-switch" style="position: relative; display: inline-block; width: 48px; height: 26px;">
+                  <label
+                    class="toggle-switch"
+                    style="position: relative; display: inline-block; width: 48px; height: 26px;"
+                  >
                     <input
                       type="checkbox"
                       checked={matchConfirmationsEnabled.value}
@@ -354,7 +402,9 @@ export function NotificationsModal() {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        backgroundColor: matchConfirmationsEnabled.value ? 'var(--color-primary, #2C6E49)' : '#ccc',
+                        backgroundColor: matchConfirmationsEnabled.value
+                          ? 'var(--color-primary, #2C6E49)'
+                          : '#ccc',
                         transition: '0.3s',
                         borderRadius: '26px',
                       }}
@@ -379,18 +429,22 @@ export function NotificationsModal() {
                 <div style="padding-top: 12px; border-top: 1px solid #e0e0e0;">
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <div>
-                      <div style="font-weight: 500; font-size: 13px; color: #333;">Muted members</div>
+                      <div style="font-weight: 500; font-size: 13px; color: #333;">
+                        Muted members
+                      </div>
                       <div style="font-size: 11px; color: #666;">No alerts from these members</div>
                     </div>
                     <button
-                      onClick={() => { showMutePicker.value = true; }}
+                      onClick={() => {
+                        showMutePicker.value = true;
+                      }}
                       style="background: #e8e8e8; color: #333; border: none; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 500;"
                     >
                       + Add
                     </button>
                   </div>
                   <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                    {mutedMembers.value.map(name => (
+                    {mutedMembers.value.map((name) => (
                       <span
                         key={name}
                         style={{
@@ -445,7 +499,7 @@ export function NotificationsModal() {
                     padding: '12px 20px',
                     borderBottom: '1px solid #f0f0f0',
                     background: notif.read ? 'white' : '#f9fff9',
-                    cursor: notif.date ? 'pointer' : (notif.read ? 'default' : 'pointer'),
+                    cursor: notif.date ? 'pointer' : notif.read ? 'default' : 'pointer',
                   }}
                 >
                   <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -454,7 +508,9 @@ export function NotificationsModal() {
                       <div style="font-size: 12px; color: #999; margin-top: 4px; display: flex; align-items: center; gap: 8px;">
                         <span>{formatTimestamp(notif.timestamp)}</span>
                         {notif.date && (
-                          <span style="color: var(--color-primary, #2C6E49); font-weight: 500;">View date →</span>
+                          <span style="color: var(--color-primary, #2C6E49); font-weight: 500;">
+                            View date →
+                          </span>
                         )}
                       </div>
                     </div>
@@ -495,11 +551,15 @@ export function useNotifications() {
 async function clearNotification(notifId: string) {
   const groupId = currentGroupId.value;
   const user = sessionUser.value;
-  if (!groupId || !user) return;
+  if (!groupId || !user) {
+    return;
+  }
 
   try {
     const db = getDatabase();
-    await db.ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/items/${notifId}`).remove();
+    await db
+      .ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/items/${notifId}`)
+      .remove();
   } catch (error) {
     console.error('Error clearing notification:', error);
   }
@@ -509,18 +569,22 @@ async function clearNotification(notifId: string) {
 async function markAllAsRead() {
   const groupId = currentGroupId.value;
   const user = sessionUser.value;
-  if (!groupId || !user) return;
+  if (!groupId || !user) {
+    return;
+  }
 
   try {
     const db = getDatabase();
     const updates: Record<string, boolean> = {};
-    notifications.value.forEach(n => {
+    notifications.value.forEach((n) => {
       if (!n.read) {
         updates[`${n.id}/read`] = true;
       }
     });
     if (Object.keys(updates).length > 0) {
-      await db.ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/items`).update(updates);
+      await db
+        .ref(`groups/${groupId}/userNotifications/${normalizeName(user)}/items`)
+        .update(updates);
     }
   } catch (error) {
     console.error('Error marking all as read:', error);

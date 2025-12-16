@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  organizeMatches,
-  timesOverlap,
-  canPlayTogetherWithTime,
-} from '../utils/matching';
+import { organizeMatches, timesOverlap, canPlayTogetherWithTime } from '../utils/matching';
 import type { CheckinData, UserPreferences, TimeRange } from '../types';
 
 describe('timesOverlap', () => {
@@ -21,33 +17,33 @@ describe('timesOverlap', () => {
   });
 
   it('returns true for overlapping time ranges', () => {
-    expect(
-      timesOverlap({ start: '09:00', end: '12:00' }, { start: '11:00', end: '14:00' })
-    ).toBe(true);
+    expect(timesOverlap({ start: '09:00', end: '12:00' }, { start: '11:00', end: '14:00' })).toBe(
+      true
+    );
   });
 
   it('returns false for non-overlapping time ranges', () => {
-    expect(
-      timesOverlap({ start: '09:00', end: '11:00' }, { start: '13:00', end: '15:00' })
-    ).toBe(false);
+    expect(timesOverlap({ start: '09:00', end: '11:00' }, { start: '13:00', end: '15:00' })).toBe(
+      false
+    );
   });
 
   it('handles open-ended ranges (from X)', () => {
-    expect(
-      timesOverlap({ start: '14:00' } as TimeRange, { start: '09:00', end: '16:00' })
-    ).toBe(true);
-    expect(
-      timesOverlap({ start: '18:00' } as TimeRange, { start: '09:00', end: '12:00' })
-    ).toBe(false);
+    expect(timesOverlap({ start: '14:00' } as TimeRange, { start: '09:00', end: '16:00' })).toBe(
+      true
+    );
+    expect(timesOverlap({ start: '18:00' } as TimeRange, { start: '09:00', end: '12:00' })).toBe(
+      false
+    );
   });
 
   it('handles open-ended ranges (until X)', () => {
-    expect(
-      timesOverlap({ end: '12:00' } as TimeRange, { start: '09:00', end: '14:00' })
-    ).toBe(true);
-    expect(
-      timesOverlap({ end: '08:00' } as TimeRange, { start: '10:00', end: '12:00' })
-    ).toBe(false);
+    expect(timesOverlap({ end: '12:00' } as TimeRange, { start: '09:00', end: '14:00' })).toBe(
+      true
+    );
+    expect(timesOverlap({ end: '08:00' } as TimeRange, { start: '10:00', end: '12:00' })).toBe(
+      false
+    );
   });
 });
 
@@ -147,10 +143,7 @@ describe('organizeMatches', () => {
   });
 
   it('forms singles match from singles-only players', () => {
-    const players = [
-      createPlayer('Alice', 'singles', 1000),
-      createPlayer('Bob', 'singles', 2000),
-    ];
+    const players = [createPlayer('Alice', 'singles', 1000), createPlayer('Bob', 'singles', 2000)];
     const result = organizeMatches(players);
 
     expect(result.matches.length).toBe(1);
@@ -173,10 +166,7 @@ describe('organizeMatches', () => {
   });
 
   it('creates doubles-forming for 2 players', () => {
-    const players = [
-      createPlayer('Alice', 'both', 1000),
-      createPlayer('Bob', 'both', 2000),
-    ];
+    const players = [createPlayer('Alice', 'both', 1000), createPlayer('Bob', 'both', 2000)];
     const result = organizeMatches(players);
 
     expect(result.matches.length).toBe(1);

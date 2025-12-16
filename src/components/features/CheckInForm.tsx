@@ -34,7 +34,9 @@ import { openPlayerSelectDrawer } from './PlayerSelectDrawer';
 function getUserCheckinStatus() {
   const user = sessionUser.value;
   const date = selectedDate.value;
-  if (!user || !date) return null;
+  if (!user || !date) {
+    return null;
+  }
 
   const checkins = allCheckins.value[date] || [];
   const userCheckin = checkins.find((c) => c.name === user);
@@ -45,7 +47,9 @@ function getUserCheckinStatus() {
 function getUserCheckinIndex() {
   const user = sessionUser.value;
   const date = selectedDate.value;
-  if (!user || !date) return -1;
+  if (!user || !date) {
+    return -1;
+  }
 
   const checkins = allCheckins.value[date] || [];
   return checkins.findIndex((c) => c.name === user);
@@ -53,14 +57,20 @@ function getUserCheckinIndex() {
 
 // Format play style for display
 function formatPlayStyle(style: string) {
-  if (style === 'singles') return 'Singles only';
-  if (style === 'doubles') return 'Doubles only';
+  if (style === 'singles') {
+    return 'Singles only';
+  }
+  if (style === 'doubles') {
+    return 'Doubles only';
+  }
   return 'Either';
 }
 
 // Format time range for display
 function formatTimeDisplay(timeRange?: { start: string; end: string }) {
-  if (!timeRange || !timeRange.start || !timeRange.end) return null;
+  if (!timeRange || !timeRange.start || !timeRange.end) {
+    return null;
+  }
 
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(':');
@@ -114,9 +124,16 @@ export function CheckInForm() {
                   </span>
                 )}
               </div>
-              <button class="edit-icon-btn" onClick={(e) => { e.stopPropagation(); handleEditClick(); }} title="Edit">
+              <button
+                class="edit-icon-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditClick();
+                }}
+                title="Edit"
+              >
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
                 </svg>
               </button>
             </div>

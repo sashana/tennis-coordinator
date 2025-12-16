@@ -3,15 +3,16 @@ import { selectedDate, allCheckins, sessionUser } from '../App';
 import { formatLocalDate, normalizeName } from '../../utils/helpers';
 import { selectedName, isFormExpanded } from '../pages/MainApp';
 
-
 // Check if session user is checked in for a given date
 function isSessionUserCheckedIn(dateStr: string): boolean {
   const user = sessionUser.value;
-  if (!user) return true; // No session user, don't pre-select
+  if (!user) {
+    return true;
+  } // No session user, don't pre-select
 
   const checkins = allCheckins.value[dateStr] || [];
-  return checkins.some((c: { name?: string }) =>
-    c.name && normalizeName(c.name) === normalizeName(user)
+  return checkins.some(
+    (c: { name?: string }) => c.name && normalizeName(c.name) === normalizeName(user)
   );
 }
 
@@ -35,7 +36,9 @@ export function DateSelector() {
   // Auto-scroll to today on initial load only
   useEffect(() => {
     const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
+    if (!scrollContainer) {
+      return;
+    }
 
     // Use setTimeout to ensure DOM is fully rendered
     const timeoutId = setTimeout(() => {
@@ -96,9 +99,7 @@ export function DateSelector() {
             <span class="day-num">{date.dayNum}</span>
             <span class="month-name">{date.monthName}</span>
             {date.isToday && <span class="today-badge">Today</span>}
-            {date.checkinCount > 0 && (
-              <span class="checkin-badge">{date.checkinCount}</span>
-            )}
+            {date.checkinCount > 0 && <span class="checkin-badge">{date.checkinCount}</span>}
           </button>
         ))}
       </div>

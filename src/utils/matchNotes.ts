@@ -52,10 +52,7 @@ export function parseMatchKey(matchKey: string): {
 /**
  * Get match note for a specific match
  */
-export function getMatchNote(
-  matchNotes: Record<string, string>,
-  matchKey: string
-): string {
+export function getMatchNote(matchNotes: Record<string, string>, matchKey: string): string {
   return matchNotes[matchKey] || '';
 }
 
@@ -107,10 +104,7 @@ export function setMatchNotesForDate(
 /**
  * Check if match has notes
  */
-export function hasMatchNotes(
-  matchNotes: Record<string, string>,
-  matchKey: string
-): boolean {
+export function hasMatchNotes(matchNotes: Record<string, string>, matchKey: string): boolean {
   const note = matchNotes[matchKey];
   return note !== undefined && note.trim().length > 0;
 }
@@ -125,12 +119,8 @@ export function countMatchesWithNotes(matchNotes: Record<string, string>): numbe
 /**
  * Get match keys with notes
  */
-export function getMatchKeysWithNotes(
-  matchNotes: Record<string, string>
-): string[] {
-  return Object.keys(matchNotes).filter(
-    (key) => matchNotes[key].trim().length > 0
-  );
+export function getMatchKeysWithNotes(matchNotes: Record<string, string>): string[] {
+  return Object.keys(matchNotes).filter((key) => matchNotes[key].trim().length > 0);
 }
 
 /**
@@ -163,10 +153,7 @@ export function mergeMatchNotes(
 /**
  * Format notes for display (truncate if too long)
  */
-export function formatNoteForDisplay(
-  note: string,
-  maxLength: number = 100
-): string {
+export function formatNoteForDisplay(note: string, maxLength: number = 100): string {
   const trimmed = note.trim();
   if (trimmed.length <= maxLength) {
     return trimmed;

@@ -192,8 +192,7 @@ export function isDuplicateName(
 ): boolean {
   const normalized = normalizeName(name);
   return existingNames.some(
-    (existing, i) =>
-      i !== excludeIndex && normalizeName(existing) === normalized
+    (existing, i) => i !== excludeIndex && normalizeName(existing) === normalized
   );
 }
 

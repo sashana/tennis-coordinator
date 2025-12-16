@@ -4,12 +4,7 @@
  * This module handles activity log formatting and entry creation.
  */
 
-import type {
-  ActivityAction,
-  ActivityEntry,
-  PlayStyle,
-  TimeRange,
-} from '@/types';
+import type { ActivityAction, ActivityEntry, PlayStyle, TimeRange } from '@/types';
 import { normalizeName, formatTimeRange, getPreferenceLabel } from './helpers';
 
 /**
@@ -54,21 +49,19 @@ export function formatActivityDisplay(entry: ActivityEntry): string {
       }
       if (entry.timeRange) {
         const timeStr = formatTimeRange(entry.timeRange.start, entry.timeRange.end);
-        if (timeStr) details.push(timeStr);
+        if (timeStr) {
+          details.push(timeStr);
+        }
       }
       const detailsStr = details.length > 0 ? ` [${details.join(', ')}]` : '';
       const byStr =
-        normalizeName(entry.by) !== normalizeName(entry.player)
-          ? ` (added by ${entry.by})`
-          : '';
+        normalizeName(entry.by) !== normalizeName(entry.player) ? ` (added by ${entry.by})` : '';
       return `${time} - ${entry.player} checked in${detailsStr}${byStr}`;
     }
 
     case 'removal': {
       const byStr =
-        normalizeName(entry.by) !== normalizeName(entry.player)
-          ? ` (by ${entry.by})`
-          : '';
+        normalizeName(entry.by) !== normalizeName(entry.player) ? ` (by ${entry.by})` : '';
       return `${time} - ${entry.player} removed${byStr}`;
     }
 

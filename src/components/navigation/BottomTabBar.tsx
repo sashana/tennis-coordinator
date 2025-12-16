@@ -1,4 +1,5 @@
 import { signal, computed } from '@preact/signals';
+import { useEffect, useState } from 'preact/hooks';
 import { notifications } from '../modals/NotificationsModal';
 
 // Navigation state
@@ -12,7 +13,7 @@ export function goToProfile() {
 
 // Computed notification count for badge
 const unreadCount = computed(() => {
-  return notifications.value.filter(n => !n.read).length;
+  return notifications.value.filter((n) => !n.read).length;
 });
 
 interface TabConfig {
@@ -52,6 +53,22 @@ const tabs: TabConfig[] = [
 ];
 
 export function BottomTabBar() {
+  // Track if component has mounted - used to trigger re-render for safe area calculation
+  const [mounted, setMounted] = useState(false);
+
+  // Force re-render after mount to ensure safe area values are properly evaluated
+  // This fixes the initial render padding issue in PWA mode
+  useEffect(() => {
+    // Use requestAnimationFrame to ensure layout is complete before triggering re-render
+    const rafId = requestAnimationFrame(() => {
+      // Double RAF ensures styles have been computed
+      requestAnimationFrame(() => {
+        setMounted(true);
+      });
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, []);
+
   return (
     <nav
       style={{
@@ -81,7 +98,9 @@ export function BottomTabBar() {
         return (
           <button
             key={tab.id}
-            onClick={() => { activeTab.value = tab.id; }}
+            onClick={() => {
+              activeTab.value = tab.id;
+            }}
             style={{
               display: 'flex',
               flexDirection: 'column',

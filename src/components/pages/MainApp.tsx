@@ -1,11 +1,6 @@
 import { signal } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
-import {
-  currentGroupId,
-  currentGroupName,
-  selectedDate,
-  sessionUser,
-} from '../App';
+import { currentGroupId, currentGroupName, selectedDate, sessionUser } from '../App';
 import { useGroupData, useCheckins, useMatchNotes, groupSettings } from '../../hooks/useFirebase';
 import { Header } from '../layout/Header';
 import { PinModal } from '../ui/PinModal';
@@ -55,8 +50,8 @@ export const sharePromptData = signal<{
   name: string;
   playStyle?: string;
   timeRange?: { start: string; end: string };
-  date: string;  // Store the date for removal messages
-  isOwner?: boolean;  // For removal: was it self-removal or removing someone else
+  date: string; // Store the date for removal messages
+  isOwner?: boolean; // For removal: was it self-removal or removing someone else
   // For invite action
   groupName?: string;
   groupUrl?: string;
@@ -141,7 +136,11 @@ export function MainApp() {
       <MemberManagementModal />
       <InvitePromptModal />
 
-      <div class="container" id="appContainer" style={showPinModal ? 'filter: blur(5px); pointer-events: none;' : ''}>
+      <div
+        class="container"
+        id="appContainer"
+        style={showPinModal ? 'filter: blur(5px); pointer-events: none;' : ''}
+      >
         <Header />
 
         {/* Tab Content */}

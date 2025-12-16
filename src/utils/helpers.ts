@@ -31,7 +31,9 @@ export function getPreferenceLabel(preference: PlayStyle): PlayStyleLabel {
  * Convert 24h time to 12h format (e.g., "14:30" -> "2:30PM")
  */
 function format12Hour(time24: string): string {
-  if (!time24) return '';
+  if (!time24) {
+    return '';
+  }
   const [hours, minutes] = time24.split(':');
   const h = parseInt(hours);
   const ampm = h >= 12 ? 'PM' : 'AM';
@@ -43,7 +45,9 @@ function format12Hour(time24: string): string {
  * Format time range for display (converts to 12h format)
  */
 export function formatTimeRange(start?: string, end?: string): string {
-  if (!start && !end) return '';
+  if (!start && !end) {
+    return '';
+  }
 
   if (start && end) {
     return `${format12Hour(start)}-${format12Hour(end)}`;
@@ -141,12 +145,11 @@ export function isSameName(name1: string, name2: string): boolean {
 /**
  * Check if time ranges overlap
  */
-export function timeRangesOverlap(
-  range1?: TimeRange,
-  range2?: TimeRange
-): boolean {
+export function timeRangesOverlap(range1?: TimeRange, range2?: TimeRange): boolean {
   // If either player has no time restriction, they're compatible
-  if (!range1 || !range2) return true;
+  if (!range1 || !range2) {
+    return true;
+  }
   if ((!range1.start && !range1.end) || (!range2.start && !range2.end)) {
     return true;
   }
@@ -154,14 +157,20 @@ export function timeRangesOverlap(
   // Convert times to comparable format (24-hour numeric)
   const parseTime = (timeStr: string): number => {
     const match = timeStr.match(/(\d+):?(\d*)?\s*(AM|PM)?/i);
-    if (!match) return 0;
+    if (!match) {
+      return 0;
+    }
 
     let hours = parseInt(match[1]);
     const minutes = match[2] ? parseInt(match[2]) : 0;
     const meridiem = match[3]?.toUpperCase();
 
-    if (meridiem === 'PM' && hours !== 12) hours += 12;
-    if (meridiem === 'AM' && hours === 12) hours = 0;
+    if (meridiem === 'PM' && hours !== 12) {
+      hours += 12;
+    }
+    if (meridiem === 'AM' && hours === 12) {
+      hours = 0;
+    }
 
     return hours * 60 + minutes;
   };

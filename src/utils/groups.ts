@@ -146,18 +146,13 @@ export function getAvailableGroupsList(
 export function sortGroupsByName(
   groups: Array<{ id: string; name: string }>
 ): Array<{ id: string; name: string }> {
-  return [...groups].sort((a, b) =>
-    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-  );
+  return [...groups].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 }
 
 /**
  * Check if group exists
  */
-export function groupExists(
-  groupId: string,
-  availableGroups: AvailableGroups
-): boolean {
+export function groupExists(groupId: string, availableGroups: AvailableGroups): boolean {
   return groupId in availableGroups;
 }
 
@@ -209,30 +204,21 @@ export function mergeGroupSettings(
  */
 export function isGroupSettingsComplete(settings: Partial<GroupSettings>): boolean {
   return Boolean(
-    settings.groupName &&
-      settings.groupPin &&
-      settings.adminPin &&
-      settings.coreMembers
+    settings.groupName && settings.groupPin && settings.adminPin && settings.coreMembers
   );
 }
 
 /**
  * Get group display name (with fallback)
  */
-export function getGroupDisplayName(
-  groupId: string,
-  availableGroups: AvailableGroups
-): string {
+export function getGroupDisplayName(groupId: string, availableGroups: AvailableGroups): string {
   return availableGroups[groupId]?.name || groupId;
 }
 
 /**
  * Build shareable group link
  */
-export function buildGroupShareLink(
-  baseUrl: string,
-  shortCode: string
-): string {
+export function buildGroupShareLink(baseUrl: string, shortCode: string): string {
   const url = new URL(baseUrl);
   url.searchParams.set('code', shortCode);
   return url.toString();

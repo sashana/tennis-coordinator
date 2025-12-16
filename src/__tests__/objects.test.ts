@@ -58,7 +58,11 @@ describe('isEmptyObject', () => {
 
 describe('mergeObjects', () => {
   it('merges multiple objects', () => {
-    const result = mergeObjects({ a: 1 } as Record<string, number>, { b: 2 } as Record<string, number>, { c: 3 } as Record<string, number>);
+    const result = mergeObjects(
+      { a: 1 } as Record<string, number>,
+      { b: 2 } as Record<string, number>,
+      { c: 3 } as Record<string, number>
+    );
     expect(result).toEqual({ a: 1, b: 2, c: 3 });
   });
 
@@ -130,21 +134,13 @@ describe('filterByDate', () => {
 
 describe('sortByTimestamp', () => {
   it('sorts ascending by default', () => {
-    const items = [
-      { timestamp: 3000 },
-      { timestamp: 1000 },
-      { timestamp: 2000 },
-    ];
+    const items = [{ timestamp: 3000 }, { timestamp: 1000 }, { timestamp: 2000 }];
     const result = sortByTimestamp(items);
     expect(result.map((i) => i.timestamp)).toEqual([1000, 2000, 3000]);
   });
 
   it('sorts descending when specified', () => {
-    const items = [
-      { timestamp: 1000 },
-      { timestamp: 3000 },
-      { timestamp: 2000 },
-    ];
+    const items = [{ timestamp: 1000 }, { timestamp: 3000 }, { timestamp: 2000 }];
     const result = sortByTimestamp(items, false);
     expect(result.map((i) => i.timestamp)).toEqual([3000, 2000, 1000]);
   });
@@ -280,6 +276,9 @@ describe('typedEntries', () => {
   it('returns typed entries', () => {
     const obj = { a: 1, b: 2 };
     const entries = typedEntries(obj);
-    expect(entries).toEqual([['a', 1], ['b', 2]]);
+    expect(entries).toEqual([
+      ['a', 1],
+      ['b', 2],
+    ]);
   });
 });

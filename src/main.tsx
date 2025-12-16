@@ -7,11 +7,16 @@ function getGroupFromUrl(): string | null {
   // First check query parameter
   const params = new URLSearchParams(window.location.search);
   const groupParam = params.get('group');
-  if (groupParam) return groupParam;
+  if (groupParam) {
+    return groupParam;
+  }
 
   // Then check URL path (e.g., /ttmd)
   const path = window.location.pathname;
-  const pathParts = path.replace(/^\/+|\/+$/g, '').split('/').filter(Boolean);
+  const pathParts = path
+    .replace(/^\/+|\/+$/g, '')
+    .split('/')
+    .filter(Boolean);
   if (pathParts.length > 0 && pathParts[0] !== 'index.html' && pathParts[0] !== 'app.html') {
     return pathParts[0];
   }
@@ -37,33 +42,33 @@ function updateManifestForGroup() {
     const manifest = {
       name: groupDisplayName,
       short_name: groupDisplayName.length > 12 ? groupDisplayName.split(' ')[0] : groupDisplayName,
-      description: "Tennis match coordination and check-in system",
-      display: "standalone",
-      background_color: "#ffffff",
-      theme_color: "#4CAF50",
-      orientation: "portrait-primary",
+      description: 'Tennis match coordination and check-in system',
+      display: 'standalone',
+      background_color: '#ffffff',
+      theme_color: '#4CAF50',
+      orientation: 'portrait-primary',
       start_url: `/${group}`,
-      scope: "/",
+      scope: '/',
       icons: [
         {
-          src: "/assets/icon-192.png",
-          sizes: "192x192",
-          type: "image/png",
-          purpose: "any maskable"
+          src: '/assets/icon-192.png',
+          sizes: '192x192',
+          type: 'image/png',
+          purpose: 'any maskable',
         },
         {
-          src: "/assets/icon-512.png",
-          sizes: "512x512",
-          type: "image/png",
-          purpose: "any maskable"
+          src: '/assets/icon-512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'any maskable',
         },
         {
-          src: "/assets/apple-touch-icon.png",
-          sizes: "180x180",
-          type: "image/png",
-          purpose: "any"
-        }
-      ]
+          src: '/assets/apple-touch-icon.png',
+          sizes: '180x180',
+          type: 'image/png',
+          purpose: 'any',
+        },
+      ],
     };
 
     // Convert manifest to data URL

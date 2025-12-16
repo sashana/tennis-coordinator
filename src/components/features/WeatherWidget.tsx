@@ -58,7 +58,9 @@ async function fetchWeather(lat: number, lon: number, date: string): Promise<Wea
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&temperature_unit=fahrenheit&timezone=America/Los_Angeles&forecast_days=14`;
 
     const response = await fetch(url);
-    if (!response.ok) throw new Error('Weather API error');
+    if (!response.ok) {
+      throw new Error('Weather API error');
+    }
 
     const data = await response.json();
 
@@ -100,13 +102,17 @@ export function WeatherWidget() {
       const date = selectedDate.value;
       const location = groupSettings.value.location;
 
-      if (!date) return;
+      if (!date) {
+        return;
+      }
 
       // Check if date is within 14 days (API limitation)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const selectedDateObj = new Date(date + 'T00:00:00');
-      const diffDays = Math.floor((selectedDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const diffDays = Math.floor(
+        (selectedDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
       if (diffDays < 0 || diffDays >= 14) {
         currentWeather.value = null;

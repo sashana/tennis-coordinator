@@ -40,7 +40,7 @@ export function generateICSContent(params: CalendarEventParams): string {
   const now = new Date();
   const timestamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 
-  let icsContent = [
+  const icsContent = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//Tennis Coordinator//EN',
@@ -170,12 +170,15 @@ export function createCalendarEventFromMatch(data: MatchCalendarData): CalendarE
   const { date, matchType, players, groupName, location, notes } = data;
 
   // Build title
-  const typeLabel = matchType.includes('doubles') ? 'Doubles' :
-                   matchType.includes('singles') ? 'Singles' : 'Tennis';
+  const typeLabel = matchType.includes('doubles')
+    ? 'Doubles'
+    : matchType.includes('singles')
+      ? 'Singles'
+      : 'Tennis';
   const title = `${typeLabel} - ${groupName}`;
 
   // Build description
-  let description = `Players: ${players.map(p => p.name).join(', ')}`;
+  let description = `Players: ${players.map((p) => p.name).join(', ')}`;
 
   if (notes) {
     description += `\n\nNotes: ${notes}`;
@@ -185,11 +188,11 @@ export function createCalendarEventFromMatch(data: MatchCalendarData): CalendarE
   let startTime: string | undefined;
   let endTime: string | undefined;
 
-  const playersWithTime = players.filter(p => p.timeRange);
+  const playersWithTime = players.filter((p) => p.timeRange);
   if (playersWithTime.length > 0) {
     // Use the latest start time and earliest end time for overlap
-    const startTimes = playersWithTime.map(p => p.timeRange!.start).sort();
-    const endTimes = playersWithTime.map(p => p.timeRange!.end).sort();
+    const startTimes = playersWithTime.map((p) => p.timeRange!.start).sort();
+    const endTimes = playersWithTime.map((p) => p.timeRange!.end).sort();
     startTime = startTimes[startTimes.length - 1]; // Latest start
     endTime = endTimes[0]; // Earliest end
 

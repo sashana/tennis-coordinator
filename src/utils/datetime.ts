@@ -12,9 +12,15 @@ export function getTimeAgo(timestamp: number): string {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return 'Just now';
-  if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  if (minutes < 1) {
+    return 'Just now';
+  }
+  if (minutes < 60) {
+    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  }
+  if (hours < 24) {
+    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  }
   return `${days} day${days > 1 ? 's' : ''} ago`;
 }
 
@@ -22,7 +28,9 @@ export function getTimeAgo(timestamp: number): string {
  * Get ordinal suffix for a day number (1st, 2nd, 3rd, etc.)
  */
 export function getOrdinalSuffix(day: number): string {
-  if (day > 3 && day < 21) return 'th';
+  if (day > 3 && day < 21) {
+    return 'th';
+  }
   switch (day % 10) {
     case 1:
       return 'st';
@@ -69,16 +77,22 @@ export function getQuarter(date: Date): number {
  */
 export function isValidDateString(dateStr: string): boolean {
   const regex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!regex.test(dateStr)) return false;
+  if (!regex.test(dateStr)) {
+    return false;
+  }
 
   const [year, month, day] = dateStr.split('-').map(Number);
 
   // Check month is valid (1-12)
-  if (month < 1 || month > 12) return false;
+  if (month < 1 || month > 12) {
+    return false;
+  }
 
   // Check day is valid for the month
   const daysInMonth = new Date(year, month, 0).getDate();
-  if (day < 1 || day > daysInMonth) return false;
+  if (day < 1 || day > daysInMonth) {
+    return false;
+  }
 
   const date = new Date(dateStr + 'T12:00:00');
   return !isNaN(date.getTime());
@@ -89,7 +103,9 @@ export function isValidDateString(dateStr: string): boolean {
  * Returns null if invalid
  */
 export function parseDateString(dateStr: string): Date | null {
-  if (!isValidDateString(dateStr)) return null;
+  if (!isValidDateString(dateStr)) {
+    return null;
+  }
   return new Date(dateStr + 'T12:00:00');
 }
 
@@ -98,7 +114,9 @@ export function parseDateString(dateStr: string): Date | null {
  */
 export function formatDateWithYear(dateStr: string): string {
   const date = parseDateString(dateStr);
-  if (!date) return dateStr;
+  if (!date) {
+    return dateStr;
+  }
 
   return date.toLocaleDateString('en-US', {
     weekday: 'short',
@@ -113,7 +131,9 @@ export function formatDateWithYear(dateStr: string): string {
  */
 export function formatDateShort(dateStr: string): string {
   const date = parseDateString(dateStr);
-  if (!date) return dateStr;
+  if (!date) {
+    return dateStr;
+  }
 
   return date.toLocaleDateString('en-US', {
     weekday: 'short',

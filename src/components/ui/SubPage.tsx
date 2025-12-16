@@ -95,7 +95,14 @@ export function SubPage({ title, isOpen, onBack, children }: SubPageProps) {
           >
             ←
           </button>
-          <h2 style={{ margin: 0, fontSize: 'var(--font-size-xl, 18px)', fontWeight: 600, color: 'var(--color-text-primary, #333)' }}>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: 'var(--font-size-xl, 18px)',
+              fontWeight: 600,
+              color: 'var(--color-text-primary, #333)',
+            }}
+          >
             {title}
           </h2>
         </div>

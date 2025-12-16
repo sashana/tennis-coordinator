@@ -32,11 +32,7 @@ function getUserPrefs(
 /**
  * Check if two players can play together based on exclusion preferences
  */
-function canPlayTogether(
-  name1: string,
-  name2: string,
-  userPreferences: UserPreferences
-): boolean {
+function canPlayTogether(name1: string, name2: string, userPreferences: UserPreferences): boolean {
   const prefs1 = getUserPrefs(name1, userPreferences);
   const prefs2 = getUserPrefs(name2, userPreferences);
   const n1 = normalizeName(name1);
@@ -48,19 +44,22 @@ function canPlayTogether(
 /**
  * Check if two time ranges overlap
  */
-export function timesOverlap(
-  time1: TimeRange | undefined,
-  time2: TimeRange | undefined
-): boolean {
+export function timesOverlap(time1: TimeRange | undefined, time2: TimeRange | undefined): boolean {
   // If either has no time restriction, they can play together
-  if (!time1 || !time2) return true;
+  if (!time1 || !time2) {
+    return true;
+  }
 
   // If both have no start/end times, they're flexible
-  if (!time1.start && !time1.end && !time2.start && !time2.end) return true;
+  if (!time1.start && !time1.end && !time2.start && !time2.end) {
+    return true;
+  }
 
   // Convert times to minutes for easier comparison
   const timeToMinutes = (timeStr: string | undefined): number | null => {
-    if (!timeStr) return null;
+    if (!timeStr) {
+      return null;
+    }
     const [hours, minutes] = timeStr.split(':').map(Number);
     return hours * 60 + minutes;
   };
@@ -117,22 +116,18 @@ export function organizeMatches(
 ): OrganizeMatchesResult {
   const matches: Match[] = [];
   const warnings: string[] = [];
-  let remaining = checkins.map((c, idx) => ({ ...c, originalIndex: idx }));
+  const remaining = checkins.map((c, idx) => ({ ...c, originalIndex: idx }));
 
   // Separate by play style and sort by timestamp (first-come, first-served)
   remaining.sort((a, b) => a.timestamp - b.timestamp);
 
   const doublesOnly = remaining.filter((p) => p.playStyle === 'doubles');
   const singlesOnly = remaining.filter((p) => p.playStyle === 'singles');
-  const either = remaining.filter(
-    (p) => p.playStyle === 'both' || !p.playStyle
-  );
+  const either = remaining.filter((p) => p.playStyle === 'both' || !p.playStyle);
 
   // === STEP 1: Form complete doubles matches ===
   // Doubles pool: Doubles Only + Either players (sorted by timestamp)
-  let doublesPool = [...doublesOnly, ...either].sort(
-    (a, b) => a.timestamp - b.timestamp
-  );
+  const doublesPool = [...doublesOnly, ...either].sort((a, b) => a.timestamp - b.timestamp);
 
   while (doublesPool.length >= 4) {
     const group = doublesPool.slice(0, 4);
@@ -145,7 +140,7 @@ export function organizeMatches(
   }
 
   // === STEP 2: Form singles matches from Singles Only players ===
-  let singlesPool = [...singlesOnly].sort((a, b) => a.timestamp - b.timestamp);
+  const singlesPool = [...singlesOnly].sort((a, b) => a.timestamp - b.timestamp);
 
   while (singlesPool.length >= 2) {
     let pair: CheckinData[] | null = null;
@@ -153,14 +148,14 @@ export function organizeMatches(
     // Find first valid pair respecting exclusions AND time overlap
     for (let i = 0; i < singlesPool.length - 1; i++) {
       for (let j = i + 1; j < singlesPool.length; j++) {
-        if (
-          canPlayTogetherWithTime(singlesPool[i], singlesPool[j], userPreferences)
-        ) {
+        if (canPlayTogetherWithTime(singlesPool[i], singlesPool[j], userPreferences)) {
           pair = [singlesPool[i], singlesPool[j]];
           break;
         }
       }
-      if (pair) break;
+      if (pair) {
+        break;
+      }
     }
 
     if (pair) {
@@ -169,10 +164,10 @@ export function organizeMatches(
         players: pair,
       });
       pair.forEach((p) => {
-        const idx = singlesPool.findIndex(
-          (sp) => sp.originalIndex === p.originalIndex
-        );
-        if (idx > -1) singlesPool.splice(idx, 1);
+        const idx = singlesPool.findIndex((sp) => sp.originalIndex === p.originalIndex);
+        if (idx > -1) {
+          singlesPool.splice(idx, 1);
+        }
       });
     } else {
       break;
@@ -197,39 +192,19 @@ export function organizeMatches(
     const eitherCount = eitherPlayers.length;
 
     // Check if all are "Either" and allow rotation (for 3 players)
-    const allEither = remainingDoublesPool.every(
-      (p) => p.playStyle === 'both' || !p.playStyle
-    );
-    const allAllowRotation = remainingDoublesPool.every(
-      (p) => p.allowRotation !== false
-    );
+    const allEither = remainingDoublesPool.every((p) => p.playStyle === 'both' || !p.playStyle);
+    const allAllowRotation = remainingDoublesPool.every((p) => p.allowRotation !== false);
     const canAllPlayTogether =
       remainingDoublesPool.length === 3 &&
-      canPlayTogetherWithTime(
-        remainingDoublesPool[0],
-        remainingDoublesPool[1],
-        userPreferences
-      ) &&
-      canPlayTogetherWithTime(
-        remainingDoublesPool[0],
-        remainingDoublesPool[2],
-        userPreferences
-      ) &&
-      canPlayTogetherWithTime(
-        remainingDoublesPool[1],
-        remainingDoublesPool[2],
-        userPreferences
-      );
+      canPlayTogetherWithTime(remainingDoublesPool[0], remainingDoublesPool[1], userPreferences) &&
+      canPlayTogetherWithTime(remainingDoublesPool[0], remainingDoublesPool[2], userPreferences) &&
+      canPlayTogetherWithTime(remainingDoublesPool[1], remainingDoublesPool[2], userPreferences);
 
     // Check if 2+ Either players can play singles together (time overlap, no exclusions)
     let canPlaySingles = false;
     if (eitherCount >= 2) {
       // Check if first two Either players can play together
-      canPlaySingles = canPlayTogetherWithTime(
-        eitherPlayers[0],
-        eitherPlayers[1],
-        userPreferences
-      );
+      canPlaySingles = canPlayTogetherWithTime(eitherPlayers[0], eitherPlayers[1], userPreferences);
     }
 
     matches.push({
@@ -237,10 +212,7 @@ export function organizeMatches(
       players: remainingDoublesPool,
       needed: needed,
       canRotate:
-        remainingDoublesPool.length === 3 &&
-        allEither &&
-        allAllowRotation &&
-        canAllPlayTogether,
+        remainingDoublesPool.length === 3 && allEither && allAllowRotation && canAllPlayTogether,
       eitherCount: eitherCount,
       canPlaySingles: canPlaySingles,
     });
@@ -263,10 +235,7 @@ export function organizeMatches(
 /**
  * Check if a player is in any complete match
  */
-export function isPlayerInMatch(
-  playerName: string,
-  matches: Match[]
-): boolean {
+export function isPlayerInMatch(playerName: string, matches: Match[]): boolean {
   const normalized = normalizeName(playerName);
   return matches.some(
     (m) =>
@@ -278,10 +247,7 @@ export function isPlayerInMatch(
 /**
  * Get the match type for a player
  */
-export function getPlayerMatchType(
-  playerName: string,
-  matches: Match[]
-): string | null {
+export function getPlayerMatchType(playerName: string, matches: Match[]): string | null {
   const normalized = normalizeName(playerName);
   for (const match of matches) {
     if (match.players.some((p) => normalizeName(p.name) === normalized)) {

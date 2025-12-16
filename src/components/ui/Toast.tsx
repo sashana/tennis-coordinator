@@ -6,9 +6,12 @@ interface ToastProps {
 export function Toast({ message, type }: ToastProps) {
   const getIcon = () => {
     switch (type) {
-      case 'success': return '✓';
-      case 'error': return '✕';
-      default: return 'ℹ';
+      case 'success':
+        return '✓';
+      case 'error':
+        return '✕';
+      default:
+        return 'ℹ';
     }
   };
 

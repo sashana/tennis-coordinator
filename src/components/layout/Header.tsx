@@ -22,7 +22,7 @@ const THEMES = [
     lightBg: '#E8F5E9', // Light green
     hoverBg: '#C8E6C9', // Slightly darker green for hover
     logo: null, // Uses tennis ball emoji
-    emoji: '🎾'
+    emoji: '🎾',
   },
   {
     id: 'wimbledon',
@@ -31,7 +31,7 @@ const THEMES = [
     lightBg: '#E8F5E9', // Wimbledon green light
     hoverBg: '#C8E6C9',
     logo: wimbledonLogo,
-    emoji: '🏆'
+    emoji: '🏆',
   },
   {
     id: 'roland-garros',
@@ -40,7 +40,7 @@ const THEMES = [
     lightBg: '#FBE9E7', // Clay/terracotta light
     hoverBg: '#FFCCBC',
     logo: 'https://images.prismic.io/fft-rg-site%2F95765448-c7fa-428b-b565-8368dba90b17_logo.svg',
-    emoji: '🗼'
+    emoji: '🗼',
   },
   {
     id: 'australian-open',
@@ -49,7 +49,7 @@ const THEMES = [
     lightBg: '#E1F5FE', // Light blue
     hoverBg: '#B3E5FC',
     logo: 'https://ausopen.com/sites/default/files/styles/medium/public/ao_blue_1.png?itok=dcy08jHH',
-    emoji: '🦘'
+    emoji: '🦘',
   },
   {
     id: 'us-open',
@@ -58,14 +58,16 @@ const THEMES = [
     lightBg: '#E3F2FD', // US Open blue light
     hoverBg: '#BBDEFB',
     logo: usOpenLogo,
-    emoji: '🗽'
+    emoji: '🗽',
   },
 ];
 
 // Check if user is logged in as group admin
 function isGroupAdmin(): boolean {
   const groupId = currentGroupId.value;
-  if (!groupId) return false;
+  if (!groupId) {
+    return false;
+  }
   return sessionStorage.getItem(`adminAuth_${groupId}`) === 'true';
 }
 
@@ -97,7 +99,7 @@ export function Header() {
 
   // Get current theme info
   const currentTheme = groupSettings.value?.theme || 'default';
-  const currentThemeInfo = THEMES.find(t => t.id === currentTheme) || THEMES[0];
+  const currentThemeInfo = THEMES.find((t) => t.id === currentTheme) || THEMES[0];
 
   // Handle theme selection
   const handleThemeSelect = async (themeId: string) => {
@@ -106,9 +108,14 @@ export function Header() {
     if (groupId) {
       try {
         const db = getDatabase();
-        await db.ref(`groups/${groupId}/settings/theme`).set(themeId === 'default' ? null : themeId);
-        groupSettings.value = { ...groupSettings.value, theme: themeId === 'default' ? undefined : themeId };
-        const themeName = THEMES.find(t => t.id === themeId)?.name || 'Classic';
+        await db
+          .ref(`groups/${groupId}/settings/theme`)
+          .set(themeId === 'default' ? null : themeId);
+        groupSettings.value = {
+          ...groupSettings.value,
+          theme: themeId === 'default' ? undefined : themeId,
+        };
+        const themeName = THEMES.find((t) => t.id === themeId)?.name || 'Classic';
         showToast(`Theme: ${themeName}`, 'success');
       } catch (error) {
         console.error('Error saving theme:', error);
@@ -120,7 +127,16 @@ export function Header() {
   return (
     <h1 style="display: flex; justify-content: space-between; align-items: center; gap: var(--spacing-md, 8px);">
       {/* Group name with theme icon (clickable by admin) */}
-      <div ref={dropdownRef} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm, 6px)', minWidth: 0 }}>
+      <div
+        ref={dropdownRef}
+        style={{
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--spacing-sm, 6px)',
+          minWidth: 0,
+        }}
+      >
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -128,7 +144,7 @@ export function Header() {
               setShowThemeDropdown(!showThemeDropdown);
             }
           }}
-          title={adminStatus ? "Change theme" : currentThemeInfo.name}
+          title={adminStatus ? 'Change theme' : currentThemeInfo.name}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -155,13 +171,20 @@ export function Header() {
                 const img = e.target as HTMLImageElement;
                 img.style.display = 'none';
                 const sibling = img.nextElementSibling as HTMLElement | null;
-                if (sibling) sibling.style.display = 'block';
+                if (sibling) {
+                  sibling.style.display = 'block';
+                }
               }}
             />
           ) : null}
-          <span style={{ display: currentThemeInfo.logo ? 'none' : 'block' }}>{currentThemeInfo.emoji}</span>
+          <span style={{ display: currentThemeInfo.logo ? 'none' : 'block' }}>
+            {currentThemeInfo.emoji}
+          </span>
         </button>
-        <span id="groupNameDisplay" style="font-size: var(--font-size-xl, 18px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; padding-top: 2px;">
+        <span
+          id="groupNameDisplay"
+          style="font-size: var(--font-size-xl, 18px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; padding-top: 2px;"
+        >
           {currentGroupName.value || 'Tennis Coordinator'}
         </span>
 
@@ -197,27 +220,53 @@ export function Header() {
                   textAlign: 'left',
                   transition: 'background 0.2s',
                 }}
-                onMouseEnter={(e) => { if (currentTheme !== theme.id) (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-muted, #f5f5f5)'; }}
-                onMouseLeave={(e) => { if (currentTheme !== theme.id) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                onMouseEnter={(e) => {
+                  if (currentTheme !== theme.id) {
+                    (e.currentTarget as HTMLElement).style.background =
+                      'var(--color-bg-muted, #f5f5f5)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (currentTheme !== theme.id) {
+                    (e.currentTarget as HTMLElement).style.background = 'transparent';
+                  }
+                }}
               >
-                <span style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   {theme.logo ? (
                     <img
                       src={theme.logo}
                       alt={theme.name}
                       style={{ width: '24px', height: '24px', objectFit: 'contain' }}
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
                     />
                   ) : (
                     <span style={{ fontSize: 'var(--font-size-2xl, 20px)' }}>{theme.emoji}</span>
                   )}
                 </span>
-                <span style={{ flex: 1, fontWeight: currentTheme === theme.id ? '600' : '400', color: currentTheme === theme.id ? theme.color : 'var(--color-text-primary, #333)' }}>
+                <span
+                  style={{
+                    flex: 1,
+                    fontWeight: currentTheme === theme.id ? '600' : '400',
+                    color:
+                      currentTheme === theme.id ? theme.color : 'var(--color-text-primary, #333)',
+                  }}
+                >
                   {theme.name}
                 </span>
                 {currentTheme === theme.id && (
                   <svg viewBox="0 0 24 24" width="18" height="18" fill={theme.color}>
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                   </svg>
                 )}
               </button>
@@ -229,70 +278,87 @@ export function Header() {
       {/* User badge - compact with theme accent and clear hover state */}
       {sessionUser.value && (
         <button
-            onClick={goToProfile}
+          onClick={goToProfile}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--spacing-sm, 6px)',
+            background: adminStatus
+              ? 'var(--color-warning-light, #FFF3E0)'
+              : currentThemeInfo.lightBg,
+            border: `1px solid ${adminStatus ? 'var(--color-warning, #FF9800)' : currentThemeInfo.color}40`,
+            borderLeft: adminStatus
+              ? '3px solid var(--color-warning, #FF9800)'
+              : `3px solid ${currentThemeInfo.color}`,
+            borderRadius: 'var(--radius-lg, 8px)',
+            padding: 'var(--spacing-sm, 6px) var(--spacing-lg, 10px)',
+            fontSize: 'var(--font-size-base, 14px)',
+            fontWeight: '600',
+            color: 'var(--color-text-primary, #333)',
+            cursor: 'pointer',
+            boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.1))',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            const btn = e.currentTarget as HTMLElement;
+            btn.style.boxShadow = 'var(--shadow-md, 0 2px 8px rgba(0,0,0,0.15))';
+            btn.style.transform = 'translateY(-1px)';
+            btn.style.background = adminStatus ? '#FFE0B2' : currentThemeInfo.hoverBg;
+          }}
+          onMouseLeave={(e) => {
+            const btn = e.currentTarget as HTMLElement;
+            btn.style.boxShadow = 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.1))';
+            btn.style.transform = 'translateY(0)';
+            btn.style.background = adminStatus
+              ? 'var(--color-warning-light, #FFF3E0)'
+              : currentThemeInfo.lightBg;
+          }}
+          onMouseDown={(e) => {
+            const btn = e.currentTarget as HTMLElement;
+            btn.style.transform = 'translateY(0)';
+            btn.style.boxShadow = 'var(--shadow-xs, 0 1px 2px rgba(0,0,0,0.1))';
+          }}
+          onMouseUp={(e) => {
+            const btn = e.currentTarget as HTMLElement;
+            btn.style.transform = 'translateY(-1px)';
+            btn.style.boxShadow = 'var(--shadow-md, 0 2px 8px rgba(0,0,0,0.15))';
+          }}
+        >
+          <span
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-sm, 6px)',
-              background: adminStatus ? 'var(--color-warning-light, #FFF3E0)' : currentThemeInfo.lightBg,
-              border: `1px solid ${adminStatus ? 'var(--color-warning, #FF9800)' : currentThemeInfo.color}40`,
-              borderLeft: adminStatus
-                ? '3px solid var(--color-warning, #FF9800)'
-                : `3px solid ${currentThemeInfo.color}`,
-              borderRadius: 'var(--radius-lg, 8px)',
-              padding: 'var(--spacing-sm, 6px) var(--spacing-lg, 10px)',
-              fontSize: 'var(--font-size-base, 14px)',
-              fontWeight: '600',
-              color: 'var(--color-text-primary, #333)',
-              cursor: 'pointer',
-              boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.1))',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              const btn = e.currentTarget as HTMLElement;
-              btn.style.boxShadow = 'var(--shadow-md, 0 2px 8px rgba(0,0,0,0.15))';
-              btn.style.transform = 'translateY(-1px)';
-              btn.style.background = adminStatus ? '#FFE0B2' : currentThemeInfo.hoverBg;
-            }}
-            onMouseLeave={(e) => {
-              const btn = e.currentTarget as HTMLElement;
-              btn.style.boxShadow = 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.1))';
-              btn.style.transform = 'translateY(0)';
-              btn.style.background = adminStatus ? 'var(--color-warning-light, #FFF3E0)' : currentThemeInfo.lightBg;
-            }}
-            onMouseDown={(e) => {
-              const btn = e.currentTarget as HTMLElement;
-              btn.style.transform = 'translateY(0)';
-              btn.style.boxShadow = 'var(--shadow-xs, 0 1px 2px rgba(0,0,0,0.1))';
-            }}
-            onMouseUp={(e) => {
-              const btn = e.currentTarget as HTMLElement;
-              btn.style.transform = 'translateY(-1px)';
-              btn.style.boxShadow = 'var(--shadow-md, 0 2px 8px rgba(0,0,0,0.15))';
+              maxWidth: '120px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
             }}
           >
-            <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {sessionUser.value}
+            {sessionUser.value}
+          </span>
+          {adminStatus && (
+            <span
+              style={{
+                background: 'var(--color-warning, #FF9800)',
+                color: 'white',
+                fontSize: 'var(--font-size-2xs, 9px)',
+                padding: '1px var(--spacing-xs, 4px)',
+                borderRadius: 'var(--radius-md, 4px)',
+                fontWeight: '600',
+                letterSpacing: '0.5px',
+              }}
+            >
+              ADMIN
             </span>
-            {adminStatus && (
-              <span
-                style={{
-                  background: 'var(--color-warning, #FF9800)',
-                  color: 'white',
-                  fontSize: 'var(--font-size-2xs, 9px)',
-                  padding: '1px var(--spacing-xs, 4px)',
-                  borderRadius: 'var(--radius-md, 4px)',
-                  fontWeight: '600',
-                  letterSpacing: '0.5px',
-                }}
-              >
-                ADMIN
-              </span>
-            )}
-            {/* Arrow indicator for clickability */}
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style={{ opacity: 0.5, marginLeft: '-2px' }}>
-              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
-            </svg>
+          )}
+          {/* Arrow indicator for clickability */}
+          <svg
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+            fill="currentColor"
+            style={{ opacity: 0.5, marginLeft: '-2px' }}
+          >
+            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
+          </svg>
         </button>
       )}
     </h1>

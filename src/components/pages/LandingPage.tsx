@@ -5,8 +5,8 @@ export function LandingPage() {
         <h1>🎾 Tennis Coordinator</h1>
         <p class="landing-tagline">Turn your love for tennis into more games.</p>
         <p class="landing-subtitle">
-          A simple tool that helps tennis groups self-organize matches with minimal
-          friction—so you spend less time coordinating and more time on the court.
+          A simple tool that helps tennis groups self-organize matches with minimal friction—so you
+          spend less time coordinating and more time on the court.
         </p>
 
         <div class="landing-section">
@@ -72,12 +72,16 @@ export function LandingPage() {
 
         <div class="landing-cta">
           <p>
-            To access your tennis group, visit your group's unique URL or contact
-            your group admin for the link.
+            To access your tennis group, visit your group's unique URL or contact your group admin
+            for the link.
           </p>
         </div>
 
         <div class="landing-footer">
+          <a href="whats-new.html" class="whatsnew-link">
+            What's New
+          </a>
+          <span class="footer-separator">|</span>
           <a
             href="#admin"
             class="admin-link"

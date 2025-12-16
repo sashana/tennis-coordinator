@@ -49,7 +49,7 @@ async function handleShare(memberName: string) {
   try {
     await navigator.share({
       title: `Join ${gName}`,
-      text: inviteMessage
+      text: inviteMessage,
     });
     handleClose();
     showToast('Shared successfully!', 'success');
@@ -110,12 +110,7 @@ export function InvitePromptModal() {
   const canShare = typeof navigator !== 'undefined' && navigator.share !== undefined;
 
   return (
-    <Modal
-      isOpen={showInviteModal.value}
-      onClose={handleClose}
-      title=""
-      showCloseButton={false}
-    >
+    <Modal isOpen={showInviteModal.value} onClose={handleClose} title="" showCloseButton={false}>
       <div style={{ textAlign: 'center', padding: '10px 0' }}>
         <h3 style={{ margin: '0 0 12px 0', fontSize: '16px' }}>Invite {memberName}?</h3>
         <p style={{ margin: '0 0 16px 0', color: '#666', fontSize: '14px' }}>

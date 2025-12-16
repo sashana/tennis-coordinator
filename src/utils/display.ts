@@ -69,10 +69,7 @@ export function formatMatchDescription(match: Match): string {
     return `${typeLabel} ${match.number}`;
   }
 
-  if (
-    (match.type === 'doubles-forming' || match.type === 'singles-forming') &&
-    match.needed
-  ) {
+  if ((match.type === 'doubles-forming' || match.type === 'singles-forming') && match.needed) {
     return `${typeLabel} (need ${match.needed})`;
   }
 
@@ -190,7 +187,9 @@ export function getMatchTypeClass(matchType: MatchType): string {
  * Format rotation status
  */
 export function formatRotationStatus(match: Match): string | null {
-  if (match.type !== 'doubles-forming') return null;
+  if (match.type !== 'doubles-forming') {
+    return null;
+  }
 
   if (match.canRotate) {
     return 'Can rotate';

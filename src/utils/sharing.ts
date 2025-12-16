@@ -124,10 +124,7 @@ export function formatCheckinForWhatsApp(
 
   // Time if specified
   if (checkinData.timeRange) {
-    const timeStr = formatTimeRange(
-      checkinData.timeRange.start,
-      checkinData.timeRange.end
-    );
+    const timeStr = formatTimeRange(checkinData.timeRange.start, checkinData.timeRange.end);
     if (timeStr) {
       lines.push(`Available: ${timeStr}`);
     }
@@ -211,11 +208,11 @@ export function generateInviteMessage(
   const lines: string[] = [];
   lines.push(`Hi ${memberName}!`);
   lines.push('');
-  lines.push(
-    `${inviterName} has added you to the ${groupName} tennis group.`
-  );
+  lines.push(`${inviterName} has added you to the ${groupName} tennis group.`);
   lines.push('');
-  lines.push('You can now check in for matches, see who else is playing, and coordinate with the group.');
+  lines.push(
+    'You can now check in for matches, see who else is playing, and coordinate with the group.'
+  );
   lines.push('');
   lines.push('See you on the courts!');
   return lines.join('\n');
@@ -254,7 +251,7 @@ export function generateCompactWhatsAppMessage(
   const dateFormatted = dateObj.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   });
 
   let message = `${dateFormatted}\n`;

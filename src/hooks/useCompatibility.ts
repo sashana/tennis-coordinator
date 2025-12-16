@@ -12,10 +12,7 @@
  */
 
 import { signal, computed } from '@preact/signals';
-import type {
-  GroupSettings,
-  WeatherLocation,
-} from '../types/index';
+import type { GroupSettings, WeatherLocation } from '../types/index';
 import type {
   DataFormat,
   CompatibilityConfig,
@@ -207,8 +204,8 @@ export function getDeviceToken(): string {
   if (!token) {
     // Generate new UUID
     token = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);
     });
     localStorage.setItem(storageKey, token);
@@ -388,7 +385,7 @@ export function legacyToUnifiedSettings(legacy: GroupSettings): UnifiedGroupSett
 export function independentGroupToUnifiedSettings(group: IndependentGroup): UnifiedGroupSettings {
   return {
     groupName: group.name,
-    coreMembers: Object.values(group.members).map(m => m.displayName),
+    coreMembers: Object.values(group.members).map((m) => m.displayName),
     groupPin: group.settings.groupPin || '',
     adminPin: group.settings.adminPin || '',
     location: group.location,
@@ -400,10 +397,7 @@ export function independentGroupToUnifiedSettings(group: IndependentGroup): Unif
 /**
  * Convert club group to unified settings format
  */
-export function clubGroupToUnifiedSettings(
-  group: ClubGroup,
-  club: Club
-): UnifiedGroupSettings {
+export function clubGroupToUnifiedSettings(group: ClubGroup, club: Club): UnifiedGroupSettings {
   // Get members from both club membership and group membership
   const memberNames: string[] = [];
   for (const member of Object.values(group.members)) {
@@ -431,10 +425,7 @@ export function clubGroupToUnifiedSettings(
 /**
  * Initialize compatibility config based on current URL and detected format
  */
-export function initCompatConfig(
-  route: ParsedRoute,
-  format: DataFormat
-): CompatibilityConfig {
+export function initCompatConfig(route: ParsedRoute, format: DataFormat): CompatibilityConfig {
   const config: CompatibilityConfig = { format };
 
   if (format === 'legacy') {

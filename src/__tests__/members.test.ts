@@ -379,12 +379,18 @@ describe('validateMemberName', () => {
 
   it('returns error for name too long', () => {
     const longName = 'A'.repeat(51);
-    expect(validateMemberName(longName, existingMembers)).toBe('Name must be less than 50 characters');
+    expect(validateMemberName(longName, existingMembers)).toBe(
+      'Name must be less than 50 characters'
+    );
   });
 
   it('returns error for duplicate name', () => {
-    expect(validateMemberName('Alice', existingMembers)).toBe('A member with this name already exists');
-    expect(validateMemberName('alice', existingMembers)).toBe('A member with this name already exists');
+    expect(validateMemberName('Alice', existingMembers)).toBe(
+      'A member with this name already exists'
+    );
+    expect(validateMemberName('alice', existingMembers)).toBe(
+      'A member with this name already exists'
+    );
   });
 
   it('allows renaming to same name (with excludeName)', () => {
@@ -392,6 +398,8 @@ describe('validateMemberName', () => {
   });
 
   it('still detects duplicates when renaming to existing name', () => {
-    expect(validateMemberName('Bob', existingMembers, 'Alice')).toBe('A member with this name already exists');
+    expect(validateMemberName('Bob', existingMembers, 'Alice')).toBe(
+      'A member with this name already exists'
+    );
   });
 });

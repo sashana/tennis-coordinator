@@ -15,8 +15,8 @@ export type PlayStyleLabel = 'Singles Only' | 'Doubles Only' | 'Either';
 // ============================================
 
 export interface TimeRange {
-  start: string;  // e.g., "2:00 PM"
-  end: string;    // e.g., "4:00 PM"
+  start: string; // e.g., "2:00 PM"
+  end: string; // e.g., "4:00 PM"
 }
 
 export interface WeatherLocation {
@@ -60,14 +60,14 @@ export interface MemberDetailsMap {
 
 export interface CheckinData {
   name: string;
-  playStyle?: PlayStyle;  // 'singles' | 'doubles' | 'both' (defaults to 'both')
+  playStyle?: PlayStyle; // 'singles' | 'doubles' | 'both' (defaults to 'both')
   timestamp: number;
   timeRange?: TimeRange;
-  allowRotation?: boolean;  // defaults to true
+  allowRotation?: boolean; // defaults to true
   addedBy?: string;
   isGuest?: boolean;
   guestOf?: string;
-  originalIndex?: number;  // Used during match organization
+  originalIndex?: number; // Used during match organization
 }
 
 export interface CheckinsByDate {
@@ -149,11 +149,11 @@ export interface ActivityEntry {
   timeRange?: TimeRange;
   contact?: string;
   notes?: string;
-  type?: string;  // for whatsapp_share
-  matchKey?: string;  // for notes_saved
-  matchCount?: number;  // for arrangement_saved - number of matches arranged
-  playerCount?: number;  // for arrangement_saved - total players arranged
-  arrangementDetails?: string;  // for arrangement_saved - human-readable description of arrangement
+  type?: string; // for whatsapp_share
+  matchKey?: string; // for notes_saved
+  matchCount?: number; // for arrangement_saved - number of matches arranged
+  playerCount?: number; // for arrangement_saved - total players arranged
+  arrangementDetails?: string; // for arrangement_saved - human-readable description of arrangement
 }
 
 export interface ActivityByDate {
@@ -166,16 +166,22 @@ export interface ActivityByDate {
 // Match Types
 // ============================================
 
-export type MatchType = 'doubles' | 'singles' | 'doubles-forming' | 'singles-forming' | 'singles-or-practice' | 'waiting';
+export type MatchType =
+  | 'doubles'
+  | 'singles'
+  | 'doubles-forming'
+  | 'singles-forming'
+  | 'singles-or-practice'
+  | 'waiting';
 
 export interface Match {
   type: MatchType;
-  number?: number;  // For doubles matches: Doubles 1, Doubles 2, etc.
+  number?: number; // For doubles matches: Doubles 1, Doubles 2, etc.
   players: CheckinData[];
-  needed?: number;  // For forming matches: how many more players needed
-  canRotate?: boolean;  // For 3-player doubles-forming that can rotate
-  eitherCount?: number;  // Count of "Either" players in forming match
-  canPlaySingles?: boolean;  // Whether forming players can play singles
+  needed?: number; // For forming matches: how many more players needed
+  canRotate?: boolean; // For 3-player doubles-forming that can rotate
+  eitherCount?: number; // Count of "Either" players in forming match
+  canPlaySingles?: boolean; // Whether forming players can play singles
 }
 
 export interface OrganizeMatchesResult {
@@ -189,14 +195,15 @@ export interface OrganizeMatchesResult {
 
 export interface MatchArrangement {
   matches: {
-    [matchKey: string]: {  // e.g., "doubles-1", "doubles-2", "singles-1"
-      players: string[];   // Player names in this match
-      note?: string;       // Optional time note like "12pm start"
+    [matchKey: string]: {
+      // e.g., "doubles-1", "doubles-2", "singles-1"
+      players: string[]; // Player names in this match
+      note?: string; // Optional time note like "12pm start"
     };
   };
-  unassigned: string[];    // Players not assigned to any match
-  arrangedBy: string;      // Admin who set this
-  arrangedAt: number;      // Timestamp
+  unassigned: string[]; // Players not assigned to any match
+  arrangedBy: string; // Admin who set this
+  arrangedAt: number; // Timestamp
 }
 
 // ============================================

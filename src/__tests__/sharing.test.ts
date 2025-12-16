@@ -240,10 +240,15 @@ describe('generateCompactWhatsAppMessage', () => {
   });
 
   it('includes weather info when provided', () => {
-    const result = generateCompactWhatsAppMessage([], '2024-12-13', {}, {
-      description: '☀️ Clear sky',
-      tempMax: 72,
-    });
+    const result = generateCompactWhatsAppMessage(
+      [],
+      '2024-12-13',
+      {},
+      {
+        description: '☀️ Clear sky',
+        tempMax: 72,
+      }
+    );
     expect(result).toContain('☀️ Clear sky, 72°F');
   });
 

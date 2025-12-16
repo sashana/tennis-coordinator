@@ -1,9 +1,23 @@
 import { signal, computed } from '@preact/signals';
-import { allCheckins, sessionUser, selectedDate, memberDetails, currentGroupId, currentGroupName, showToast, coreMembers } from '../App';
+import {
+  allCheckins,
+  sessionUser,
+  selectedDate,
+  memberDetails,
+  currentGroupId,
+  currentGroupName,
+  showToast,
+  coreMembers,
+} from '../App';
 import { organizeMatches } from '../../utils/matching';
 import { formatDate, formatTimeRange, normalizeName } from '../../utils/helpers';
 import { activeTab } from '../navigation/BottomTabBar';
-import { groupSettings, matchNotes, allMatchNotes, useAllMatchNotes } from '../../hooks/useFirebase';
+import {
+  groupSettings,
+  matchNotes,
+  allMatchNotes,
+  useAllMatchNotes,
+} from '../../hooks/useFirebase';
 import { createCalendarEventFromMatch, downloadICSFile } from '../../utils/calendar';
 
 // State for inline share dropdown
@@ -24,7 +38,9 @@ const gamesView = signal<'upcoming' | 'past'>('upcoming');
 // Check if current user is admin
 function isGroupAdmin(): boolean {
   const groupId = currentGroupId.value;
-  if (!groupId) return false;
+  if (!groupId) {
+    return false;
+  }
   return sessionStorage.getItem(`adminAuth_${groupId}`) === 'true';
 }
 
@@ -42,13 +58,15 @@ if (typeof document !== 'undefined') {
 
     // Close member picker dropdown
     if (showMemberPicker.value) {
-      if (!target.closest('.member-picker-dropdown') && !target.closest('[data-member-picker-button]')) {
+      if (
+        !target.closest('.member-picker-dropdown') &&
+        !target.closest('[data-member-picker-button]')
+      ) {
         showMemberPicker.value = false;
       }
     }
   });
 }
-
 
 interface ScheduledMatch {
   date: string;
@@ -63,7 +81,9 @@ interface ScheduledMatch {
 const allUserMatches = computed(() => {
   // Use viewingUser if admin is viewing another user, otherwise use sessionUser
   const user = viewingUser.value || sessionUser.value;
-  if (!user) return { upcoming: [], past: [] };
+  if (!user) {
+    return { upcoming: [], past: [] };
+  }
 
   const normalizedUser = normalizeName(user);
   const upcoming: ScheduledMatch[] = [];
@@ -79,7 +99,9 @@ const allUserMatches = computed(() => {
     const isPast = dateObj < today;
 
     const checkins = allCheckins.value[date] || [];
-    if (checkins.length === 0) continue;
+    if (checkins.length === 0) {
+      continue;
+    }
 
     // Build user preferences from member details
     const userPreferences: Record<string, { include: string[]; exclude: string[] }> = {};
@@ -137,7 +159,8 @@ function getMatchTypeLabel(type: string): string {
     case 'rotation':
     case 'singles-or-practice':
       return 'Rotation';
-    default: return type;
+    default:
+      return type;
   }
 }
 
@@ -146,15 +169,15 @@ function generateNeedPlayersMessage(match: ScheduledMatch): string {
   const dateStr = dateObj.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   });
 
-  const playerNames = match.players.map(p => p.name).join(' & ');
+  const playerNames = match.players.map((p) => p.name).join(' & ');
   const groupId = currentGroupId.value;
   const appUrl = `${window.location.origin}${window.location.pathname}#${groupId}`;
 
   if (match.type === 'doubles-forming') {
-    const needed = match.needed || (4 - match.players.length);
+    const needed = match.needed || 4 - match.players.length;
     const neededText = needed === 1 ? '1 more player needed' : `${needed} more players needed`;
 
     let message = `🎾 ${neededText} for doubles!\n`;
@@ -190,11 +213,14 @@ function shareNeedPlayers(match: ScheduledMatch, method: 'whatsapp' | 'sms' | 'c
     const encoded = encodeURIComponent(message);
     window.open(`sms:?body=${encoded}`, '_blank');
   } else if (method === 'copy') {
-    navigator.clipboard.writeText(message).then(() => {
-      showToast('Message copied!', 'success');
-    }).catch(() => {
-      showToast('Failed to copy', 'error');
-    });
+    navigator.clipboard
+      .writeText(message)
+      .then(() => {
+        showToast('Message copied!', 'success');
+      })
+      .catch(() => {
+        showToast('Failed to copy', 'error');
+      });
   }
 
   activeShareDropdown.value = null;
@@ -202,7 +228,9 @@ function shareNeedPlayers(match: ScheduledMatch, method: 'whatsapp' | 'sms' | 'c
 
 function handleDateClick(date: string) {
   // Don't navigate when in selection mode
-  if (isSelectionMode.value) return;
+  if (isSelectionMode.value) {
+    return;
+  }
   selectedDate.value = date;
   activeTab.value = 'checkin';
 }
@@ -251,11 +279,13 @@ function generateMultiGameShareText(schedule: ScheduledMatch[], selectedKeys: Se
     return selectedKeys.has(matchKey);
   });
 
-  if (selectedMatches.length === 0) return '';
+  if (selectedMatches.length === 0) {
+    return '';
+  }
 
   // Separate by status
-  const ready = selectedMatches.filter(m => !m.isForming);
-  const forming = selectedMatches.filter(m => m.isForming);
+  const ready = selectedMatches.filter((m) => !m.isForming);
+  const forming = selectedMatches.filter((m) => m.isForming);
 
   let message = '🎾 Tennis Update\n\n';
 
@@ -263,9 +293,13 @@ function generateMultiGameShareText(schedule: ScheduledMatch[], selectedKeys: Se
     message += '✅ Ready to Play:\n';
     for (const match of ready) {
       const dateObj = new Date(match.date + 'T00:00:00');
-      const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      const dateStr = dateObj.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+      });
       const typeLabel = getMatchTypeLabel(match.type);
-      const playerNames = match.players.map(p => p.name).join(', ');
+      const playerNames = match.players.map((p) => p.name).join(', ');
       message += `• ${dateStr} - ${typeLabel}\n  ${playerNames}\n`;
     }
     message += '\n';
@@ -275,10 +309,14 @@ function generateMultiGameShareText(schedule: ScheduledMatch[], selectedKeys: Se
     message += '🟡 Need Players:\n';
     for (const match of forming) {
       const dateObj = new Date(match.date + 'T00:00:00');
-      const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      const dateStr = dateObj.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+      });
       const typeLabel = getMatchTypeLabel(match.type);
       const needed = match.needed || 1;
-      const playerNames = match.players.map(p => p.name).join(', ');
+      const playerNames = match.players.map((p) => p.name).join(', ');
       message += `• ${dateStr} - ${typeLabel} needs ${needed}\n  ${playerNames}\n`;
     }
     message += '\n';
@@ -289,7 +327,10 @@ function generateMultiGameShareText(schedule: ScheduledMatch[], selectedKeys: Se
   return message;
 }
 
-function shareSelectedGames(method: 'whatsapp' | 'sms' | 'copy' | 'native', schedule: ScheduledMatch[]) {
+function shareSelectedGames(
+  method: 'whatsapp' | 'sms' | 'copy' | 'native',
+  schedule: ScheduledMatch[]
+) {
   const message = generateMultiGameShareText(schedule, selectedGames.value);
 
   if (!message) {
@@ -298,15 +339,17 @@ function shareSelectedGames(method: 'whatsapp' | 'sms' | 'copy' | 'native', sche
   }
 
   if (method === 'native' && navigator.share) {
-    navigator.share({
-      title: 'Tennis Update',
-      text: message,
-    }).catch(() => {
-      // User cancelled or share failed - fallback to copy
-      navigator.clipboard.writeText(message).then(() => {
-        showToast('Copied to clipboard', 'success');
+    navigator
+      .share({
+        title: 'Tennis Update',
+        text: message,
+      })
+      .catch(() => {
+        // User cancelled or share failed - fallback to copy
+        navigator.clipboard.writeText(message).then(() => {
+          showToast('Copied to clipboard', 'success');
+        });
       });
-    });
   } else if (method === 'whatsapp') {
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/?text=${encoded}`, '_blank');
@@ -314,11 +357,14 @@ function shareSelectedGames(method: 'whatsapp' | 'sms' | 'copy' | 'native', sche
     const encoded = encodeURIComponent(message);
     window.open(`sms:?body=${encoded}`, '_blank');
   } else {
-    navigator.clipboard.writeText(message).then(() => {
-      showToast('Copied to clipboard', 'success');
-    }).catch(() => {
-      showToast('Failed to copy', 'error');
-    });
+    navigator.clipboard
+      .writeText(message)
+      .then(() => {
+        showToast('Copied to clipboard', 'success');
+      })
+      .catch(() => {
+        showToast('Failed to copy', 'error');
+      });
   }
 
   // Exit selection mode after sharing
@@ -346,23 +392,25 @@ export function MyMatchesTab() {
     <div style="padding: 16px 0;">
       {/* Selection mode bottom bar */}
       {inSelectionMode && (
-        <div style={{
-          position: 'fixed',
-          bottom: '70px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 'calc(100% - 32px)',
-          maxWidth: '400px',
-          background: 'white',
-          borderRadius: '16px',
-          padding: '12px 16px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '12px',
-          zIndex: 100,
-          boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
-        }}>
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '70px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 'calc(100% - 32px)',
+            maxWidth: '400px',
+            background: 'white',
+            borderRadius: '16px',
+            padding: '12px 16px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '12px',
+            zIndex: 100,
+            boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+          }}
+        >
           <button
             onClick={exitSelectionMode}
             style={{
@@ -382,10 +430,15 @@ export function MyMatchesTab() {
           </span>
           <div style={{ position: 'relative' }}>
             <button
-              onClick={() => { showShareOptions.value = !showShareOptions.value; }}
+              onClick={() => {
+                showShareOptions.value = !showShareOptions.value;
+              }}
               disabled={selectionCount === 0}
               style={{
-                background: selectionCount > 0 ? 'var(--color-primary, #2C6E49)' : 'var(--color-gray-disabled, #ccc)',
+                background:
+                  selectionCount > 0
+                    ? 'var(--color-primary, #2C6E49)'
+                    : 'var(--color-gray-disabled, #ccc)',
                 border: 'none',
                 borderRadius: '20px',
                 padding: '8px 16px',
@@ -400,21 +453,23 @@ export function MyMatchesTab() {
             >
               Share
               <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" />
               </svg>
             </button>
             {showShareOptions.value && selectionCount > 0 && (
-              <div style={{
-                position: 'absolute',
-                bottom: '100%',
-                right: '0',
-                marginBottom: '8px',
-                background: 'white',
-                borderRadius: '12px',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
-                overflow: 'hidden',
-                minWidth: '160px',
-              }}>
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '100%',
+                  right: '0',
+                  marginBottom: '8px',
+                  background: 'white',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+                  overflow: 'hidden',
+                  minWidth: '160px',
+                }}
+              >
                 {typeof navigator.share === 'function' && (
                   <button
                     onClick={() => shareSelectedGames('native', schedule)}
@@ -431,8 +486,13 @@ export function MyMatchesTab() {
                       color: '#333',
                     }}
                   >
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-primary, #2C6E49)">
-                      <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="20"
+                      height="20"
+                      fill="var(--color-primary, #2C6E49)"
+                    >
+                      <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" />
                     </svg>
                     Share...
                   </button>
@@ -454,7 +514,7 @@ export function MyMatchesTab() {
                   }}
                 >
                   <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                   </svg>
                   WhatsApp
                 </button>
@@ -475,7 +535,7 @@ export function MyMatchesTab() {
                   }}
                 >
                   <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" />
                   </svg>
                   SMS
                 </button>
@@ -496,7 +556,7 @@ export function MyMatchesTab() {
                   }}
                 >
                   <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
                   </svg>
                   Copy text
                 </button>
@@ -507,15 +567,20 @@ export function MyMatchesTab() {
       )}
 
       {/* Segmented control for Upcoming/Past */}
-      <div style={{
-        display: 'flex',
-        background: 'var(--color-gray-lightest, #f0f0f0)',
-        borderRadius: '10px',
-        padding: '4px',
-        marginBottom: '16px',
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          background: 'var(--color-gray-lightest, #f0f0f0)',
+          borderRadius: '10px',
+          padding: '4px',
+          marginBottom: '16px',
+        }}
+      >
         <button
-          onClick={() => { gamesView.value = 'upcoming'; exitSelectionMode(); }}
+          onClick={() => {
+            gamesView.value = 'upcoming';
+            exitSelectionMode();
+          }}
           style={{
             flex: 1,
             padding: '10px 16px',
@@ -526,14 +591,20 @@ export function MyMatchesTab() {
             cursor: 'pointer',
             transition: 'all 0.2s',
             background: gamesView.value === 'upcoming' ? 'white' : 'transparent',
-            color: gamesView.value === 'upcoming' ? 'var(--color-primary, #2C6E49)' : 'var(--color-gray-base, #666)',
+            color:
+              gamesView.value === 'upcoming'
+                ? 'var(--color-primary, #2C6E49)'
+                : 'var(--color-gray-base, #666)',
             boxShadow: gamesView.value === 'upcoming' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
           }}
         >
           Upcoming ({allMatches.upcoming.length})
         </button>
         <button
-          onClick={() => { gamesView.value = 'past'; exitSelectionMode(); }}
+          onClick={() => {
+            gamesView.value = 'past';
+            exitSelectionMode();
+          }}
           style={{
             flex: 1,
             padding: '10px 16px',
@@ -544,7 +615,10 @@ export function MyMatchesTab() {
             cursor: 'pointer',
             transition: 'all 0.2s',
             background: gamesView.value === 'past' ? 'white' : 'transparent',
-            color: gamesView.value === 'past' ? 'var(--color-primary, #2C6E49)' : 'var(--color-gray-base, #666)',
+            color:
+              gamesView.value === 'past'
+                ? 'var(--color-primary, #2C6E49)'
+                : 'var(--color-gray-base, #666)',
             boxShadow: gamesView.value === 'past' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
           }}
         >
@@ -561,7 +635,9 @@ export function MyMatchesTab() {
         <div style="display: flex; gap: 8px; align-items: center;">
           {isViewingOther && (
             <button
-              onClick={() => { viewingUser.value = null; }}
+              onClick={() => {
+                viewingUser.value = null;
+              }}
               style={{
                 background: 'var(--color-gray-lightest, #f5f5f5)',
                 border: '1px solid var(--color-gray-light, #ddd)',
@@ -577,7 +653,9 @@ export function MyMatchesTab() {
           )}
           {!isViewingOther && schedule.length > 0 && !inSelectionMode && (
             <button
-              onClick={() => { isSelectionMode.value = true; }}
+              onClick={() => {
+                isSelectionMode.value = true;
+              }}
               style={{
                 background: 'var(--color-gray-lightest, #f5f5f5)',
                 border: '1px solid var(--color-gray-light, #ddd)',
@@ -592,7 +670,7 @@ export function MyMatchesTab() {
               }}
             >
               <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" />
               </svg>
               Share
             </button>
@@ -602,20 +680,24 @@ export function MyMatchesTab() {
 
       {/* Admin user selector */}
       {isAdmin && !isViewingOther && (
-        <div style={{
-          background: 'var(--color-gray-lightest, #f5f5f5)',
-          borderRadius: 'var(--radius-lg, 8px)',
-          padding: 'var(--spacing-xl, 12px)',
-          marginBottom: 'var(--spacing-2xl, 16px)',
-          position: 'relative',
-        }}>
-          <label style={{
-            display: 'block',
-            fontSize: 'var(--font-size-sm, 13px)',
-            color: 'var(--color-gray-base, #666)',
-            marginBottom: 'var(--spacing-sm, 6px)',
-            fontWeight: '500',
-          }}>
+        <div
+          style={{
+            background: 'var(--color-gray-lightest, #f5f5f5)',
+            borderRadius: 'var(--radius-lg, 8px)',
+            padding: 'var(--spacing-xl, 12px)',
+            marginBottom: 'var(--spacing-2xl, 16px)',
+            position: 'relative',
+          }}
+        >
+          <label
+            style={{
+              display: 'block',
+              fontSize: 'var(--font-size-sm, 13px)',
+              color: 'var(--color-gray-base, #666)',
+              marginBottom: 'var(--spacing-sm, 6px)',
+              fontWeight: '500',
+            }}
+          >
             View another member's games
           </label>
           <button
@@ -640,8 +722,17 @@ export function MyMatchesTab() {
             }}
           >
             <span>Select a member...</span>
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style={{ transform: showMemberPicker.value ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-              <path d="M7 10l5 5 5-5z"/>
+            <svg
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="currentColor"
+              style={{
+                transform: showMemberPicker.value ? 'rotate(180deg)' : 'none',
+                transition: 'transform 0.2s',
+              }}
+            >
+              <path d="M7 10l5 5 5-5z" />
             </svg>
           </button>
 
@@ -664,9 +755,9 @@ export function MyMatchesTab() {
               }}
             >
               {coreMembers.value
-                .filter(m => m !== sessionUser.value)
+                .filter((m) => m !== sessionUser.value)
                 .sort((a, b) => a.localeCompare(b))
-                .map(member => (
+                .map((member) => (
                   <button
                     key={member}
                     onClick={() => {
@@ -688,8 +779,7 @@ export function MyMatchesTab() {
                   >
                     {member}
                   </button>
-                ))
-              }
+                ))}
             </div>
           )}
         </div>
@@ -703,18 +793,19 @@ export function MyMatchesTab() {
           </p>
           <p style="font-size: 14px; color: var(--color-gray-base, #666); margin: 0 0 16px 0;">
             {isPastView
-              ? (isViewingOther
-                  ? `${viewingUser.value} has no past games on record.`
-                  : 'Your game history will appear here.')
-              : (isViewingOther
-                  ? `${viewingUser.value} has no upcoming games.`
-                  : 'Check in for a date to get matched with other players!')
-            }
+              ? isViewingOther
+                ? `${viewingUser.value} has no past games on record.`
+                : 'Your game history will appear here.'
+              : isViewingOther
+                ? `${viewingUser.value} has no upcoming games.`
+                : 'Check in for a date to get matched with other players!'}
           </p>
           {/* Check In button for upcoming empty state (only for self, not when viewing others) */}
           {!isPastView && !isViewingOther && (
             <button
-              onClick={() => { activeTab.value = 'checkin'; }}
+              onClick={() => {
+                activeTab.value = 'checkin';
+              }}
               style={{
                 background: 'var(--color-primary, #2C6E49)',
                 color: 'white',
@@ -731,7 +822,7 @@ export function MyMatchesTab() {
               }}
             >
               <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
               </svg>
               Check In
             </button>
@@ -741,7 +832,7 @@ export function MyMatchesTab() {
         <div style="display: flex; flex-direction: column; gap: 12px;">
           {schedule.map((match, idx) => {
             const otherPlayers = match.players.filter(
-              p => normalizeName(p.name) !== normalizeName(currentViewUser)
+              (p) => normalizeName(p.name) !== normalizeName(currentViewUser)
             );
             const matchKey = `mygames-${match.date}-${match.type}-${idx}`;
             const isDropdownOpen = activeShareDropdown.value === matchKey;
@@ -760,31 +851,36 @@ export function MyMatchesTab() {
                   padding: '16px',
                   background: match.isForming ? '#FFF8E1' : '#E8F5E9',
                   borderRadius: '12px',
-                  border: inSelectionMode && isSelected
-                    ? '2px solid var(--color-primary, #2C6E49)'
-                    : match.isForming ? '1px solid #FFE082' : '1px solid #A5D6A7',
+                  border:
+                    inSelectionMode && isSelected
+                      ? '2px solid var(--color-primary, #2C6E49)'
+                      : match.isForming
+                        ? '1px solid #FFE082'
+                        : '1px solid #A5D6A7',
                   cursor: inSelectionMode ? 'pointer' : 'default',
                   position: 'relative',
                 }}
               >
                 {/* Selection checkbox in selection mode */}
                 {inSelectionMode && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '12px',
-                    right: '12px',
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '6px',
-                    border: isSelected ? 'none' : '2px solid var(--color-gray-disabled, #ccc)',
-                    background: isSelected ? 'var(--color-primary, #2C6E49)' : 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                  }}>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '6px',
+                      border: isSelected ? 'none' : '2px solid var(--color-gray-disabled, #ccc)',
+                      background: isSelected ? 'var(--color-primary, #2C6E49)' : 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                    }}
+                  >
                     {isSelected && '✓'}
                   </div>
                 )}
@@ -810,14 +906,16 @@ export function MyMatchesTab() {
                     <span style="font-weight: 600; color: var(--color-gray-dark, #333); font-size: 16px;">
                       {formatDate(match.date)}
                     </span>
-                    <span style={{
-                      fontSize: '12px',
-                      padding: '2px 8px',
-                      borderRadius: '10px',
-                      background: '#f0f0f0',
-                      color: 'var(--color-gray-base, #666)',
-                      fontWeight: '500',
-                    }}>
+                    <span
+                      style={{
+                        fontSize: '12px',
+                        padding: '2px 8px',
+                        borderRadius: '10px',
+                        background: '#f0f0f0',
+                        color: 'var(--color-gray-base, #666)',
+                        fontWeight: '500',
+                      }}
+                    >
                       {getMatchTypeLabel(match.type)}
                     </span>
                   </div>
@@ -826,14 +924,14 @@ export function MyMatchesTab() {
                     {match.isForming ? (
                       <span style="display: flex; align-items: center; gap: 4px; color: #F57C00; font-size: 12px; font-weight: 600;">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                          <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                          <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
                         </svg>
                         Need {needed}
                       </span>
                     ) : (
                       <span style="display: flex; align-items: center; gap: 4px; color: var(--color-primary, #2C6E49); font-size: 12px; font-weight: 600;">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                         </svg>
                         Ready
                       </span>
@@ -849,7 +947,9 @@ export function MyMatchesTab() {
                           }}
                           title="Invite players"
                           style={{
-                            background: isDropdownOpen ? 'var(--color-orange-dark, #e65100)' : 'var(--color-orange-primary, #ff9800)',
+                            background: isDropdownOpen
+                              ? 'var(--color-orange-dark, #e65100)'
+                              : 'var(--color-orange-primary, #ff9800)',
                             border: 'none',
                             borderRadius: '12px',
                             padding: '4px 10px',
@@ -865,8 +965,17 @@ export function MyMatchesTab() {
                           }}
                         >
                           <span>Invite</span>
-                          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-                            <path d="M7 10l5 5 5-5z"/>
+                          <svg
+                            viewBox="0 0 24 24"
+                            width="12"
+                            height="12"
+                            fill="currentColor"
+                            style={{
+                              transform: isDropdownOpen ? 'rotate(180deg)' : 'none',
+                              transition: 'transform 0.2s',
+                            }}
+                          >
+                            <path d="M7 10l5 5 5-5z" />
                           </svg>
                         </button>
 
@@ -887,7 +996,10 @@ export function MyMatchesTab() {
                             }}
                           >
                             <button
-                              onClick={(e) => { e.stopPropagation(); shareNeedPlayers(match, 'whatsapp'); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                shareNeedPlayers(match, 'whatsapp');
+                              }}
                               style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -902,12 +1014,15 @@ export function MyMatchesTab() {
                               }}
                             >
                               <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                               </svg>
                               WhatsApp
                             </button>
                             <button
-                              onClick={(e) => { e.stopPropagation(); shareNeedPlayers(match, 'sms'); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                shareNeedPlayers(match, 'sms');
+                              }}
                               style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -923,12 +1038,15 @@ export function MyMatchesTab() {
                               }}
                             >
                               <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" />
                               </svg>
                               SMS
                             </button>
                             <button
-                              onClick={(e) => { e.stopPropagation(); shareNeedPlayers(match, 'copy'); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                shareNeedPlayers(match, 'copy');
+                              }}
                               style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -944,7 +1062,7 @@ export function MyMatchesTab() {
                               }}
                             >
                               <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
                               </svg>
                               Copy
                             </button>
@@ -974,7 +1092,7 @@ export function MyMatchesTab() {
                         className="hover-color-primary"
                       >
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                          <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/>
+                          <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z" />
                         </svg>
                       </button>
                     )}
@@ -999,7 +1117,9 @@ export function MyMatchesTab() {
                   {otherPlayers.length > 0 ? (
                     <>
                       <span style="color: #888;">Playing with </span>
-                      <span style="font-weight: 500;">{otherPlayers.map(p => p.name).join(', ')}</span>
+                      <span style="font-weight: 500;">
+                        {otherPlayers.map((p) => p.name).join(', ')}
+                      </span>
                     </>
                   ) : (
                     <span style="color: #888; font-style: italic;">
@@ -1014,18 +1134,24 @@ export function MyMatchesTab() {
                   const noteForMatch = allMatchNotes.value[match.date]?.[noteMatchKey];
                   if (noteForMatch) {
                     return (
-                      <div style={{
-                        marginTop: '8px',
-                        padding: '8px 10px',
-                        background: match.isForming ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.6)',
-                        borderRadius: '6px',
-                        fontSize: '13px',
-                        color: 'var(--color-gray-base, #666)',
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: '6px',
-                      }}>
-                        <span style={{ color: 'var(--color-gray-muted, #999)', flexShrink: 0 }}>📝</span>
+                      <div
+                        style={{
+                          marginTop: '8px',
+                          padding: '8px 10px',
+                          background: match.isForming
+                            ? 'rgba(255,255,255,0.6)'
+                            : 'rgba(255,255,255,0.6)',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          color: 'var(--color-gray-base, #666)',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '6px',
+                        }}
+                      >
+                        <span style={{ color: 'var(--color-gray-muted, #999)', flexShrink: 0 }}>
+                          📝
+                        </span>
                         <span>{noteForMatch}</span>
                       </div>
                     );
@@ -1040,7 +1166,9 @@ export function MyMatchesTab() {
 
       {schedule.length > 0 && (
         <p style="font-size: 13px; color: var(--color-gray-muted, #999); text-align: center; margin-top: 16px;">
-          {isPastView ? 'Tap a game to view that day\'s history' : 'Tap a game to view that day\'s details'}
+          {isPastView
+            ? "Tap a game to view that day's history"
+            : "Tap a game to view that day's details"}
         </p>
       )}
     </div>

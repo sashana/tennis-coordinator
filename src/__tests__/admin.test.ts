@@ -24,8 +24,8 @@ describe('Admin Features', () => {
         };
 
         const uniquePlayers = new Set<string>();
-        Object.values(checkins).forEach(dateCheckins => {
-          dateCheckins.forEach(c => uniquePlayers.add(c.name));
+        Object.values(checkins).forEach((dateCheckins) => {
+          dateCheckins.forEach((c) => uniquePlayers.add(c.name));
         });
 
         expect(uniquePlayers.size).toBe(3); // Alice, Bob, Charlie
@@ -37,9 +37,7 @@ describe('Admin Features', () => {
             { name: 'Alice', playStyle: 'both' },
             { name: 'Bob', playStyle: 'doubles' },
           ],
-          '2024-01-16': [
-            { name: 'Charlie', playStyle: 'both' },
-          ],
+          '2024-01-16': [{ name: 'Charlie', playStyle: 'both' }],
         };
 
         const counts = Object.entries(checkins).map(([date, c]) => ({
@@ -64,7 +62,7 @@ describe('Admin Features', () => {
         ];
 
         const counts = { singles: 0, doubles: 0, both: 0 };
-        checkins.forEach(c => {
+        checkins.forEach((c) => {
           counts[c.playStyle as keyof typeof counts]++;
         });
 
@@ -91,7 +89,7 @@ describe('Admin Features', () => {
         ];
 
         const grouped: Record<string, number> = {};
-        activities.forEach(a => {
+        activities.forEach((a) => {
           grouped[a.action] = (grouped[a.action] || 0) + 1;
         });
 
@@ -123,11 +121,11 @@ describe('Admin Features', () => {
         const toDelete = { date: '2024-01-15', firebaseKey: 'key2' };
 
         const filtered = activities.filter(
-          a => !(a.date === toDelete.date && a.firebaseKey === toDelete.firebaseKey)
+          (a) => !(a.date === toDelete.date && a.firebaseKey === toDelete.firebaseKey)
         );
 
         expect(filtered.length).toBe(2);
-        expect(filtered.find(a => a.firebaseKey === 'key2')).toBeUndefined();
+        expect(filtered.find((a) => a.firebaseKey === 'key2')).toBeUndefined();
       });
     });
 
@@ -149,10 +147,10 @@ describe('Admin Features', () => {
 
         // Filter for check-ins only
         const allowedActions = new Set(filterConfig.checkin.actions);
-        const filtered = activities.filter(a => allowedActions.has(a.action));
+        const filtered = activities.filter((a) => allowedActions.has(a.action));
 
         expect(filtered.length).toBe(2);
-        expect(filtered.map(a => a.player)).toEqual(['Alice', 'Bob']);
+        expect(filtered.map((a) => a.player)).toEqual(['Alice', 'Bob']);
       });
     });
   });
@@ -166,8 +164,8 @@ describe('Admin Features', () => {
         };
 
         const storage = {
-          'adminAuth_group1': 'true',
-          'adminAuth_group2': 'false',
+          adminAuth_group1: 'true',
+          adminAuth_group2: 'false',
         };
 
         expect(isGroupAdmin('group1', storage)).toBe(true);
@@ -200,7 +198,7 @@ describe('Admin Features', () => {
         const coreMembers = ['Alice', 'Bob', 'Charlie', 'Dana'];
         const sessionUser = 'Alice';
 
-        const filteredMembers = coreMembers.filter(m => m !== sessionUser);
+        const filteredMembers = coreMembers.filter((m) => m !== sessionUser);
 
         expect(filteredMembers).toEqual(['Bob', 'Charlie', 'Dana']);
         expect(filteredMembers).not.toContain('Alice');
@@ -219,11 +217,11 @@ describe('Admin Features', () => {
 
         const normalizeName = (name: string) => name.toLowerCase();
         const otherPlayers = matchPlayers.filter(
-          p => normalizeName(p.name) !== normalizeName(currentViewUser)
+          (p) => normalizeName(p.name) !== normalizeName(currentViewUser)
         );
 
         expect(otherPlayers.length).toBe(2);
-        expect(otherPlayers.map(p => p.name)).toEqual(['Alice', 'Charlie']);
+        expect(otherPlayers.map((p) => p.name)).toEqual(['Alice', 'Charlie']);
       });
     });
   });
@@ -274,9 +272,12 @@ describe('UI Helper Functions', () => {
     it('returns correct labels for play styles', () => {
       const getPreferenceLabel = (playStyle: string): string => {
         switch (playStyle) {
-          case 'singles': return 'Singles';
-          case 'doubles': return 'Doubles';
-          default: return 'Either';
+          case 'singles':
+            return 'Singles';
+          case 'doubles':
+            return 'Doubles';
+          default:
+            return 'Either';
         }
       };
 

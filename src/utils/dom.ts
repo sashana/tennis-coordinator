@@ -62,12 +62,10 @@ export function removeClass(element: Element | null, ...classNames: string[]): v
 /**
  * Toggle class on element
  */
-export function toggleClass(
-  element: Element | null,
-  className: string,
-  force?: boolean
-): boolean {
-  if (!element) return false;
+export function toggleClass(element: Element | null, className: string, force?: boolean): boolean {
+  if (!element) {
+    return false;
+  }
   return element.classList.toggle(className, force);
 }
 
@@ -84,7 +82,9 @@ export function setVisible(element: HTMLElement | null, visible: boolean): void 
  * Check if element is visible (not display:none)
  */
 export function isVisible(element: HTMLElement | null): boolean {
-  if (!element) return false;
+  if (!element) {
+    return false;
+  }
   return element.style.display !== 'none' && !element.hidden;
 }
 
@@ -153,11 +153,7 @@ export function setChecked(element: HTMLInputElement | null, checked: boolean): 
 /**
  * Set element attribute
  */
-export function setAttribute(
-  element: Element | null,
-  name: string,
-  value: string
-): void {
+export function setAttribute(element: Element | null, name: string, value: string): void {
   if (element) {
     element.setAttribute(name, value);
   }
@@ -182,11 +178,7 @@ export function removeAttribute(element: Element | null, name: string): void {
 /**
  * Set data attribute
  */
-export function setDataAttribute(
-  element: HTMLElement | null,
-  name: string,
-  value: string
-): void {
+export function setDataAttribute(element: HTMLElement | null, name: string, value: string): void {
   if (element) {
     element.dataset[name] = value;
   }
@@ -195,10 +187,7 @@ export function setDataAttribute(
 /**
  * Get data attribute
  */
-export function getDataAttribute(
-  element: HTMLElement | null,
-  name: string
-): string | undefined {
+export function getDataAttribute(element: HTMLElement | null, name: string): string | undefined {
   return element?.dataset[name];
 }
 
@@ -240,10 +229,7 @@ export function blurElement(element: HTMLElement | null): void {
 /**
  * Scroll element into view
  */
-export function scrollIntoView(
-  element: Element | null,
-  options?: ScrollIntoViewOptions
-): void {
+export function scrollIntoView(element: Element | null, options?: ScrollIntoViewOptions): void {
   element?.scrollIntoView(options);
 }
 
@@ -341,22 +327,17 @@ export function addEventListenerWithCleanup<K extends keyof HTMLElementEventMap>
 /**
  * Get computed style value
  */
-export function getComputedStyleValue(
-  element: Element | null,
-  property: string
-): string {
-  if (!element) return '';
+export function getComputedStyleValue(element: Element | null, property: string): string {
+  if (!element) {
+    return '';
+  }
   return getComputedStyle(element).getPropertyValue(property);
 }
 
 /**
  * Set CSS custom property (CSS variable)
  */
-export function setCSSVariable(
-  element: HTMLElement | null,
-  name: string,
-  value: string
-): void {
+export function setCSSVariable(element: HTMLElement | null, name: string, value: string): void {
   if (element) {
     element.style.setProperty(name, value);
   }
@@ -448,7 +429,9 @@ export function removeLocalStorageItem(key: string): boolean {
 export function getLocalStorageJSON<T>(key: string): T | null {
   try {
     const item = localStorage.getItem(key);
-    if (!item) return null;
+    if (!item) {
+      return null;
+    }
     return JSON.parse(item) as T;
   } catch {
     return null;

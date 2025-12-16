@@ -14,23 +14,30 @@ const excludeInput = signal('');
 function loadPreferences() {
   const groupId = currentGroupId.value;
   const user = sessionUser.value;
-  if (!groupId || !user) return;
+  if (!groupId || !user) {
+    return;
+  }
 
   const db = getDatabase();
   const prefsRef = db.ref(`groups/${groupId}/userPreferences/${user}`);
 
-  prefsRef.once('value').then((snapshot) => {
-    const prefs = (snapshot.val() || {}) as Record<string, unknown>;
-    excludedPlayers.value = (prefs.excludedPlayers as string[]) || [];
-  }).catch((error) => {
-    console.error('Error loading preferences:', error);
-  });
+  prefsRef
+    .once('value')
+    .then((snapshot) => {
+      const prefs = (snapshot.val() || {}) as Record<string, unknown>;
+      excludedPlayers.value = (prefs.excludedPlayers as string[]) || [];
+    })
+    .catch((error) => {
+      console.error('Error loading preferences:', error);
+    });
 }
 
 async function savePreferences() {
   const groupId = currentGroupId.value;
   const user = sessionUser.value;
-  if (!groupId || !user) return;
+  if (!groupId || !user) {
+    return;
+  }
 
   try {
     const db = getDatabase();
@@ -51,12 +58,12 @@ async function savePreferences() {
 
 function addExclude() {
   const name = excludeInput.value.trim();
-  if (!name) return;
+  if (!name) {
+    return;
+  }
 
   // Check if name exists in core members
-  const matchedName = coreMembers.value.find(
-    m => m.toLowerCase() === name.toLowerCase()
-  );
+  const matchedName = coreMembers.value.find((m) => m.toLowerCase() === name.toLowerCase());
 
   if (!matchedName) {
     showToast('Player not found in group', 'error');
@@ -78,7 +85,7 @@ function addExclude() {
 }
 
 function removeExclude(name: string) {
-  excludedPlayers.value = excludedPlayers.value.filter(n => n !== name);
+  excludedPlayers.value = excludedPlayers.value.filter((n) => n !== name);
 }
 
 function handleClose() {
@@ -96,7 +103,7 @@ export function PreferencesModal() {
 
   // Filter available players for quick selection
   const availablePlayers = coreMembers.value.filter(
-    name => name !== sessionUser.value && !excludedPlayers.value.includes(name)
+    (name) => name !== sessionUser.value && !excludedPlayers.value.includes(name)
   );
 
   return (
@@ -125,8 +132,10 @@ export function PreferencesModal() {
               style="width: 100%; padding: var(--spacing-lg, 10px); border: 1px solid var(--color-border, #ddd); border-radius: var(--radius-lg, 8px); font-size: var(--font-size-base, 14px);"
             >
               <option value="">Select player to exclude...</option>
-              {availablePlayers.map(name => (
-                <option key={name} value={name}>{name}</option>
+              {availablePlayers.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
               ))}
             </select>
           </div>
@@ -138,8 +147,14 @@ export function PreferencesModal() {
             type="text"
             placeholder="Or type a name"
             value={excludeInput.value}
-            onInput={(e) => { excludeInput.value = (e.target as HTMLInputElement).value; }}
-            onKeyPress={(e) => { if (e.key === 'Enter') addExclude(); }}
+            onInput={(e) => {
+              excludeInput.value = (e.target as HTMLInputElement).value;
+            }}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                addExclude();
+              }
+            }}
             style="flex: 1; padding: var(--spacing-lg, 10px); border: 1px solid var(--color-border, #ddd); border-radius: var(--radius-lg, 8px); font-size: var(--font-size-base, 14px);"
           />
           <button onClick={addExclude}>Add</button>
@@ -148,9 +163,11 @@ export function PreferencesModal() {
         {/* Excluded list */}
         <div class="pref-list" style="display: flex; flex-wrap: wrap; gap: 8px;">
           {excludedPlayers.value.length === 0 ? (
-            <p style="color: var(--color-text-muted, #999); font-size: var(--font-size-sm, 13px);">No players excluded</p>
+            <p style="color: var(--color-text-muted, #999); font-size: var(--font-size-sm, 13px);">
+              No players excluded
+            </p>
           ) : (
-            excludedPlayers.value.map(name => (
+            excludedPlayers.value.map((name) => (
               <span
                 key={name}
                 style="display: inline-flex; align-items: center; gap: var(--spacing-sm, 6px); background: var(--color-error-light, #fee2e2); color: #991b1b; padding: var(--spacing-sm, 6px) var(--spacing-lg, 10px); border-radius: var(--radius-2xl, 16px); font-size: var(--font-size-sm, 13px);"
@@ -170,9 +187,13 @@ export function PreferencesModal() {
 
       <div style="margin-top: 16px;">
         <p style="font-size: var(--font-size-xs, 11px); color: var(--color-text-secondary, #666); margin-bottom: var(--spacing-xl, 12px);">
-          Note: These preferences affect how the match organizer pairs players. They won't prevent you from being in the same doubles group.
+          Note: These preferences affect how the match organizer pairs players. They won't prevent
+          you from being in the same doubles group.
         </p>
-        <button onClick={savePreferences} style="width: 100%; background: var(--color-primary, #2C6E49); color: white;">
+        <button
+          onClick={savePreferences}
+          style="width: 100%; background: var(--color-primary, #2C6E49); color: white;"
+        >
           Save Preferences
         </button>
       </div>

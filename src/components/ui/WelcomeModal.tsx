@@ -50,7 +50,7 @@ export function WelcomeModal() {
   const sortedMembers = [...coreMembers.value].sort((a, b) => a.localeCompare(b));
   const query = searchQuery.value.toLowerCase();
   const filteredMembers = query
-    ? sortedMembers.filter(name => name.toLowerCase().includes(query))
+    ? sortedMembers.filter((name) => name.toLowerCase().includes(query))
     : sortedMembers;
 
   const handleSearchInput = (e: Event) => {
@@ -58,11 +58,7 @@ export function WelcomeModal() {
   };
 
   return (
-    <Modal
-      isOpen={showWelcomeModal.value}
-      title=""
-      showCloseButton={false}
-    >
+    <Modal isOpen={showWelcomeModal.value} title="" showCloseButton={false}>
       <div class="welcome-modal-content">
         <div class="welcome-header">
           <h2>Welcome Back</h2>
@@ -82,21 +78,13 @@ export function WelcomeModal() {
         </div>
 
         <div class="member-list">
-          {filteredMembers.map(name => (
-            <button
-              key={name}
-              class="member-row"
-              onClick={() => handleNameClick(name)}
-            >
-              <div class="member-avatar">
-                {name.charAt(0).toUpperCase()}
-              </div>
+          {filteredMembers.map((name) => (
+            <button key={name} class="member-row" onClick={() => handleNameClick(name)}>
+              <div class="member-avatar">{name.charAt(0).toUpperCase()}</div>
               <span class="member-name">{name}</span>
             </button>
           ))}
-          {filteredMembers.length === 0 && (
-            <p class="no-results">No members found</p>
-          )}
+          {filteredMembers.length === 0 && <p class="no-results">No members found</p>}
         </div>
       </div>
 

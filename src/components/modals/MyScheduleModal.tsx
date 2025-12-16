@@ -8,7 +8,6 @@ import { memberDetails } from '../App';
 // Modal state
 export const showMyScheduleModal = signal(false);
 
-
 interface ScheduledMatch {
   date: string;
   type: string;
@@ -21,7 +20,9 @@ interface ScheduledMatch {
 // Compute user's matches across all dates
 const userSchedule = computed(() => {
   const user = sessionUser.value;
-  if (!user) return [];
+  if (!user) {
+    return [];
+  }
 
   const normalizedUser = normalizeName(user);
   const schedule: ScheduledMatch[] = [];
@@ -34,10 +35,14 @@ const userSchedule = computed(() => {
   for (const date of dates) {
     // Skip past dates
     const dateObj = new Date(date + 'T00:00:00');
-    if (dateObj < today) continue;
+    if (dateObj < today) {
+      continue;
+    }
 
     const checkins = allCheckins.value[date] || [];
-    if (checkins.length === 0) continue;
+    if (checkins.length === 0) {
+      continue;
+    }
 
     // Build user preferences from member details
     const userPreferences: Record<string, { include: string[]; exclude: string[] }> = {};
@@ -77,12 +82,18 @@ const userSchedule = computed(() => {
 
 function getMatchTypeLabel(type: string): string {
   switch (type) {
-    case 'doubles': return 'Doubles';
-    case 'singles': return 'Singles';
-    case 'rotation': return '3-Player Rotation';
-    case 'doubles-forming': return 'Doubles (forming)';
-    case 'singles-forming': return 'Singles (forming)';
-    default: return type;
+    case 'doubles':
+      return 'Doubles';
+    case 'singles':
+      return 'Singles';
+    case 'rotation':
+      return '3-Player Rotation';
+    case 'doubles-forming':
+      return 'Doubles (forming)';
+    case 'singles-forming':
+      return 'Singles (forming)';
+    default:
+      return type;
   }
 }
 
@@ -112,7 +123,9 @@ export function MyScheduleModal() {
   return (
     <Modal
       isOpen={showMyScheduleModal.value}
-      onClose={() => { showMyScheduleModal.value = false; }}
+      onClose={() => {
+        showMyScheduleModal.value = false;
+      }}
       title="My Schedule"
     >
       <div style="max-height: 400px; overflow-y: auto;">
@@ -125,7 +138,7 @@ export function MyScheduleModal() {
           <div style="display: flex; flex-direction: column; gap: 12px;">
             {schedule.map((match, idx) => {
               const otherPlayers = match.players.filter(
-                p => normalizeName(p) !== normalizeName(sessionUser.value)
+                (p) => normalizeName(p) !== normalizeName(sessionUser.value)
               );
 
               return (
@@ -141,16 +154,16 @@ export function MyScheduleModal() {
                   }}
                 >
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <span style="font-weight: 600; color: #333;">
-                      {formatDate(match.date)}
-                    </span>
-                    <span style={{
-                      fontSize: '12px',
-                      padding: '2px 8px',
-                      borderRadius: '12px',
-                      background: match.isForming ? '#FFF3E0' : '#C8E6C9',
-                      color: match.isForming ? '#E65100' : '#2E7D32',
-                    }}>
+                    <span style="font-weight: 600; color: #333;">{formatDate(match.date)}</span>
+                    <span
+                      style={{
+                        fontSize: '12px',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        background: match.isForming ? '#FFF3E0' : '#C8E6C9',
+                        color: match.isForming ? '#E65100' : '#2E7D32',
+                      }}
+                    >
                       {getMatchIcon(match.type)} {getMatchTypeLabel(match.type)}
                     </span>
                   </div>
@@ -162,7 +175,8 @@ export function MyScheduleModal() {
                       </>
                     ) : (
                       <span style="color: #888; font-style: italic;">
-                        Waiting for {match.needed || 1} more player{(match.needed || 1) > 1 ? 's' : ''}
+                        Waiting for {match.needed || 1} more player
+                        {(match.needed || 1) > 1 ? 's' : ''}
                       </span>
                     )}
                   </div>

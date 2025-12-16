@@ -71,10 +71,7 @@ export function deepMerge<T extends object>(...objects: Partial<T>[]): T {
 /**
  * Pick specific keys from an object
  */
-export function pick<T extends object, K extends keyof T>(
-  obj: T,
-  keys: K[]
-): Pick<T, K> {
+export function pick<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
   const result = {} as Pick<T, K>;
   for (const key of keys) {
     if (key in obj) {
@@ -87,10 +84,7 @@ export function pick<T extends object, K extends keyof T>(
 /**
  * Omit specific keys from an object
  */
-export function omit<T extends object, K extends keyof T>(
-  obj: T,
-  keys: K[]
-): Omit<T, K> {
+export function omit<T extends object, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> {
   const result = { ...obj };
   for (const key of keys) {
     delete result[key];
@@ -101,10 +95,7 @@ export function omit<T extends object, K extends keyof T>(
 /**
  * Group array items by a key
  */
-export function groupBy<T>(
-  items: T[],
-  keyFn: (item: T) => string
-): Record<string, T[]> {
+export function groupBy<T>(items: T[], keyFn: (item: T) => string): Record<string, T[]> {
   return items.reduce(
     (groups, item) => {
       const key = keyFn(item);
@@ -159,10 +150,7 @@ export function uniqueBy<T>(items: T[], keyFn: (item: T) => string): T[] {
 /**
  * Find item index by predicate
  */
-export function findIndexBy<T>(
-  items: T[],
-  predicate: (item: T) => boolean
-): number {
+export function findIndexBy<T>(items: T[], predicate: (item: T) => boolean): number {
   for (let i = 0; i < items.length; i++) {
     if (predicate(items[i])) {
       return i;
@@ -174,10 +162,7 @@ export function findIndexBy<T>(
 /**
  * Remove item from array by predicate (returns new array)
  */
-export function removeBy<T>(
-  items: T[],
-  predicate: (item: T) => boolean
-): T[] {
+export function removeBy<T>(items: T[], predicate: (item: T) => boolean): T[] {
   return items.filter((item) => !predicate(item));
 }
 
@@ -201,10 +186,7 @@ export function updateBy<T>(
 /**
  * Count items matching a predicate
  */
-export function countBy<T>(
-  items: T[],
-  predicate: (item: T) => boolean
-): number {
+export function countBy<T>(items: T[], predicate: (item: T) => boolean): number {
   return items.filter(predicate).length;
 }
 
@@ -229,10 +211,7 @@ export function flatten<T>(arrays: T[][]): T[] {
 /**
  * Create a lookup map from array
  */
-export function toLookup<T>(
-  items: T[],
-  keyFn: (item: T) => string
-): Map<string, T> {
+export function toLookup<T>(items: T[], keyFn: (item: T) => string): Map<string, T> {
   const map = new Map<string, T>();
   for (const item of items) {
     map.set(keyFn(item), item);

@@ -65,7 +65,8 @@ export function AdminPage() {
     }
 
     if (!siteAdminPin.value) {
-      loginError.value = 'Site admin PIN not configured. Please set siteAdminPin in siteSettings in Firebase.';
+      loginError.value =
+        'Site admin PIN not configured. Please set siteAdminPin in siteSettings in Firebase.';
       return;
     }
 
@@ -185,7 +186,9 @@ export function AdminPage() {
 
   async function saveEditMember() {
     const editInfo = editingMemberInfo.value;
-    if (!editInfo) return;
+    if (!editInfo) {
+      return;
+    }
 
     const newName = editMemberNewName.value.trim();
     if (!newName) {
@@ -202,21 +205,29 @@ export function AdminPage() {
     const currentMembers = group?.settings?.members || [];
 
     // Check for duplicate
-    if (currentMembers.some((m: string) => m.toLowerCase() === newName.toLowerCase() && m !== editInfo.originalName)) {
+    if (
+      currentMembers.some(
+        (m: string) => m.toLowerCase() === newName.toLowerCase() && m !== editInfo.originalName
+      )
+    ) {
       showToast('A member with this name already exists', 'error');
       return;
     }
 
     try {
       const db = getDatabase();
-      const updatedMembers = currentMembers.map((m: string) => m === editInfo.originalName ? newName : m);
+      const updatedMembers = currentMembers.map((m: string) =>
+        m === editInfo.originalName ? newName : m
+      );
       await db.ref(`groups/${editInfo.groupId}/settings/members`).set(updatedMembers);
 
       // Also move member details if they exist
       const memberDetails = group?.settings?.memberDetails || {};
       if (memberDetails[editInfo.originalName]) {
         const details = memberDetails[editInfo.originalName];
-        await db.ref(`groups/${editInfo.groupId}/settings/memberDetails/${editInfo.originalName}`).remove();
+        await db
+          .ref(`groups/${editInfo.groupId}/settings/memberDetails/${editInfo.originalName}`)
+          .remove();
         await db.ref(`groups/${editInfo.groupId}/settings/memberDetails/${newName}`).set(details);
 
         // Update local member details
@@ -257,7 +268,10 @@ export function AdminPage() {
       for (const [dateKey, dateCheckins] of Object.entries(allCheckinsData)) {
         if (dateCheckins && typeof dateCheckins === 'object') {
           // Convert to array, update names, then save back
-          const checkinsArray = Object.values(dateCheckins) as Array<{ name?: string; [key: string]: unknown }>;
+          const checkinsArray = Object.values(dateCheckins) as Array<{
+            name?: string;
+            [key: string]: unknown;
+          }>;
           let hasChanges = false;
 
           const updatedCheckins = checkinsArray.map((checkin) => {
@@ -414,7 +428,9 @@ export function AdminPage() {
                             type="text"
                             placeholder="Enter member name"
                             value={newMemberName.value}
-                            onInput={(e) => { newMemberName.value = (e.target as HTMLInputElement).value; }}
+                            onInput={(e) => {
+                              newMemberName.value = (e.target as HTMLInputElement).value;
+                            }}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
                                 e.preventDefault();
@@ -439,7 +455,9 @@ export function AdminPage() {
                             <p class="no-members">No members yet. Add the first member above.</p>
                           ) : (
                             members.map((member: string) => {
-                              const isEditing = editingMemberInfo.value?.groupId === groupId && editingMemberInfo.value?.originalName === member;
+                              const isEditing =
+                                editingMemberInfo.value?.groupId === groupId &&
+                                editingMemberInfo.value?.originalName === member;
                               return (
                                 <div key={member} class="member-item">
                                   {isEditing ? (
@@ -447,7 +465,11 @@ export function AdminPage() {
                                       <input
                                         type="text"
                                         value={editMemberNewName.value}
-                                        onInput={(e) => { editMemberNewName.value = (e.target as HTMLInputElement).value; }}
+                                        onInput={(e) => {
+                                          editMemberNewName.value = (
+                                            e.target as HTMLInputElement
+                                          ).value;
+                                        }}
                                         onKeyDown={(e) => {
                                           if (e.key === 'Enter') {
                                             e.preventDefault();
@@ -467,7 +489,9 @@ export function AdminPage() {
                                         ✓
                                       </button>
                                       <button
-                                        onClick={() => { editingMemberInfo.value = null; }}
+                                        onClick={() => {
+                                          editingMemberInfo.value = null;
+                                        }}
                                         class="cancel-edit-btn"
                                         title="Cancel"
                                       >
@@ -502,10 +526,7 @@ export function AdminPage() {
                     )}
 
                     <div class="group-card-footer">
-                      <button
-                        onClick={() => toggleGroupExpand(groupId)}
-                        class="manage-members-btn"
-                      >
+                      <button onClick={() => toggleGroupExpand(groupId)} class="manage-members-btn">
                         {isExpanded ? 'Hide Members' : 'Manage Members'}
                       </button>
                       <a

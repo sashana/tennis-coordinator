@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Cache
+.cache/
+
+# Legacy files
+legacy.html
+test-typescript.html
+
+# Generated files
+*.min.js
+*.min.css
+
+# Markdown (preserve formatting)
+*.md
+
+# Package lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

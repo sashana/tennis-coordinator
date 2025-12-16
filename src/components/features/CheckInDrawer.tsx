@@ -26,11 +26,15 @@ export const editingCheckinIndex = signal<number>(-1);
 // Helper to get current check-in data for a user
 function getUserCheckinData(userName: string) {
   const date = selectedDate.value;
-  if (!date) return null;
+  if (!date) {
+    return null;
+  }
 
   const checkins = allCheckins.value[date] || [];
   const index = checkins.findIndex((c) => c.name === userName);
-  if (index === -1) return null;
+  if (index === -1) {
+    return null;
+  }
 
   return { checkin: checkins[index], index };
 }
@@ -51,17 +55,20 @@ export function CheckInDrawer() {
     }
 
     const checkinPlayStyle = selectedPreference.value;
-    const checkinTimeRange = startTime.value && endTime.value
-      ? { start: startTime.value, end: endTime.value }
-      : undefined;
+    const checkinTimeRange =
+      startTime.value && endTime.value ? { start: startTime.value, end: endTime.value } : undefined;
 
     // If editing, use updateCheckin instead of addCheckin
     if (isEditMode.value && editingCheckinIndex.value >= 0) {
-      await updateCheckin(editingCheckinIndex.value, {
-        playStyle: checkinPlayStyle,
-        allowRotation: allowRotation.value,
-        timeRange: checkinTimeRange,
-      }, sessionUser.value || '');
+      await updateCheckin(
+        editingCheckinIndex.value,
+        {
+          playStyle: checkinPlayStyle,
+          allowRotation: allowRotation.value,
+          timeRange: checkinTimeRange,
+        },
+        sessionUser.value || ''
+      );
     } else {
       await addCheckin({
         name: targetUser,
@@ -88,7 +95,9 @@ export function CheckInDrawer() {
   };
 
   const handleRemoveCheckIn = async () => {
-    if (editingCheckinIndex.value < 0) return;
+    if (editingCheckinIndex.value < 0) {
+      return;
+    }
 
     await removeCheckin(editingCheckinIndex.value, sessionUser.value);
 
@@ -122,7 +131,9 @@ export function CheckInDrawer() {
     }
   };
 
-  if (!showCheckInDrawer.value) return null;
+  if (!showCheckInDrawer.value) {
+    return null;
+  }
 
   return (
     <div class="drawer-backdrop" onClick={handleBackdropClick}>
@@ -136,12 +147,12 @@ export function CheckInDrawer() {
         <div class="drawer-header">
           <h2>{isEditMode.value ? 'Edit Check-in' : 'Check In'}</h2>
           <div class="player-display">
-            <div class="player-avatar">
-              {targetUser?.charAt(0).toUpperCase()}
-            </div>
+            <div class="player-avatar">{targetUser?.charAt(0).toUpperCase()}</div>
             <div class="player-info">
               <span class="player-name">{targetUser}</span>
-              <span class="player-context">{isForSelf ? 'Playing as yourself' : 'Checking in for them'}</span>
+              <span class="player-context">
+                {isForSelf ? 'Playing as yourself' : 'Checking in for them'}
+              </span>
             </div>
           </div>
         </div>
@@ -152,19 +163,25 @@ export function CheckInDrawer() {
           <div class="preference-buttons">
             <button
               class={`pref-btn singles ${selectedPreference.value === 'singles' ? 'selected' : ''}`}
-              onClick={() => { selectedPreference.value = 'singles'; }}
+              onClick={() => {
+                selectedPreference.value = 'singles';
+              }}
             >
               Singles
             </button>
             <button
               class={`pref-btn ${selectedPreference.value === 'both' ? 'selected' : ''}`}
-              onClick={() => { selectedPreference.value = 'both'; }}
+              onClick={() => {
+                selectedPreference.value = 'both';
+              }}
             >
               Either
             </button>
             <button
               class={`pref-btn doubles ${selectedPreference.value === 'doubles' ? 'selected' : ''}`}
-              onClick={() => { selectedPreference.value = 'doubles'; }}
+              onClick={() => {
+                selectedPreference.value = 'doubles';
+              }}
             >
               Doubles
             </button>
@@ -177,7 +194,9 @@ export function CheckInDrawer() {
             <input
               type="checkbox"
               checked={allowRotation.value}
-              onChange={(e) => { allowRotation.value = (e.target as HTMLInputElement).checked; }}
+              onChange={(e) => {
+                allowRotation.value = (e.target as HTMLInputElement).checked;
+              }}
             />
             <span class="toggle-label">
               <span class="toggle-title">Open to 3-player rotation</span>
@@ -188,7 +207,9 @@ export function CheckInDrawer() {
 
         {/* Time Availability */}
         <div class="drawer-section">
-          <h3>Available Time <span class="optional-tag">optional</span></h3>
+          <h3>
+            Available Time <span class="optional-tag">optional</span>
+          </h3>
           <div class="time-presets">
             <button
               class={`time-btn ${startTime.value === '08:00' && endTime.value === '12:00' ? 'selected' : ''}`}
@@ -223,20 +244,27 @@ export function CheckInDrawer() {
             <input
               type="time"
               value={startTime.value}
-              onInput={(e) => { startTime.value = (e.target as HTMLInputElement).value; }}
+              onInput={(e) => {
+                startTime.value = (e.target as HTMLInputElement).value;
+              }}
               placeholder="Start"
             />
             <span class="time-separator">to</span>
             <input
               type="time"
               value={endTime.value}
-              onInput={(e) => { endTime.value = (e.target as HTMLInputElement).value; }}
+              onInput={(e) => {
+                endTime.value = (e.target as HTMLInputElement).value;
+              }}
               placeholder="End"
             />
             {(startTime.value || endTime.value) && (
               <button
                 class="clear-time-btn"
-                onClick={() => { startTime.value = ''; endTime.value = ''; }}
+                onClick={() => {
+                  startTime.value = '';
+                  endTime.value = '';
+                }}
               >
                 Clear
               </button>

@@ -48,7 +48,9 @@ export function AddMemberDrawer() {
     }
   };
 
-  if (!showAddMemberDrawer.value) return null;
+  if (!showAddMemberDrawer.value) {
+    return null;
+  }
 
   return (
     <div class="drawer-backdrop" onClick={handleBackdropClick}>
@@ -66,12 +68,16 @@ export function AddMemberDrawer() {
 
         {/* Name */}
         <div class="drawer-section">
-          <label class="field-label">Name <span class="required">*</span></label>
+          <label class="field-label">
+            Name <span class="required">*</span>
+          </label>
           <input
             type="text"
             placeholder="Enter member's full name"
             value={memberName.value}
-            onInput={(e) => { memberName.value = (e.target as HTMLInputElement).value; }}
+            onInput={(e) => {
+              memberName.value = (e.target as HTMLInputElement).value;
+            }}
             class="drawer-input"
             autoFocus
           />
@@ -79,29 +85,35 @@ export function AddMemberDrawer() {
 
         {/* Contact Info */}
         <div class="drawer-section">
-          <label class="field-label">Contact Info <span class="optional-tag">optional</span></label>
+          <label class="field-label">
+            Contact Info <span class="optional-tag">optional</span>
+          </label>
           <div class="contact-inputs">
             <div class="input-with-icon">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="#999">
-                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
               </svg>
               <input
                 type="tel"
                 placeholder="Phone number"
                 value={memberPhone.value}
-                onInput={(e) => { memberPhone.value = (e.target as HTMLInputElement).value; }}
+                onInput={(e) => {
+                  memberPhone.value = (e.target as HTMLInputElement).value;
+                }}
                 class="drawer-input with-icon"
               />
             </div>
             <div class="input-with-icon">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="#999">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
               </svg>
               <input
                 type="email"
                 placeholder="Email address"
                 value={memberEmail.value}
-                onInput={(e) => { memberEmail.value = (e.target as HTMLInputElement).value; }}
+                onInput={(e) => {
+                  memberEmail.value = (e.target as HTMLInputElement).value;
+                }}
                 class="drawer-input with-icon"
               />
             </div>
@@ -111,12 +123,16 @@ export function AddMemberDrawer() {
 
         {/* Notes */}
         <div class="drawer-section">
-          <label class="field-label">Notes <span class="optional-tag">optional</span></label>
+          <label class="field-label">
+            Notes <span class="optional-tag">optional</span>
+          </label>
           <textarea
             placeholder="Skill level, how you know them, etc."
             rows={2}
             value={memberNotes.value}
-            onInput={(e) => { memberNotes.value = (e.target as HTMLTextAreaElement).value; }}
+            onInput={(e) => {
+              memberNotes.value = (e.target as HTMLTextAreaElement).value;
+            }}
             class="drawer-textarea"
           />
         </div>
@@ -124,9 +140,11 @@ export function AddMemberDrawer() {
         {/* Added By Info */}
         <div class="added-by-info">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="#999">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
           </svg>
-          <span>Added by: <strong>{sessionUser.value || 'Unknown'}</strong></span>
+          <span>
+            Added by: <strong>{sessionUser.value || 'Unknown'}</strong>
+          </span>
         </div>
 
         {/* Action Buttons */}

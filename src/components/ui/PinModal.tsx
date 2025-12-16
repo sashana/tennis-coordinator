@@ -32,11 +32,7 @@ export function PinModal({ isOpen, groupName, correctPin, onSuccess }: PinModalP
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      title=""
-      showCloseButton={false}
-    >
+    <Modal isOpen={isOpen} title="" showCloseButton={false}>
       <div class="pin-modal-content">
         <div class="pin-header">
           <p class="tennis-icon">🎾</p>
@@ -58,9 +54,7 @@ export function PinModal({ isOpen, groupName, correctPin, onSuccess }: PinModalP
             autoFocus
           />
 
-          {errorMessage.value && (
-            <p class="error-message">{errorMessage.value}</p>
-          )}
+          {errorMessage.value && <p class="error-message">{errorMessage.value}</p>}
 
           <button type="submit" class="pin-submit-btn">
             Enter

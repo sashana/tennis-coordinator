@@ -105,10 +105,7 @@ export function mightAffectPlay(code: number): boolean {
 /**
  * Format temperature for display
  */
-export function formatTemperature(
-  temp: number,
-  unit: 'C' | 'F' = 'F'
-): string {
+export function formatTemperature(temp: number, unit: 'C' | 'F' = 'F'): string {
   const roundedTemp = Math.round(temp);
   return `${roundedTemp}°${unit}`;
 }
@@ -148,9 +145,13 @@ export function getCachedWeather(
   maxAgeMs?: number
 ): WeatherData | null {
   const entry = cache[dateStr];
-  if (!entry) return null;
+  if (!entry) {
+    return null;
+  }
 
-  if (!isWeatherCacheValid(entry.timestamp, maxAgeMs)) return null;
+  if (!isWeatherCacheValid(entry.timestamp, maxAgeMs)) {
+    return null;
+  }
 
   return entry.data;
 }
@@ -190,16 +191,14 @@ export function buildWeatherApiUrl(location: WeatherLocation): string {
 /**
  * Parse weather API response
  */
-export function parseWeatherResponse(
-  response: {
-    daily: {
-      time: string[];
-      weathercode: number[];
-      temperature_2m_max: number[];
-      precipitation_probability_max: number[];
-    };
-  }
-): Record<string, { temp: number; code: number; precipProb: number }> {
+export function parseWeatherResponse(response: {
+  daily: {
+    time: string[];
+    weathercode: number[];
+    temperature_2m_max: number[];
+    precipitation_probability_max: number[];
+  };
+}): Record<string, { temp: number; code: number; precipProb: number }> {
   const result: Record<string, { temp: number; code: number; precipProb: number }> = {};
 
   const { time, weathercode, temperature_2m_max, precipitation_probability_max } = response.daily;
@@ -218,11 +217,7 @@ export function parseWeatherResponse(
 /**
  * Get weather summary text
  */
-export function getWeatherSummary(
-  temp: number,
-  code: number,
-  precipProb: number
-): string {
+export function getWeatherSummary(temp: number, code: number, precipProb: number): string {
   const icon = getWeatherIcon(code);
   const tempStr = formatTemperature(temp);
   const desc = getWeatherDescription(code);

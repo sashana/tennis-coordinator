@@ -83,7 +83,7 @@ describe('getMatchNotesForDate', () => {
   it('returns notes for date', () => {
     const allNotes = {
       '2024-01-15': { 'doubles-1': 'Court 3' },
-      '2024-01-16': { 'singles': 'Practice court' },
+      '2024-01-16': { singles: 'Practice court' },
     };
     expect(getMatchNotesForDate(allNotes, '2024-01-15')).toEqual({ 'doubles-1': 'Court 3' });
   });
@@ -101,7 +101,7 @@ describe('setMatchNotesForDate', () => {
   });
 
   it('preserves other dates', () => {
-    const allNotes = { '2024-01-14': { 'singles': 'Note' } };
+    const allNotes = { '2024-01-14': { singles: 'Note' } };
     const result = setMatchNotesForDate(allNotes, '2024-01-15', { 'doubles-1': 'Court 3' });
     expect(result['2024-01-14']).toBeDefined();
     expect(result['2024-01-15']).toBeDefined();
@@ -130,7 +130,7 @@ describe('countMatchesWithNotes', () => {
     const notes = {
       'doubles-1': 'Court 3',
       'doubles-2': 'Court 4',
-      'singles': '',
+      singles: '',
     };
     expect(countMatchesWithNotes(notes)).toBe(2);
   });
@@ -141,7 +141,7 @@ describe('getMatchKeysWithNotes', () => {
     const notes = {
       'doubles-1': 'Court 3',
       'doubles-2': '',
-      'singles': 'Practice',
+      singles: 'Practice',
     };
     const keys = getMatchKeysWithNotes(notes);
     expect(keys).toContain('doubles-1');
@@ -159,7 +159,7 @@ describe('clearAllMatchNotes', () => {
 describe('mergeMatchNotes', () => {
   it('merges notes keeping non-empty', () => {
     const existing = { 'doubles-1': 'Old note' };
-    const incoming = { 'doubles-1': 'New note', 'singles': 'Single note' };
+    const incoming = { 'doubles-1': 'New note', singles: 'Single note' };
     const result = mergeMatchNotes(existing, incoming);
     expect(result['doubles-1']).toBe('New note');
     expect(result['singles']).toBe('Single note');
@@ -195,7 +195,7 @@ describe('getNotesSummary', () => {
     const notes = {
       'doubles-1': 'Note 1',
       'doubles-2': 'Note 2',
-      'singles': '',
+      singles: '',
     };
     const summary = getNotesSummary(notes);
     expect(summary.total).toBe(2);

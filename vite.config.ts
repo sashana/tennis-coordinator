@@ -20,6 +20,7 @@ export default defineConfig({
       input: {
         index: resolve(__dirname, 'index.html'),
         ttmd: resolve(__dirname, 'ttmd.html'),
+        'whats-new': resolve(__dirname, 'whats-new.html'),
       },
     },
   },

@@ -85,10 +85,7 @@ export class FirebaseService {
     return (snapshot.val() as AvailableGroups) || {};
   }
 
-  async saveGroup(
-    groupId: string,
-    data: { name: string; shortCode?: string }
-  ): Promise<void> {
+  async saveGroup(groupId: string, data: { name: string; shortCode?: string }): Promise<void> {
     await this.ref(firebasePaths.group(groupId)).update(data);
   }
 
@@ -104,7 +101,9 @@ export class FirebaseService {
     const snapshot = await this.ref(firebasePaths.settings(groupId)).once('value');
     const settings = snapshot.val() as Partial<GroupSettings> | null;
 
-    if (!settings) return null;
+    if (!settings) {
+      return null;
+    }
 
     // Apply defaults
     return {
@@ -150,11 +149,7 @@ export class FirebaseService {
     return (snapshot.val() as CheckinData[]) || [];
   }
 
-  async saveCheckinsForDate(
-    groupId: string,
-    date: string,
-    checkins: CheckinData[]
-  ): Promise<void> {
+  async saveCheckinsForDate(groupId: string, date: string, checkins: CheckinData[]): Promise<void> {
     await this.ref(firebasePaths.checkinsDate(groupId, date)).set(checkins);
   }
 
@@ -185,10 +180,7 @@ export class FirebaseService {
   // Activity Log
   // ============================================
 
-  async loadActivityForDate(
-    groupId: string,
-    date: string
-  ): Promise<Record<string, ActivityEntry>> {
+  async loadActivityForDate(groupId: string, date: string): Promise<Record<string, ActivityEntry>> {
     const snapshot = await this.ref(firebasePaths.activity(groupId, date)).once('value');
     return (snapshot.val() as Record<string, ActivityEntry>) || {};
   }
@@ -198,11 +190,7 @@ export class FirebaseService {
     return (snapshot.val() as ActivityByDate) || {};
   }
 
-  async logActivity(
-    groupId: string,
-    date: string,
-    entry: ActivityEntry
-  ): Promise<void> {
+  async logActivity(groupId: string, date: string, entry: ActivityEntry): Promise<void> {
     const ref = this.ref(firebasePaths.activity(groupId, date));
     const newRef = ref.push();
     await newRef.set(entry);
@@ -212,10 +200,7 @@ export class FirebaseService {
   // Match Notes
   // ============================================
 
-  async loadMatchNotes(
-    groupId: string,
-    date: string
-  ): Promise<Record<string, string>> {
+  async loadMatchNotes(groupId: string, date: string): Promise<Record<string, string>> {
     const snapshot = await this.ref(firebasePaths.matchNotes(groupId, date)).once('value');
     return (snapshot.val() as Record<string, string>) || {};
   }
@@ -233,13 +218,10 @@ export class FirebaseService {
   // Notifications
   // ============================================
 
-  async loadNotificationPrefs(
-    groupId: string,
-    userName: string
-  ): Promise<NotificationPreferences> {
-    const snapshot = await this.ref(
-      firebasePaths.userNotificationPrefs(groupId, userName)
-    ).once('value');
+  async loadNotificationPrefs(groupId: string, userName: string): Promise<NotificationPreferences> {
+    const snapshot = await this.ref(firebasePaths.userNotificationPrefs(groupId, userName)).once(
+      'value'
+    );
 
     const prefs = snapshot.val() as Partial<NotificationPreferences> | null;
 
@@ -263,9 +245,9 @@ export class FirebaseService {
     groupId: string,
     userName: string
   ): Promise<Record<string, NotificationItem>> {
-    const snapshot = await this.ref(
-      firebasePaths.userNotifications(groupId, userName)
-    ).once('value');
+    const snapshot = await this.ref(firebasePaths.userNotifications(groupId, userName)).once(
+      'value'
+    );
     return (snapshot.val() as Record<string, NotificationItem>) || {};
   }
 
@@ -323,10 +305,7 @@ export class FirebaseService {
   // Match Arrangements (Admin Override)
   // ============================================
 
-  async loadMatchArrangement(
-    groupId: string,
-    date: string
-  ): Promise<MatchArrangement | null> {
+  async loadMatchArrangement(groupId: string, date: string): Promise<MatchArrangement | null> {
     const snapshot = await this.ref(firebasePaths.matchArrangements(groupId, date)).once('value');
     return (snapshot.val() as MatchArrangement) || null;
   }

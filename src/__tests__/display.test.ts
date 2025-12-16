@@ -17,7 +17,10 @@ import {
 } from '../utils/display';
 import type { Match, CheckinData } from '../types';
 
-const createPlayer = (name: string, playStyle: 'singles' | 'doubles' | 'both' = 'both'): CheckinData => ({
+const createPlayer = (
+  name: string,
+  playStyle: 'singles' | 'doubles' | 'both' = 'both'
+): CheckinData => ({
   name,
   playStyle,
   timestamp: Date.now(),

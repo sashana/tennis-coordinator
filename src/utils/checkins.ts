@@ -8,10 +8,7 @@ import { normalizeName } from './helpers';
 /**
  * Find existing check-in by name
  */
-export function findCheckinByName(
-  name: string,
-  checkins: CheckinData[]
-): CheckinData | null {
+export function findCheckinByName(name: string, checkins: CheckinData[]): CheckinData | null {
   const normalized = normalizeName(name);
   return checkins.find((c) => normalizeName(c.name) === normalized) || null;
 }
@@ -19,10 +16,7 @@ export function findCheckinByName(
 /**
  * Find check-in index by name
  */
-export function findCheckinIndex(
-  name: string,
-  checkins: CheckinData[]
-): number {
+export function findCheckinIndex(name: string, checkins: CheckinData[]): number {
   const normalized = normalizeName(name);
   return checkins.findIndex((c) => normalizeName(c.name) === normalized);
 }
@@ -30,10 +24,7 @@ export function findCheckinIndex(
 /**
  * Check if player can check in (not already checked in)
  */
-export function canPlayerCheckin(
-  name: string,
-  checkins: CheckinData[]
-): boolean {
+export function canPlayerCheckin(name: string, checkins: CheckinData[]): boolean {
   return findCheckinByName(name, checkins) === null;
 }
 
@@ -66,24 +57,16 @@ export function buildCheckinData(
 /**
  * Add check-in to list
  */
-export function addCheckin(
-  checkin: CheckinData,
-  checkins: CheckinData[]
-): CheckinData[] {
+export function addCheckin(checkin: CheckinData, checkins: CheckinData[]): CheckinData[] {
   // Remove existing check-in for same player first
-  const filtered = checkins.filter(
-    (c) => normalizeName(c.name) !== normalizeName(checkin.name)
-  );
+  const filtered = checkins.filter((c) => normalizeName(c.name) !== normalizeName(checkin.name));
   return [...filtered, checkin];
 }
 
 /**
  * Remove check-in by name
  */
-export function removeCheckinByName(
-  name: string,
-  checkins: CheckinData[]
-): CheckinData[] {
+export function removeCheckinByName(name: string, checkins: CheckinData[]): CheckinData[] {
   const normalized = normalizeName(name);
   return checkins.filter((c) => normalizeName(c.name) !== normalized);
 }
@@ -91,10 +74,7 @@ export function removeCheckinByName(
 /**
  * Remove check-in by index
  */
-export function removeCheckinByIndex(
-  index: number,
-  checkins: CheckinData[]
-): CheckinData[] {
+export function removeCheckinByIndex(index: number, checkins: CheckinData[]): CheckinData[] {
   if (index < 0 || index >= checkins.length) {
     return checkins;
   }
@@ -110,9 +90,7 @@ export function updateCheckin(
   checkins: CheckinData[]
 ): CheckinData[] {
   const normalized = normalizeName(name);
-  return checkins.map((c) =>
-    normalizeName(c.name) === normalized ? { ...c, ...updates } : c
-  );
+  return checkins.map((c) => (normalizeName(c.name) === normalized ? { ...c, ...updates } : c));
 }
 
 /**
@@ -137,10 +115,7 @@ export function getCheckinSummary(checkins: CheckinData[]): {
 /**
  * Count check-ins by play style
  */
-export function countByPlayStyle(
-  checkins: CheckinData[],
-  playStyle: PlayStyle
-): number {
+export function countByPlayStyle(checkins: CheckinData[], playStyle: PlayStyle): number {
   if (playStyle === 'both') {
     return checkins.filter((c) => c.playStyle === 'both' || !c.playStyle).length;
   }
@@ -150,10 +125,7 @@ export function countByPlayStyle(
 /**
  * Filter check-ins by play style
  */
-export function filterByPlayStyle(
-  checkins: CheckinData[],
-  playStyle: PlayStyle
-): CheckinData[] {
+export function filterByPlayStyle(checkins: CheckinData[], playStyle: PlayStyle): CheckinData[] {
   if (playStyle === 'both') {
     return checkins.filter((c) => c.playStyle === 'both' || !c.playStyle);
   }
@@ -176,31 +148,21 @@ export function sortCheckinsByTimestamp(
  * Sort check-ins by name
  */
 export function sortCheckinsByName(checkins: CheckinData[]): CheckinData[] {
-  return [...checkins].sort((a, b) =>
-    normalizeName(a.name).localeCompare(normalizeName(b.name))
-  );
+  return [...checkins].sort((a, b) => normalizeName(a.name).localeCompare(normalizeName(b.name)));
 }
 
 /**
  * Get check-ins with time restrictions
  */
-export function getCheckinsWithTimeRestrictions(
-  checkins: CheckinData[]
-): CheckinData[] {
-  return checkins.filter(
-    (c) => c.timeRange && (c.timeRange.start || c.timeRange.end)
-  );
+export function getCheckinsWithTimeRestrictions(checkins: CheckinData[]): CheckinData[] {
+  return checkins.filter((c) => c.timeRange && (c.timeRange.start || c.timeRange.end));
 }
 
 /**
  * Get check-ins without time restrictions
  */
-export function getCheckinsWithoutTimeRestrictions(
-  checkins: CheckinData[]
-): CheckinData[] {
-  return checkins.filter(
-    (c) => !c.timeRange || (!c.timeRange.start && !c.timeRange.end)
-  );
+export function getCheckinsWithoutTimeRestrictions(checkins: CheckinData[]): CheckinData[] {
+  return checkins.filter((c) => !c.timeRange || (!c.timeRange.start && !c.timeRange.end));
 }
 
 /**
@@ -220,10 +182,7 @@ export function getMemberCheckins(checkins: CheckinData[]): CheckinData[] {
 /**
  * Get check-ins for multiple dates
  */
-export function getCheckinsForDates(
-  allCheckins: CheckinsByDate,
-  dates: string[]
-): CheckinData[] {
+export function getCheckinsForDates(allCheckins: CheckinsByDate, dates: string[]): CheckinData[] {
   const result: CheckinData[] = [];
   for (const date of dates) {
     const checkins = allCheckins[date] || [];
@@ -246,10 +205,7 @@ export function getUniquePlayerNames(checkins: CheckinData[]): string[] {
 /**
  * Merge check-in data (update existing or add new)
  */
-export function mergeCheckins(
-  existing: CheckinData[],
-  incoming: CheckinData[]
-): CheckinData[] {
+export function mergeCheckins(existing: CheckinData[], incoming: CheckinData[]): CheckinData[] {
   const result = [...existing];
 
   for (const checkin of incoming) {
@@ -278,7 +234,9 @@ export function isSessionUserCheckedIn(
   sessionUserName: string | null,
   checkins: CheckinData[]
 ): boolean {
-  if (!sessionUserName) return true; // No session user, consider as "checked in" to avoid pre-selection
+  if (!sessionUserName) {
+    return true;
+  } // No session user, consider as "checked in" to avoid pre-selection
   return findCheckinByName(sessionUserName, checkins) !== null;
 }
 
@@ -290,6 +248,8 @@ export function shouldAutoExpandForm(
   sessionUserName: string | null,
   checkins: CheckinData[]
 ): boolean {
-  if (!sessionUserName) return false;
+  if (!sessionUserName) {
+    return false;
+  }
   return !isSessionUserCheckedIn(sessionUserName, checkins);
 }

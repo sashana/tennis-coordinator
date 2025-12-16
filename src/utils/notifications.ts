@@ -4,23 +4,20 @@
  * This module handles notification message formatting and eligibility checks.
  */
 
-import type {
-  NotificationPreferences,
-  PlayStyle,
-} from '@/types';
-import { normalizeName, formatDateForNotification, getPreferenceLabel, formatTimeRange } from './helpers';
+import type { NotificationPreferences, PlayStyle } from '@/types';
+import {
+  normalizeName,
+  formatDateForNotification,
+  getPreferenceLabel,
+  formatTimeRange,
+} from './helpers';
 
 /**
  * Check if a member is muted by the user
  */
-export function isMemberMuted(
-  memberName: string,
-  prefs: NotificationPreferences
-): boolean {
+export function isMemberMuted(memberName: string, prefs: NotificationPreferences): boolean {
   const mutedMembers = prefs.mutedMembers || [];
-  return mutedMembers.some(
-    (m) => normalizeName(m) === normalizeName(memberName)
-  );
+  return mutedMembers.some((m) => normalizeName(m) === normalizeName(memberName));
 }
 
 /**
@@ -32,13 +29,19 @@ export function shouldReceiveActivityNotification(
   actorName: string
 ): boolean {
   // Check if activity alerts are enabled
-  if (!prefs.activityAlerts) return false;
+  if (!prefs.activityAlerts) {
+    return false;
+  }
 
   // Don't notify the actor themselves
-  if (normalizeName(userName) === normalizeName(actorName)) return false;
+  if (normalizeName(userName) === normalizeName(actorName)) {
+    return false;
+  }
 
   // Check if actor is muted
-  if (isMemberMuted(actorName, prefs)) return false;
+  if (isMemberMuted(actorName, prefs)) {
+    return false;
+  }
 
   return true;
 }
@@ -75,14 +78,13 @@ export function formatCheckinNotification(
 
   if (checkinData.timeStart || checkinData.timeEnd) {
     const timeStr = formatTimeRange(checkinData.timeStart, checkinData.timeEnd);
-    if (timeStr) details.push(timeStr);
+    if (timeStr) {
+      details.push(timeStr);
+    }
   }
 
   let addedByStr = '';
-  if (
-    checkinData.addedBy &&
-    normalizeName(checkinData.addedBy) !== normalizeName(playerName)
-  ) {
+  if (checkinData.addedBy && normalizeName(checkinData.addedBy) !== normalizeName(playerName)) {
     addedByStr = ` (added by ${checkinData.addedBy})`;
   }
 
@@ -138,7 +140,8 @@ export function formatMatchDissolvedNotification(
 
   if (droppedPlayers.length > 0) {
     const droppedNames = droppedPlayers.join(', ');
-    const neededText = playersNeeded === 1 ? 'Need 1 more player' : `Need ${playersNeeded} more players`;
+    const neededText =
+      playersNeeded === 1 ? 'Need 1 more player' : `Need ${playersNeeded} more players`;
     return `⚠️ Your ${matchLabel} for ${formattedDate} is no longer confirmed - ${droppedNames} dropped out. ${neededText}.`;
   } else {
     return `⚠️ Your ${matchLabel} for ${formattedDate} is no longer confirmed.`;
@@ -148,20 +151,14 @@ export function formatMatchDissolvedNotification(
 /**
  * Format member added notification message
  */
-export function formatMemberAddedNotification(
-  memberName: string,
-  addedBy: string
-): string {
+export function formatMemberAddedNotification(memberName: string, addedBy: string): string {
   return `👤 ${memberName} was added to the group by ${addedBy}`;
 }
 
 /**
  * Format member removed notification message
  */
-export function formatMemberRemovedNotification(
-  memberName: string,
-  removedBy: string
-): string {
+export function formatMemberRemovedNotification(memberName: string, removedBy: string): string {
   return `🚫 ${memberName} was removed from the group by ${removedBy}`;
 }
 

@@ -8,10 +8,7 @@ import { normalizeName } from './helpers';
 /**
  * Find member by name (case-insensitive)
  */
-export function findMemberByName(
-  name: string,
-  members: string[]
-): string | null {
+export function findMemberByName(name: string, members: string[]): string | null {
   const normalized = normalizeName(name);
   return members.find((m) => normalizeName(m) === normalized) || null;
 }
@@ -55,7 +52,9 @@ export function getMemberContact(
   memberDetails: MemberDetailsMap
 ): { phone?: string; email?: string } | null {
   const details = getMemberDetails(name, memberDetails);
-  if (!details) return null;
+  if (!details) {
+    return null;
+  }
 
   return {
     phone: details.phone,
@@ -67,28 +66,25 @@ export function getMemberContact(
  * Sort members alphabetically
  */
 export function sortMembersAlphabetically(members: string[]): string[] {
-  return [...members].sort((a, b) =>
-    normalizeName(a).localeCompare(normalizeName(b))
-  );
+  return [...members].sort((a, b) => normalizeName(a).localeCompare(normalizeName(b)));
 }
 
 /**
  * Sort members by check-in status (checked-in first, then alphabetically)
  */
-export function sortMembersByCheckinStatus(
-  members: string[],
-  checkins: CheckinData[]
-): string[] {
-  const checkedInNames = new Set(
-    checkins.map((c) => normalizeName(c.name))
-  );
+export function sortMembersByCheckinStatus(members: string[], checkins: CheckinData[]): string[] {
+  const checkedInNames = new Set(checkins.map((c) => normalizeName(c.name)));
 
   return [...members].sort((a, b) => {
     const aCheckedIn = checkedInNames.has(normalizeName(a));
     const bCheckedIn = checkedInNames.has(normalizeName(b));
 
-    if (aCheckedIn && !bCheckedIn) return -1;
-    if (!aCheckedIn && bCheckedIn) return 1;
+    if (aCheckedIn && !bCheckedIn) {
+      return -1;
+    }
+    if (!aCheckedIn && bCheckedIn) {
+      return 1;
+    }
     return normalizeName(a).localeCompare(normalizeName(b));
   });
 }
@@ -120,10 +116,7 @@ export function filterActiveMembers(
 /**
  * Check if member is checked in for a specific date
  */
-export function isMemberCheckedIn(
-  name: string,
-  checkins: CheckinData[]
-): boolean {
+export function isMemberCheckedIn(name: string, checkins: CheckinData[]): boolean {
   const normalized = normalizeName(name);
   return checkins.some((c) => normalizeName(c.name) === normalized);
 }
@@ -131,10 +124,7 @@ export function isMemberCheckedIn(
 /**
  * Get check-in data for a specific member
  */
-export function getMemberCheckin(
-  name: string,
-  checkins: CheckinData[]
-): CheckinData | null {
+export function getMemberCheckin(name: string, checkins: CheckinData[]): CheckinData | null {
   const normalized = normalizeName(name);
   return checkins.find((c) => normalizeName(c.name) === normalized) || null;
 }
@@ -142,20 +132,14 @@ export function getMemberCheckin(
 /**
  * Get members not checked in
  */
-export function getMembersNotCheckedIn(
-  members: string[],
-  checkins: CheckinData[]
-): string[] {
+export function getMembersNotCheckedIn(members: string[], checkins: CheckinData[]): string[] {
   return members.filter((m) => !isMemberCheckedIn(m, checkins));
 }
 
 /**
  * Add member to list (if not already present)
  */
-export function addMemberToList(
-  name: string,
-  members: string[]
-): string[] {
+export function addMemberToList(name: string, members: string[]): string[] {
   if (isMember(name, members)) {
     return members;
   }
@@ -165,10 +149,7 @@ export function addMemberToList(
 /**
  * Remove member from list
  */
-export function removeMemberFromList(
-  name: string,
-  members: string[]
-): string[] {
+export function removeMemberFromList(name: string, members: string[]): string[] {
   const normalized = normalizeName(name);
   return members.filter((m) => normalizeName(m) !== normalized);
 }
@@ -229,10 +210,7 @@ export function getMemberCount(members: string[]): number {
 /**
  * Get members added by a specific person
  */
-export function getMembersAddedBy(
-  addedBy: string,
-  memberDetails: MemberDetailsMap
-): string[] {
+export function getMembersAddedBy(addedBy: string, memberDetails: MemberDetailsMap): string[] {
   const normalized = normalizeName(addedBy);
   const result: string[] = [];
 
@@ -249,11 +227,7 @@ export function getMembersAddedBy(
  * Rename a member in the members list
  * Returns new array with old name replaced by new name, sorted alphabetically
  */
-export function renameMemberInList(
-  oldName: string,
-  newName: string,
-  members: string[]
-): string[] {
+export function renameMemberInList(oldName: string, newName: string, members: string[]): string[] {
   const trimmedNewName = newName.trim();
   if (!trimmedNewName || trimmedNewName === oldName) {
     return members;
@@ -313,14 +287,12 @@ export function updateCheckinNames(
  * Check if a name already exists in the members list (case-insensitive)
  * Excludes the current name being renamed
  */
-export function isDuplicateName(
-  newName: string,
-  members: string[],
-  excludeName?: string
-): boolean {
+export function isDuplicateName(newName: string, members: string[], excludeName?: string): boolean {
   const normalizedNew = normalizeName(newName);
   return members.some((m) => {
-    if (excludeName && m === excludeName) return false;
+    if (excludeName && m === excludeName) {
+      return false;
+    }
     return normalizeName(m) === normalizedNew;
   });
 }

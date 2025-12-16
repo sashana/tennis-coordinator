@@ -48,7 +48,7 @@ export interface PlayPreferences {
   prefersSingles: boolean;
   prefersDoubles: boolean;
   prefersMixed: boolean;
-  availableDays?: string[];  // e.g., ['monday', 'wednesday', 'saturday']
+  availableDays?: string[]; // e.g., ['monday', 'wednesday', 'saturday']
   preferredTimes?: string[]; // e.g., ['morning', 'afternoon', 'evening']
 }
 
@@ -61,14 +61,14 @@ export interface UserLocation {
   country: string;
   lat?: number;
   lon?: number;
-  radiusMiles?: number;  // How far they're willing to travel
+  radiusMiles?: number; // How far they're willing to travel
 }
 
 /**
  * Public profile visibility settings
  */
 export interface ProfileVisibility {
-  isPublic: boolean;           // Can be found in player discovery
+  isPublic: boolean; // Can be found in player discovery
   showEmail: boolean;
   showPhone: boolean;
   showSkillLevel: boolean;
@@ -90,13 +90,13 @@ export interface UserProfile {
   bio?: string;
   skillLevel?: SkillLevel;
   gender?: Gender;
-  birthYear?: number;  // For age-based matching
+  birthYear?: number; // For age-based matching
   location?: UserLocation;
   playPreferences?: PlayPreferences;
   visibility: ProfileVisibility;
 
   // Optional: link to external profiles
-  utaRating?: string;  // USTA rating like "4.0"
+  utaRating?: string; // USTA rating like "4.0"
   ntrpRating?: number; // NTRP numeric rating
 }
 
@@ -106,9 +106,9 @@ export interface UserProfile {
 export interface ClubMembership {
   clubId: string;
   role: ClubRole;
-  displayName: string;  // Name shown within this club
+  displayName: string; // Name shown within this club
   joinedAt: number;
-  groups: Record<string, boolean>;  // groupId -> true for groups they're in
+  groups: Record<string, boolean>; // groupId -> true for groups they're in
 }
 
 /**
@@ -123,9 +123,9 @@ export interface UserSettings {
  * A platform user (identified by device token or authenticated account)
  */
 export interface PlatformUser {
-  id: string;  // UUID (device token) or Firebase Auth UID
+  id: string; // UUID (device token) or Firebase Auth UID
   profile: UserProfile;
-  memberships: Record<string, ClubMembership>;  // clubId -> membership
+  memberships: Record<string, ClubMembership>; // clubId -> membership
   settings: UserSettings;
 }
 
@@ -143,11 +143,11 @@ export type JoinPolicy = 'open' | 'invite' | 'request';
  */
 export interface ClubInfo {
   name: string;
-  shortCode: string;  // URL-friendly code, e.g., "LGTC"
+  shortCode: string; // URL-friendly code, e.g., "LGTC"
   description?: string;
   location?: WeatherLocation;
   createdAt: number;
-  createdBy: string;  // userId
+  createdBy: string; // userId
 }
 
 /**
@@ -155,7 +155,7 @@ export interface ClubInfo {
  */
 export interface ClubSettings {
   joinPolicy: JoinPolicy;
-  memberPin?: string;  // Optional PIN for "open" clubs
+  memberPin?: string; // Optional PIN for "open" clubs
   features: {
     guestCheckins: boolean;
     maxGroups: number;
@@ -182,10 +182,10 @@ export interface ClubMember {
 export interface ClubInvite {
   code: string;
   clubId: string;
-  createdBy: string;  // userId
+  createdBy: string; // userId
   createdAt: number;
   expiresAt: number;
-  usedBy?: string;  // userId who used it
+  usedBy?: string; // userId who used it
   usedAt?: number;
   maxUses?: number;
   useCount: number;
@@ -198,8 +198,8 @@ export interface Club {
   id: string;
   info: ClubInfo;
   settings: ClubSettings;
-  members: Record<string, ClubMember>;  // userId -> member
-  groups: Record<string, ClubGroup>;    // groupId -> group
+  members: Record<string, ClubMember>; // userId -> member
+  groups: Record<string, ClubGroup>; // groupId -> group
   invites?: Record<string, ClubInvite>; // inviteCode -> invite
 }
 
@@ -218,22 +218,25 @@ export interface IndependentGroup {
   description?: string;
   location?: WeatherLocation;
   createdAt: number;
-  createdBy: string;  // userId of creator (becomes owner)
+  createdBy: string; // userId of creator (becomes owner)
   settings: {
-    isPublic: boolean;     // Can be found in group discovery
+    isPublic: boolean; // Can be found in group discovery
     joinPolicy: JoinPolicy;
-    groupPin?: string;     // For PIN-protected groups
+    groupPin?: string; // For PIN-protected groups
     adminPin?: string;
     allowGuests: boolean;
     maxPlayers?: number;
     rules?: string;
   };
-  members: Record<string, {
-    userId: string;
-    role: 'owner' | 'admin' | 'member';
-    displayName: string;
-    joinedAt: number;
-  }>;
+  members: Record<
+    string,
+    {
+      userId: string;
+      role: 'owner' | 'admin' | 'member';
+      displayName: string;
+      joinedAt: number;
+    }
+  >;
 }
 
 // ============================================
@@ -256,7 +259,7 @@ export interface GroupSettings {
   allowGuests: boolean;
   maxPlayers?: number;
   rules?: string;
-  adminPin?: string;  // Optional separate admin PIN for group
+  adminPin?: string; // Optional separate admin PIN for group
 }
 
 /**
@@ -266,22 +269,22 @@ export interface ClubGroup {
   id: string;
   clubId: string;
   name: string;
-  shortCode?: string;  // Optional URL-friendly code
+  shortCode?: string; // Optional URL-friendly code
   description?: string;
-  schedule?: string;  // e.g., "Tuesdays 6pm"
-  location?: WeatherLocation;  // Override club location
+  schedule?: string; // e.g., "Tuesdays 6pm"
+  location?: WeatherLocation; // Override club location
   settings: GroupSettings;
-  members: Record<string, GroupMember>;  // userId -> member
+  members: Record<string, GroupMember>; // userId -> member
 }
 
 /**
  * Group data (the actual check-ins, activity, etc.)
  */
 export interface GroupData {
-  checkins: Record<string, CheckinData[]>;  // date -> checkins
-  activity: Record<string, Record<string, ActivityEntry>>;  // date -> id -> entry
-  matchNotes: Record<string, Record<string, string>>;  // date -> matchKey -> note
-  matchArrangements: Record<string, MatchArrangement>;  // date -> arrangement
+  checkins: Record<string, CheckinData[]>; // date -> checkins
+  activity: Record<string, Record<string, ActivityEntry>>; // date -> id -> entry
+  matchNotes: Record<string, Record<string, string>>; // date -> matchKey -> note
+  matchArrangements: Record<string, MatchArrangement>; // date -> arrangement
 }
 
 // ============================================
@@ -292,7 +295,7 @@ export interface GroupData {
  * Extended check-in data with user ID
  */
 export interface MultiTenantCheckin extends CheckinData {
-  userId: string;  // Platform user ID
+  userId: string; // Platform user ID
   // displayName is inherited from CheckinData.name
 }
 
@@ -305,7 +308,7 @@ export interface MultiTenantCheckin extends CheckinData {
  */
 export interface ClubUserNotifications {
   preferences: NotificationPreferences;
-  items: Record<string, NotificationItem>;  // notificationId -> item
+  items: Record<string, NotificationItem>; // notificationId -> item
 }
 
 // ============================================
@@ -317,7 +320,7 @@ export interface ClubUserNotifications {
  */
 export interface PlatformSettings {
   siteAdminPin: string;
-  platformAdmins: Record<string, boolean>;  // userId -> true
+  platformAdmins: Record<string, boolean>; // userId -> true
 }
 
 /**
@@ -326,7 +329,7 @@ export interface PlatformSettings {
 export interface PlatformData {
   users: Record<string, PlatformUser>;
   clubs: Record<string, Club>;
-  clubData: Record<string, Record<string, GroupData>>;  // clubId -> groupId -> data
+  clubData: Record<string, Record<string, GroupData>>; // clubId -> groupId -> data
   siteSettings: PlatformSettings;
 }
 
@@ -341,7 +344,7 @@ export interface MigrationMapping {
   oldGroupId: string;
   newClubId: string;
   newGroupId: string;
-  memberMappings: Record<string, string>;  // oldMemberName -> newUserId
+  memberMappings: Record<string, string>; // oldMemberName -> newUserId
 }
 
 /**
@@ -374,9 +377,9 @@ export type DataFormat = 'legacy' | 'multitenant';
  */
 export interface CompatibilityConfig {
   format: DataFormat;
-  legacyGroupId?: string;  // If legacy, which group
-  clubId?: string;         // If multi-tenant, which club
-  groupId?: string;        // If multi-tenant, which group
+  legacyGroupId?: string; // If legacy, which group
+  clubId?: string; // If multi-tenant, which club
+  groupId?: string; // If multi-tenant, which group
 }
 
 // ============================================
@@ -497,11 +500,14 @@ export interface ConnectionRequest {
  * User connections (tennis buddies)
  */
 export interface UserConnections {
-  connections: Record<string, {
-    userId: string;
-    displayName: string;
-    connectedAt: number;
-  }>;
+  connections: Record<
+    string,
+    {
+      userId: string;
+      displayName: string;
+      connectedAt: number;
+    }
+  >;
   pendingReceived: Record<string, ConnectionRequest>;
   pendingSent: Record<string, ConnectionRequest>;
 }
@@ -519,19 +525,19 @@ export interface PlatformDataV2 {
 
   // Organized clubs with their groups
   clubs: Record<string, Club>;
-  clubData: Record<string, Record<string, GroupData>>;  // clubId -> groupId -> data
+  clubData: Record<string, Record<string, GroupData>>; // clubId -> groupId -> data
 
   // Independent groups (not part of any club)
   independentGroups: Record<string, IndependentGroup>;
-  independentGroupData: Record<string, GroupData>;  // groupId -> data
+  independentGroupData: Record<string, GroupData>; // groupId -> data
 
   // User connections/friends
-  userConnections: Record<string, UserConnections>;  // userId -> connections
+  userConnections: Record<string, UserConnections>; // userId -> connections
 
   // Site settings
   siteSettings: PlatformSettings;
 
   // Public profile index (for discovery - this would be a separate optimized index)
   // In Firebase, this might be stored separately for efficient querying
-  publicProfiles?: Record<string, PublicPlayerProfile>;  // userId -> public profile
+  publicProfiles?: Record<string, PublicPlayerProfile>; // userId -> public profile
 }

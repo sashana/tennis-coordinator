@@ -1,11 +1,5 @@
 import { signal } from '@preact/signals';
-import {
-  coreMembers,
-  allCheckins,
-  selectedDate,
-  sessionUser,
-  showToast,
-} from '../App';
+import { coreMembers, allCheckins, selectedDate, sessionUser, showToast } from '../App';
 import {
   guestName,
   newMemberName,
@@ -45,7 +39,7 @@ export function PlayerSelectDrawer() {
   // Get members who haven't checked in yet
   const getAvailableMembers = () => {
     const date = selectedDate.value;
-    const checkins = date ? (allCheckins.value[date] || []) : [];
+    const checkins = date ? allCheckins.value[date] || [] : [];
     const checkedInNames = new Set(checkins.map((c) => c.name));
     return [...coreMembers.value]
       .filter((name) => !checkedInNames.has(name))
@@ -55,7 +49,7 @@ export function PlayerSelectDrawer() {
   const availableMembers = getAvailableMembers();
   const query = searchQuery.value.toLowerCase();
   const filteredMembers = query
-    ? availableMembers.filter(name => name.toLowerCase().includes(query))
+    ? availableMembers.filter((name) => name.toLowerCase().includes(query))
     : availableMembers;
 
   const closeDrawer = () => {
@@ -81,9 +75,8 @@ export function PlayerSelectDrawer() {
     }
 
     const checkinPlayStyle = selectedPreference.value;
-    const checkinTimeRange = startTime.value && endTime.value
-      ? { start: startTime.value, end: endTime.value }
-      : undefined;
+    const checkinTimeRange =
+      startTime.value && endTime.value ? { start: startTime.value, end: endTime.value } : undefined;
 
     await addCheckin({
       name: guestName.value.trim(),
@@ -125,9 +118,8 @@ export function PlayerSelectDrawer() {
 
     // Then check them in with default preferences
     const checkinPlayStyle = selectedPreference.value;
-    const checkinTimeRange = startTime.value && endTime.value
-      ? { start: startTime.value, end: endTime.value }
-      : undefined;
+    const checkinTimeRange =
+      startTime.value && endTime.value ? { start: startTime.value, end: endTime.value } : undefined;
 
     await addCheckin({
       name: memberName,
@@ -151,7 +143,9 @@ export function PlayerSelectDrawer() {
     closeDrawer();
   };
 
-  if (!showPlayerSelectDrawer.value) return null;
+  if (!showPlayerSelectDrawer.value) {
+    return null;
+  }
 
   return (
     <div class="drawer-backdrop" onClick={handleBackdropClick}>
@@ -171,19 +165,25 @@ export function PlayerSelectDrawer() {
           <div class="mode-tabs">
             <button
               class={`mode-tab ${playerSelectMode.value === 'member' ? 'active' : ''}`}
-              onClick={() => { playerSelectMode.value = 'member'; }}
+              onClick={() => {
+                playerSelectMode.value = 'member';
+              }}
             >
               Member
             </button>
             <button
               class={`mode-tab ${playerSelectMode.value === 'guest' ? 'active' : ''}`}
-              onClick={() => { playerSelectMode.value = 'guest'; }}
+              onClick={() => {
+                playerSelectMode.value = 'guest';
+              }}
             >
               Guest
             </button>
             <button
               class={`mode-tab ${playerSelectMode.value === 'newMember' ? 'active' : ''}`}
-              onClick={() => { playerSelectMode.value = 'newMember'; }}
+              onClick={() => {
+                playerSelectMode.value = 'newMember';
+              }}
             >
               New Member
             </button>
@@ -198,20 +198,16 @@ export function PlayerSelectDrawer() {
                 type="text"
                 placeholder="Search member..."
                 value={searchQuery.value}
-                onInput={(e) => { searchQuery.value = (e.target as HTMLInputElement).value; }}
+                onInput={(e) => {
+                  searchQuery.value = (e.target as HTMLInputElement).value;
+                }}
                 class="search-input"
               />
             </div>
             <div class="member-list">
-              {filteredMembers.map(name => (
-                <button
-                  key={name}
-                  class="member-row"
-                  onClick={() => handleSelectMember(name)}
-                >
-                  <div class="member-avatar">
-                    {name.charAt(0).toUpperCase()}
-                  </div>
+              {filteredMembers.map((name) => (
+                <button key={name} class="member-row" onClick={() => handleSelectMember(name)}>
+                  <div class="member-avatar">{name.charAt(0).toUpperCase()}</div>
                   <span class="member-name">{name}</span>
                 </button>
               ))}
@@ -235,7 +231,9 @@ export function PlayerSelectDrawer() {
                 type="text"
                 placeholder="Enter guest's name"
                 value={guestName.value}
-                onInput={(e) => { guestName.value = (e.target as HTMLInputElement).value; }}
+                onInput={(e) => {
+                  guestName.value = (e.target as HTMLInputElement).value;
+                }}
               />
             </div>
 
@@ -244,19 +242,25 @@ export function PlayerSelectDrawer() {
               <div class="preference-buttons">
                 <button
                   class={`pref-btn singles ${selectedPreference.value === 'singles' ? 'selected' : ''}`}
-                  onClick={() => { selectedPreference.value = 'singles'; }}
+                  onClick={() => {
+                    selectedPreference.value = 'singles';
+                  }}
                 >
                   Singles
                 </button>
                 <button
                   class={`pref-btn ${selectedPreference.value === 'both' ? 'selected' : ''}`}
-                  onClick={() => { selectedPreference.value = 'both'; }}
+                  onClick={() => {
+                    selectedPreference.value = 'both';
+                  }}
                 >
                   Either
                 </button>
                 <button
                   class={`pref-btn doubles ${selectedPreference.value === 'doubles' ? 'selected' : ''}`}
-                  onClick={() => { selectedPreference.value = 'doubles'; }}
+                  onClick={() => {
+                    selectedPreference.value = 'doubles';
+                  }}
                 >
                   Doubles
                 </button>
@@ -283,38 +287,52 @@ export function PlayerSelectDrawer() {
                 type="text"
                 placeholder="Enter member's name"
                 value={newMemberName.value}
-                onInput={(e) => { newMemberName.value = (e.target as HTMLInputElement).value; }}
+                onInput={(e) => {
+                  newMemberName.value = (e.target as HTMLInputElement).value;
+                }}
               />
             </div>
 
             <div class="form-row">
               <div class="form-field">
-                <label>Phone <span class="optional">(optional)</span></label>
+                <label>
+                  Phone <span class="optional">(optional)</span>
+                </label>
                 <input
                   type="tel"
                   placeholder="Phone number"
                   value={newMemberPhone.value}
-                  onInput={(e) => { newMemberPhone.value = (e.target as HTMLInputElement).value; }}
+                  onInput={(e) => {
+                    newMemberPhone.value = (e.target as HTMLInputElement).value;
+                  }}
                 />
               </div>
               <div class="form-field">
-                <label>Email <span class="optional">(optional)</span></label>
+                <label>
+                  Email <span class="optional">(optional)</span>
+                </label>
                 <input
                   type="email"
                   placeholder="Email address"
                   value={newMemberEmail.value}
-                  onInput={(e) => { newMemberEmail.value = (e.target as HTMLInputElement).value; }}
+                  onInput={(e) => {
+                    newMemberEmail.value = (e.target as HTMLInputElement).value;
+                  }}
                 />
               </div>
             </div>
 
             <div class="form-field">
-              <label>Notes <span class="optional">(optional)</span></label>
+              <label>
+                Notes <span class="optional">(optional)</span>
+              </label>
               <textarea
                 placeholder="Skill level, how you know them, etc."
                 rows={3}
                 value={newMemberNotes.value}
-                onInput={(e) => { newMemberNotes.value = (e.target as HTMLTextAreaElement).value; }}
+                onInput={(e) => {
+                  newMemberNotes.value = (e.target as HTMLTextAreaElement).value;
+                }}
               />
             </div>
 

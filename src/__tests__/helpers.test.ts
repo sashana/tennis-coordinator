@@ -171,7 +171,11 @@ describe('isSameName', () => {
 });
 
 describe('isMemberMuted', () => {
-  const basePrefs: NotificationPreferences = { activityAlerts: true, matchConfirmations: true, mutedMembers: [] };
+  const basePrefs: NotificationPreferences = {
+    activityAlerts: true,
+    matchConfirmations: true,
+    mutedMembers: [],
+  };
 
   it('returns false when no muted members', () => {
     expect(isMemberMuted('Alice', { ...basePrefs } as NotificationPreferences)).toBe(false);

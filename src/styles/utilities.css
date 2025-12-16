@@ -26,12 +26,14 @@
 
 .hover-color-primary:hover,
 .hover-color-primary:active {
-  color: var(--color-primary, #2C6E49) !important;
+  color: var(--color-primary, #2c6e49) !important;
 }
 
 /* Danger hover - for delete/remove actions */
 .hover-danger {
-  transition: color 0.2s, background 0.2s;
+  transition:
+    color 0.2s,
+    background 0.2s;
 }
 
 .hover-danger:hover,
@@ -52,7 +54,9 @@
 
 /* Scale hover - for badges and small interactive elements */
 .hover-scale {
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .hover-scale:hover,
@@ -62,7 +66,9 @@
 
 /* Lift hover - for buttons with shadow */
 .hover-lift {
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .hover-lift:hover,
@@ -76,28 +82,32 @@
 
 /* Admin badge hover pattern */
 .hover-admin-badge {
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .hover-admin-badge:hover,
 .hover-admin-badge:active {
   transform: scale(1.1) !important;
-  box-shadow: var(--shadow-md, 0 2px 8px rgba(0,0,0,0.15)) !important;
+  box-shadow: var(--shadow-md, 0 2px 8px rgba(0, 0, 0, 0.15)) !important;
 }
 
 /* Scroll-to-top button pattern */
 .hover-scroll-btn {
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .hover-scroll-btn:hover {
   transform: translateY(-1px) !important;
-  box-shadow: var(--shadow-md, 0 2px 8px rgba(0,0,0,0.15)) !important;
+  box-shadow: var(--shadow-md, 0 2px 8px rgba(0, 0, 0, 0.15)) !important;
 }
 
 .hover-scroll-btn:active {
   transform: translateY(0) !important;
-  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.1)) !important;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.1)) !important;
 }
 
 /* ============================================

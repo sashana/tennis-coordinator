@@ -19,7 +19,9 @@ const confirmingRemove = signal(false);
 // Check if user is logged in as group admin
 function isGroupAdmin(): boolean {
   const groupId = currentGroupId.value;
-  if (!groupId) return false;
+  if (!groupId) {
+    return false;
+  }
   return sessionStorage.getItem(`adminAuth_${groupId}`) === 'true';
 }
 
@@ -42,7 +44,9 @@ export function EditMemberDrawer() {
   const canRemove = isAdmin && !isEditingSelf; // Admin can remove others
 
   const handleSave = async () => {
-    if (!currentMember) return;
+    if (!currentMember) {
+      return;
+    }
 
     const trimmedName = memberName.value.trim();
     if (!trimmedName) {
@@ -83,7 +87,9 @@ export function EditMemberDrawer() {
   };
 
   const handleRemove = async () => {
-    if (!currentMember || !canRemove) return;
+    if (!currentMember || !canRemove) {
+      return;
+    }
 
     if (!confirmingRemove.value) {
       confirmingRemove.value = true;
@@ -114,7 +120,9 @@ export function EditMemberDrawer() {
     }
   };
 
-  if (!showEditMemberDrawer.value || !currentMember) return null;
+  if (!showEditMemberDrawer.value || !currentMember) {
+    return null;
+  }
 
   return (
     <div class="drawer-backdrop" onClick={handleBackdropClick}>
@@ -136,12 +144,16 @@ export function EditMemberDrawer() {
 
         {/* Name (editable by admin for other members) */}
         <div class="drawer-section">
-          <label class="field-label">Name {canEditName && <span class="optional-tag">editable</span>}</label>
+          <label class="field-label">
+            Name {canEditName && <span class="optional-tag">editable</span>}
+          </label>
           <input
             type="text"
             placeholder="Member name"
             value={memberName.value}
-            onInput={(e) => { memberName.value = (e.target as HTMLInputElement).value; }}
+            onInput={(e) => {
+              memberName.value = (e.target as HTMLInputElement).value;
+            }}
             class="drawer-input"
             disabled={!canEditName}
             style={!canEditName ? { background: '#f5f5f5', color: '#666' } : {}}
@@ -150,29 +162,35 @@ export function EditMemberDrawer() {
 
         {/* Contact Info */}
         <div class="drawer-section">
-          <label class="field-label">Contact Info <span class="optional-tag">optional</span></label>
+          <label class="field-label">
+            Contact Info <span class="optional-tag">optional</span>
+          </label>
           <div class="contact-inputs">
             <div class="input-with-icon">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="#999">
-                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
               </svg>
               <input
                 type="tel"
                 placeholder="Phone number"
                 value={memberPhone.value}
-                onInput={(e) => { memberPhone.value = (e.target as HTMLInputElement).value; }}
+                onInput={(e) => {
+                  memberPhone.value = (e.target as HTMLInputElement).value;
+                }}
                 class="drawer-input with-icon"
               />
             </div>
             <div class="input-with-icon">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="#999">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
               </svg>
               <input
                 type="email"
                 placeholder="Email address"
                 value={memberEmail.value}
-                onInput={(e) => { memberEmail.value = (e.target as HTMLInputElement).value; }}
+                onInput={(e) => {
+                  memberEmail.value = (e.target as HTMLInputElement).value;
+                }}
                 class="drawer-input with-icon"
               />
             </div>
@@ -181,12 +199,16 @@ export function EditMemberDrawer() {
 
         {/* Notes */}
         <div class="drawer-section">
-          <label class="field-label">Notes <span class="optional-tag">optional</span></label>
+          <label class="field-label">
+            Notes <span class="optional-tag">optional</span>
+          </label>
           <textarea
             placeholder="Skill level, how you know them, etc."
             rows={2}
             value={memberNotes.value}
-            onInput={(e) => { memberNotes.value = (e.target as HTMLTextAreaElement).value; }}
+            onInput={(e) => {
+              memberNotes.value = (e.target as HTMLTextAreaElement).value;
+            }}
             class="drawer-textarea"
           />
         </div>
@@ -199,7 +221,9 @@ export function EditMemberDrawer() {
               <input
                 type="checkbox"
                 checked={shareContactInDirectory.value}
-                onChange={(e) => { shareContactInDirectory.value = (e.target as HTMLInputElement).checked; }}
+                onChange={(e) => {
+                  shareContactInDirectory.value = (e.target as HTMLInputElement).checked;
+                }}
               />
               <div class="privacy-option-content">
                 <span class="privacy-option-title">Share contact info in directory</span>
@@ -210,7 +234,9 @@ export function EditMemberDrawer() {
               <input
                 type="checkbox"
                 checked={shareNotesInDirectory.value}
-                onChange={(e) => { shareNotesInDirectory.value = (e.target as HTMLInputElement).checked; }}
+                onChange={(e) => {
+                  shareNotesInDirectory.value = (e.target as HTMLInputElement).checked;
+                }}
               />
               <div class="privacy-option-content">
                 <span class="privacy-option-title">Share profile notes in directory</span>

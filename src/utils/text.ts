@@ -6,7 +6,9 @@
  * Truncate text to a maximum length with ellipsis
  */
 export function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
+  if (text.length <= maxLength) {
+    return text;
+  }
   return text.substring(0, maxLength - 3) + '...';
 }
 
@@ -24,7 +26,9 @@ export function capitalizeWords(text: string): string {
  * Capitalize just the first letter of the string
  */
 export function capitalizeFirst(text: string): string {
-  if (!text) return text;
+  if (!text) {
+    return text;
+  }
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
@@ -34,23 +38,17 @@ export function capitalizeFirst(text: string): string {
  * @param count - The count to determine singular/plural
  * @param pluralForm - Optional custom plural form (defaults to word + 's')
  */
-export function pluralize(
-  word: string,
-  count: number,
-  pluralForm?: string
-): string {
-  if (count === 1) return word;
+export function pluralize(word: string, count: number, pluralForm?: string): string {
+  if (count === 1) {
+    return word;
+  }
   return pluralForm || word + 's';
 }
 
 /**
  * Pluralize a word with the count included (e.g., "3 players")
  */
-export function pluralizeWithCount(
-  word: string,
-  count: number,
-  pluralForm?: string
-): string {
+export function pluralizeWithCount(word: string, count: number, pluralForm?: string): string {
   return `${count} ${pluralize(word, count, pluralForm)}`;
 }
 
@@ -117,7 +115,9 @@ export function extractNumbers(text: string): number[] {
  * Pad a string to a minimum length
  */
 export function padStart(text: string, length: number, padChar: string = ' '): string {
-  if (text.length >= length) return text;
+  if (text.length >= length) {
+    return text;
+  }
   return padChar.repeat(length - text.length) + text;
 }
 
@@ -125,7 +125,9 @@ export function padStart(text: string, length: number, padChar: string = ' '): s
  * Pad a string to a minimum length (end)
  */
 export function padEnd(text: string, length: number, padChar: string = ' '): string {
-  if (text.length >= length) return text;
+  if (text.length >= length) {
+    return text;
+  }
   return text + padChar.repeat(length - text.length);
 }
 

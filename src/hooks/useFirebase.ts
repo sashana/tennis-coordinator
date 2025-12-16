@@ -1,6 +1,11 @@
 import { useEffect } from 'preact/hooks';
 import { signal, effect } from '@preact/signals';
 import { getDatabase } from '../config/firebase';
+import { createLogger } from '../utils/logger';
+
+const themeLogger = createLogger('Theme');
+const notificationLogger = createLogger('Notifications');
+const matchLogger = createLogger('MatchFormations');
 import {
   currentGroupId,
   currentGroupName,
@@ -9,9 +14,14 @@ import {
   coreMembers,
   memberDetails,
   sessionUser,
-  showToast
+  showToast,
 } from '../components/App';
-import { selectedName, isFormExpanded, showSharePrompt, sharePromptData } from '../components/pages/MainApp';
+import {
+  selectedName,
+  isFormExpanded,
+  showSharePrompt,
+  sharePromptData,
+} from '../components/pages/MainApp';
 import { formatTimeRange, formatDateForNotification, normalizeName } from '../utils/helpers';
 import { organizeMatches } from '../utils/matching';
 import type { CheckinData } from '../types';
@@ -33,7 +43,7 @@ export const groupSettings = signal<{
 // Apply theme to document
 export function applyTheme(themeName?: string) {
   const root = document.documentElement;
-  console.log('[Theme] Applying theme:', themeName);
+  themeLogger.debug('Applying theme:', themeName);
 
   // Remove all theme classes (both old and new theme names)
   root.classList.remove(
@@ -52,10 +62,9 @@ export function applyTheme(themeName?: string) {
     const themeClass = `theme-${themeName}`;
     root.classList.add(themeClass);
     root.setAttribute('data-theme', themeName);
-    console.log('[Theme] Added class:', themeClass, 'data-theme:', themeName);
-    console.log('[Theme] Current html classes:', root.className);
+    themeLogger.debug('Added class:', { themeClass, themeName, classes: root.className });
   } else {
-    console.log('[Theme] Using default theme (no class added)');
+    themeLogger.debug('Using default theme (no class added)');
   }
 }
 
@@ -79,45 +88,50 @@ export function useGroupData() {
     // Use effect() to subscribe to signal changes
     const dispose = effect(() => {
       const groupId = currentGroupId.value;
-      if (!groupId || groupId === 'admin') return;
+      if (!groupId || groupId === 'admin') {
+        return;
+      }
 
       // Load group settings
       const settingsRef = getRef(`groups/${groupId}/settings`);
 
-      settingsRef.once('value').then((snapshot) => {
-        const settings = (snapshot.val() || {}) as Record<string, unknown>;
+      settingsRef
+        .once('value')
+        .then((snapshot) => {
+          const settings = (snapshot.val() || {}) as Record<string, unknown>;
 
-        currentGroupName.value = (settings.groupName as string) || 'Unknown Group';
-        coreMembers.value = (settings.members as string[]) || [];
-        memberDetails.value = (settings.memberDetails as Record<string, unknown>) || {};
+          currentGroupName.value = (settings.groupName as string) || 'Unknown Group';
+          coreMembers.value = (settings.members as string[]) || [];
+          memberDetails.value = (settings.memberDetails as Record<string, unknown>) || {};
 
-        // Check if current session user was renamed by admin
-        const renamedMembers = (settings.renamedMembers as Record<string, string>) || {};
-        if (sessionUser.value && renamedMembers[sessionUser.value]) {
-          const newName = renamedMembers[sessionUser.value];
-          sessionUser.value = newName;
-          localStorage.setItem(`sessionUser_${groupId}`, newName);
-        }
+          // Check if current session user was renamed by admin
+          const renamedMembers = (settings.renamedMembers as Record<string, string>) || {};
+          if (sessionUser.value && renamedMembers[sessionUser.value]) {
+            const newName = renamedMembers[sessionUser.value];
+            sessionUser.value = newName;
+            localStorage.setItem(`sessionUser_${groupId}`, newName);
+          }
 
-        groupSettings.value = {
-          groupPin: (settings.groupPin as string) || '',
-          adminPin: (settings.adminPin as string) || '',
-          shortCode: settings.shortCode as string | undefined,
-          location: settings.location as { lat: number; lon: number; name: string } | undefined,
-          groupDescription: settings.groupDescription as string | undefined,
-          groupRules: settings.groupRules as string | undefined,
-          theme: settings.theme as string | undefined,
-        };
+          groupSettings.value = {
+            groupPin: (settings.groupPin as string) || '',
+            adminPin: (settings.adminPin as string) || '',
+            shortCode: settings.shortCode as string | undefined,
+            location: settings.location as { lat: number; lon: number; name: string } | undefined,
+            groupDescription: settings.groupDescription as string | undefined,
+            groupRules: settings.groupRules as string | undefined,
+            theme: settings.theme as string | undefined,
+          };
 
-        // Apply the group's theme
-        applyTheme(settings.theme as string | undefined);
+          // Apply the group's theme
+          applyTheme(settings.theme as string | undefined);
 
-        // Update document title
-        document.title = `${settings.groupName || 'Tennis'} - Tennis Coordinator`;
-      }).catch((error: unknown) => {
-        console.error('Error loading group settings:', error);
-        showToast('Failed to load group data', 'error');
-      });
+          // Update document title
+          document.title = `${settings.groupName || 'Tennis'} - Tennis Coordinator`;
+        })
+        .catch((error: unknown) => {
+          console.error('Error loading group settings:', error);
+          showToast('Failed to load group data', 'error');
+        });
     });
 
     return () => {
@@ -140,7 +154,9 @@ export function useCheckins() {
         currentRef.off('value', currentUnsubscribe);
       }
 
-      if (!groupId || groupId === 'admin') return;
+      if (!groupId || groupId === 'admin') {
+        return;
+      }
 
       currentRef = getRef(`groups/${groupId}/checkins`);
 
@@ -234,7 +250,6 @@ export function useAllMatchNotes() {
   }, []);
 }
 
-
 // Check-in functions
 export async function addCheckin(checkin: {
   name: string;
@@ -246,7 +261,9 @@ export async function addCheckin(checkin: {
 }) {
   const groupId = currentGroupId.value;
   const date = selectedDate.value;
-  if (!groupId || !date) return;
+  if (!groupId || !date) {
+    return;
+  }
 
   const checkinsRef = getRef(`groups/${groupId}/checkins/${date}`);
   const currentCheckins = allCheckins.value[date] || [];
@@ -317,17 +334,24 @@ export async function updateCheckin(
 ) {
   const groupId = currentGroupId.value;
   const date = selectedDate.value;
-  if (!groupId || !date) return;
+  if (!groupId || !date) {
+    return;
+  }
 
   const currentCheckins = allCheckins.value[date] || [];
   const person = currentCheckins[index] as { name?: string; addedBy?: string } | undefined;
-  if (!person) return;
+  if (!person) {
+    return;
+  }
 
   const personName = person.name || 'this person';
 
   // Permission check: Can edit if you're the owner, the adder, or admin
   const isOwner = sessionUserName && normalizeName(sessionUserName) === normalizeName(personName);
-  const isAdder = person.addedBy && sessionUserName && normalizeName(sessionUserName) === normalizeName(person.addedBy);
+  const isAdder =
+    person.addedBy &&
+    sessionUserName &&
+    normalizeName(sessionUserName) === normalizeName(person.addedBy);
   const isAdmin = sessionStorage.getItem(`adminAuth_${groupId}`) === 'true';
 
   if (!isOwner && !isAdder && !isAdmin) {
@@ -360,7 +384,9 @@ export async function updateCheckin(
 // Helper to remove a player from the current match arrangement
 async function removePlayerFromArrangement(groupId: string, date: string, playerName: string) {
   const arrangement = matchArrangement.value;
-  if (!arrangement || !arrangement.matches) return;
+  if (!arrangement || !arrangement.matches) {
+    return;
+  }
 
   // Remove player from all matches
   const newMatches: Record<string, { players: string[]; note?: string }> = {};
@@ -405,21 +431,32 @@ async function removePlayerFromArrangement(groupId: string, date: string, player
 }
 
 // Check if user can remove a check-in (returns info or null if not allowed)
-export function canRemoveCheckin(index: number, sessionUserName: string): {
+export function canRemoveCheckin(
+  index: number,
+  sessionUserName: string
+): {
   personName: string;
   isOwner: boolean;
 } | null {
   const groupId = currentGroupId.value;
   const date = selectedDate.value;
-  if (!groupId || !date) return null;
+  if (!groupId || !date) {
+    return null;
+  }
 
   const currentCheckins = allCheckins.value[date] || [];
   const person = currentCheckins[index] as { name?: string; addedBy?: string } | undefined;
   const personName = person?.name || 'this person';
 
   // Permission check: Can remove if you're the owner, the adder, or admin
-  const isOwner = Boolean(sessionUserName && normalizeName(sessionUserName) === normalizeName(personName));
-  const isAdder = Boolean(person?.addedBy && sessionUserName && normalizeName(sessionUserName) === normalizeName(person.addedBy));
+  const isOwner = Boolean(
+    sessionUserName && normalizeName(sessionUserName) === normalizeName(personName)
+  );
+  const isAdder = Boolean(
+    person?.addedBy &&
+    sessionUserName &&
+    normalizeName(sessionUserName) === normalizeName(person.addedBy)
+  );
   const isAdmin = sessionStorage.getItem(`adminAuth_${groupId}`) === 'true';
 
   if (!isOwner && !isAdder && !isAdmin) {
@@ -434,7 +471,9 @@ export function canRemoveCheckin(index: number, sessionUserName: string): {
 export async function removeCheckin(index: number, sessionUserName: string) {
   const groupId = currentGroupId.value;
   const date = selectedDate.value;
-  if (!groupId || !date) return;
+  if (!groupId || !date) {
+    return;
+  }
 
   const currentCheckins = allCheckins.value[date] || [];
   const person = currentCheckins[index] as { name?: string; addedBy?: string } | undefined;
@@ -529,20 +568,35 @@ async function notifyRemovalAlert(
   try {
     const db = getDatabase();
     const snapshot = await db.ref(`groups/${groupId}/userNotifications`).once('value');
-    const allUserNotifications = (snapshot.val() || {}) as Record<string, { preferences?: { activityAlerts?: boolean; mutedMembers?: string[]; unwatchedMembers?: string[] } }>;
+    const allUserNotifications = (snapshot.val() || {}) as Record<
+      string,
+      {
+        preferences?: {
+          activityAlerts?: boolean;
+          mutedMembers?: string[];
+          unwatchedMembers?: string[];
+        };
+      }
+    >;
 
     for (const [normalizedName, userData] of Object.entries(allUserNotifications)) {
       const prefs = userData.preferences || {};
       if (prefs.activityAlerts) {
         // Don't notify the person who removed
-        if (normalizedName === normalizeName(removedBy)) continue;
+        if (normalizedName === normalizeName(removedBy)) {
+          continue;
+        }
 
         // Check if either the removed player or remover is unwatched (support both old mutedMembers and new unwatchedMembers)
         const unwatchedMembers = prefs.unwatchedMembers || prefs.mutedMembers || [];
-        if (unwatchedMembers.includes(playerName) || unwatchedMembers.includes(removedBy)) continue;
+        if (unwatchedMembers.includes(playerName) || unwatchedMembers.includes(removedBy)) {
+          continue;
+        }
 
         // Add notification
-        const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizedName}/items`).push();
+        const notifRef = db
+          .ref(`groups/${groupId}/userNotifications/${normalizedName}/items`)
+          .push();
         await notifRef.set({
           message,
           timestamp: Date.now(),
@@ -559,9 +613,12 @@ async function notifyRemovalAlert(
 // Helper to format play style for display
 function formatPlayStyle(playStyle: string): string {
   switch (playStyle) {
-    case 'singles': return 'Singles';
-    case 'doubles': return 'Doubles';
-    default: return 'Either';
+    case 'singles':
+      return 'Singles';
+    case 'doubles':
+      return 'Doubles';
+    default:
+      return 'Either';
   }
 }
 
@@ -606,13 +663,28 @@ async function notifyCheckinAlert(
   try {
     const db = getDatabase();
     const snapshot = await db.ref(`groups/${groupId}/userNotifications`).once('value');
-    const allUserNotifications = (snapshot.val() || {}) as Record<string, { preferences?: { activityAlerts?: boolean; mutedMembers?: string[]; unwatchedMembers?: string[] } }>;
+    const allUserNotifications = (snapshot.val() || {}) as Record<
+      string,
+      {
+        preferences?: {
+          activityAlerts?: boolean;
+          mutedMembers?: string[];
+          unwatchedMembers?: string[];
+        };
+      }
+    >;
 
-    console.log('[notifyCheckinAlert] Found userNotifications entries:', Object.keys(allUserNotifications));
+    console.log(
+      '[notifyCheckinAlert] Found userNotifications entries:',
+      Object.keys(allUserNotifications)
+    );
 
     for (const [normalizedName, userData] of Object.entries(allUserNotifications)) {
       const prefs = userData.preferences || {};
-      console.log(`[notifyCheckinAlert] User ${normalizedName}:`, { activityAlerts: prefs.activityAlerts, unwatchedMembers: prefs.unwatchedMembers || prefs.mutedMembers });
+      console.log(`[notifyCheckinAlert] User ${normalizedName}:`, {
+        activityAlerts: prefs.activityAlerts,
+        unwatchedMembers: prefs.unwatchedMembers || prefs.mutedMembers,
+      });
 
       if (prefs.activityAlerts) {
         // Don't notify the person who checked in or added
@@ -628,13 +700,17 @@ async function notifyCheckinAlert(
         // Check if either the player or adder is unwatched (support both old mutedMembers and new unwatchedMembers)
         const unwatchedMembers = prefs.unwatchedMembers || prefs.mutedMembers || [];
         if (unwatchedMembers.includes(playerName) || unwatchedMembers.includes(addedBy)) {
-          console.log(`[notifyCheckinAlert] Skipping ${normalizedName} - player/adder is unwatched`);
+          console.log(
+            `[notifyCheckinAlert] Skipping ${normalizedName} - player/adder is unwatched`
+          );
           continue;
         }
 
         // Add notification
         console.log(`[notifyCheckinAlert] Sending notification to ${normalizedName}`);
-        const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizedName}/items`).push();
+        const notifRef = db
+          .ref(`groups/${groupId}/userNotifications/${normalizedName}/items`)
+          .push();
         await notifRef.set({
           message,
           timestamp: Date.now(),
@@ -653,18 +729,23 @@ async function notifyCheckinAlert(
 // This compares current match state to previous and notifies players when new complete matches form
 async function checkAndNotifyMatchFormations(groupId: string, date: string) {
   const checkins = (allCheckins.value[date] || []) as CheckinData[];
-  if (checkins.length === 0) return;
+  if (checkins.length === 0) {
+    return;
+  }
 
   const { matches } = organizeMatches(checkins);
   const currentState: Record<string, { type: string; players: string[] }> = {};
 
   // Build current state of complete matches
-  matches.forEach(match => {
+  matches.forEach((match) => {
     if (match.type === 'doubles' || match.type === 'singles') {
-      const playerNames = match.players.map(p => normalizeName(p.name)).sort().join(',');
+      const playerNames = match.players
+        .map((p) => normalizeName(p.name))
+        .sort()
+        .join(',');
       currentState[playerNames] = {
         type: match.type,
-        players: match.players.map(p => p.name)
+        players: match.players.map((p) => p.name),
       };
     }
   });
@@ -688,12 +769,16 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
       const matchType = matchData.type === 'doubles' ? 'Doubles' : 'Singles';
 
       for (const playerName of matchData.players) {
-        const teammates = matchData.players.filter(p => normalizeName(p) !== normalizeName(playerName));
+        const teammates = matchData.players.filter(
+          (p) => normalizeName(p) !== normalizeName(playerName)
+        );
         const message = `✅ You're in ${matchType} for ${formattedDate} with ${teammates.join(', ')}`;
 
         try {
           const db = getDatabase();
-          const snapshot = await db.ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/preferences`).once('value');
+          const snapshot = await db
+            .ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/preferences`)
+            .once('value');
           const prefs = (snapshot.val() || {}) as { matchConfirmations?: boolean };
 
           console.log(`[checkAndNotifyMatchFormations] Player "${playerName}" prefs:`, {
@@ -703,7 +788,9 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
 
           // Only send if matchConfirmations is enabled (default true)
           if (prefs.matchConfirmations !== false) {
-            const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/items`).push();
+            const notifRef = db
+              .ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/items`)
+              .push();
             await notifRef.set({
               message,
               timestamp: Date.now(),
@@ -712,9 +799,13 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
               type: 'match_formed',
               matchType,
             });
-            console.log(`[checkAndNotifyMatchFormations] ✅ Sent notification to ${playerName}: "${message}"`);
+            console.log(
+              `[checkAndNotifyMatchFormations] ✅ Sent notification to ${playerName}: "${message}"`
+            );
           } else {
-            console.log(`[checkAndNotifyMatchFormations] ❌ Skipped ${playerName} - matchConfirmations disabled`);
+            console.log(
+              `[checkAndNotifyMatchFormations] ❌ Skipped ${playerName} - matchConfirmations disabled`
+            );
           }
         } catch (error) {
           console.error(`Error sending match notification to ${playerName}:`, error);
@@ -734,26 +825,30 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
       const matchType = prevMatchData.type === 'doubles' ? 'Doubles' : 'Singles';
 
       // Find which players from the old match are still checked in
-      const currentCheckinNames = checkins.map(c => normalizeName(c.name));
-      const remainingPlayers = prevMatchData.players.filter(p =>
+      const currentCheckinNames = checkins.map((c) => normalizeName(c.name));
+      const remainingPlayers = prevMatchData.players.filter((p) =>
         currentCheckinNames.includes(normalizeName(p))
       );
-      const droppedPlayers = prevMatchData.players.filter(p =>
-        !currentCheckinNames.includes(normalizeName(p))
+      const droppedPlayers = prevMatchData.players.filter(
+        (p) => !currentCheckinNames.includes(normalizeName(p))
       );
 
       const droppedNames = droppedPlayers.join(', ');
-      const needed = matchType === 'Doubles' ? 4 - remainingPlayers.length : 2 - remainingPlayers.length;
+      const needed =
+        matchType === 'Doubles' ? 4 - remainingPlayers.length : 2 - remainingPlayers.length;
       const neededText = needed === 1 ? 'Need 1 more player' : `Need ${needed} more players`;
-      const message = droppedPlayers.length > 0
-        ? `⚠️ Your ${matchType} for ${formattedDate} is no longer confirmed - ${droppedNames} dropped out. ${neededText}.`
-        : `⚠️ Your ${matchType} for ${formattedDate} is no longer confirmed.`;
+      const message =
+        droppedPlayers.length > 0
+          ? `⚠️ Your ${matchType} for ${formattedDate} is no longer confirmed - ${droppedNames} dropped out. ${neededText}.`
+          : `⚠️ Your ${matchType} for ${formattedDate} is no longer confirmed.`;
 
       // Notify ALL players who were in the match (both remaining and dropped)
       for (const playerName of prevMatchData.players) {
         try {
           const db = getDatabase();
-          const snapshot = await db.ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/preferences`).once('value');
+          const snapshot = await db
+            .ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/preferences`)
+            .once('value');
           const prefs = (snapshot.val() || {}) as { matchConfirmations?: boolean };
 
           console.log(`[checkAndNotifyMatchFormations] Player "${playerName}" prefs:`, {
@@ -763,7 +858,9 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
 
           // Only send if matchConfirmations is enabled (default true)
           if (prefs.matchConfirmations !== false) {
-            const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/items`).push();
+            const notifRef = db
+              .ref(`groups/${groupId}/userNotifications/${normalizeName(playerName)}/items`)
+              .push();
             await notifRef.set({
               message,
               timestamp: Date.now(),
@@ -772,9 +869,13 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
               type: 'match_dissolved',
               matchType,
             });
-            console.log(`[checkAndNotifyMatchFormations] ✅ Sent dissolved notification to ${playerName}: "${message}"`);
+            console.log(
+              `[checkAndNotifyMatchFormations] ✅ Sent dissolved notification to ${playerName}: "${message}"`
+            );
           } else {
-            console.log(`[checkAndNotifyMatchFormations] ❌ Skipped ${playerName} - matchConfirmations disabled`);
+            console.log(
+              `[checkAndNotifyMatchFormations] ❌ Skipped ${playerName} - matchConfirmations disabled`
+            );
           }
         } catch (error) {
           console.error(`Error sending dissolved match notification to ${playerName}:`, error);
@@ -799,15 +900,17 @@ async function notifyNoteAlert(
   // Format match key for display (e.g., "doubles-1" -> "Doubles 1")
   const matchLabel = matchKey
     .replace(/-/g, ' ')
-    .replace(/\b\w/g, c => c.toUpperCase())
+    .replace(/\b\w/g, (c) => c.toUpperCase())
     .replace('Forming 1', '(forming)');
 
   let message: string;
   if (action === 'added') {
-    const preview = noteContent && noteContent.length > 30 ? noteContent.substring(0, 30) + '...' : noteContent;
+    const preview =
+      noteContent && noteContent.length > 30 ? noteContent.substring(0, 30) + '...' : noteContent;
     message = `📝 ${by} added note to ${matchLabel}: "${preview}"`;
   } else if (action === 'updated') {
-    const preview = noteContent && noteContent.length > 30 ? noteContent.substring(0, 30) + '...' : noteContent;
+    const preview =
+      noteContent && noteContent.length > 30 ? noteContent.substring(0, 30) + '...' : noteContent;
     message = `📝 ${by} updated note on ${matchLabel}: "${preview}"`;
   } else {
     message = `📝 ${by} removed note from ${matchLabel}`;
@@ -816,20 +919,35 @@ async function notifyNoteAlert(
   try {
     const db = getDatabase();
     const snapshot = await db.ref(`groups/${groupId}/userNotifications`).once('value');
-    const allUserNotifications = (snapshot.val() || {}) as Record<string, { preferences?: { activityAlerts?: boolean; mutedMembers?: string[]; unwatchedMembers?: string[] } }>;
+    const allUserNotifications = (snapshot.val() || {}) as Record<
+      string,
+      {
+        preferences?: {
+          activityAlerts?: boolean;
+          mutedMembers?: string[];
+          unwatchedMembers?: string[];
+        };
+      }
+    >;
 
     for (const [normalizedName, userData] of Object.entries(allUserNotifications)) {
       const prefs = userData.preferences || {};
       if (prefs.activityAlerts) {
         // Don't notify the person who made the change
-        if (normalizedName === normalizeName(by)) continue;
+        if (normalizedName === normalizeName(by)) {
+          continue;
+        }
 
         // Check if the person who made the change is unwatched (support both old mutedMembers and new unwatchedMembers)
         const unwatchedMembers = prefs.unwatchedMembers || prefs.mutedMembers || [];
-        if (unwatchedMembers.includes(by)) continue;
+        if (unwatchedMembers.includes(by)) {
+          continue;
+        }
 
         // Add notification
-        const notifRef = db.ref(`groups/${groupId}/userNotifications/${normalizedName}/items`).push();
+        const notifRef = db
+          .ref(`groups/${groupId}/userNotifications/${normalizedName}/items`)
+          .push();
         await notifRef.set({
           message,
           timestamp: Date.now(),
@@ -846,7 +964,9 @@ async function notifyNoteAlert(
 export async function resetDay() {
   const groupId = currentGroupId.value;
   const date = selectedDate.value;
-  if (!groupId || !date) return;
+  if (!groupId || !date) {
+    return;
+  }
 
   try {
     await getRef(`groups/${groupId}/checkins/${date}`).remove();
@@ -864,7 +984,9 @@ const lastSavedNotes: Record<string, string> = {};
 export async function saveMatchNote(matchKey: string, note: string) {
   const groupId = currentGroupId.value;
   const date = selectedDate.value;
-  if (!groupId || !date) return;
+  if (!groupId || !date) {
+    return;
+  }
 
   try {
     const noteKey = `${groupId}:${date}:${matchKey}`;
@@ -883,7 +1005,11 @@ export async function saveMatchNote(matchKey: string, note: string) {
       showToast('Note added', 'success');
     } else if (note && previousNote && note !== previousNote) {
       // Note updated
-      await logActivity(groupId, date, 'note_updated', by, by, { matchKey, noteContent: note, previousNote });
+      await logActivity(groupId, date, 'note_updated', by, by, {
+        matchKey,
+        noteContent: note,
+        previousNote,
+      });
       await notifyNoteAlert(groupId, date, by, matchKey, 'updated', note);
       lastSavedNotes[noteKey] = note;
       showToast('Note updated', 'success');
@@ -909,7 +1035,9 @@ export async function addMember(member: {
   addedBy: string;
 }) {
   const groupId = currentGroupId.value;
-  if (!groupId) return;
+  if (!groupId) {
+    return;
+  }
 
   const settingsRef = getRef(`groups/${groupId}/settings`);
 
@@ -946,7 +1074,10 @@ export async function addMember(member: {
 
     // Update local signals immediately
     coreMembers.value = newMembers;
-    memberDetails.value = newDetails as Record<string, { phone?: string; email?: string; notes?: string; addedBy?: string; addedDate?: string }>;
+    memberDetails.value = newDetails as Record<
+      string,
+      { phone?: string; email?: string; notes?: string; addedBy?: string; addedDate?: string }
+    >;
 
     // Log activity
     const date = selectedDate.value || new Date().toISOString().split('T')[0];
@@ -975,7 +1106,9 @@ export async function addMember(member: {
 // Remove member
 export async function removeMember(name: string) {
   const groupId = currentGroupId.value;
-  if (!groupId) return;
+  if (!groupId) {
+    return;
+  }
 
   const settingsRef = getRef(`groups/${groupId}/settings`);
 
@@ -985,7 +1118,7 @@ export async function removeMember(name: string) {
     const currentMembersList = (settings.members as string[]) || [];
     const currentDetailsList = (settings.memberDetails as Record<string, unknown>) || {};
 
-    const newMembers = currentMembersList.filter(m => m !== name);
+    const newMembers = currentMembersList.filter((m) => m !== name);
     const newDetails = { ...currentDetailsList };
     delete newDetails[name];
 
@@ -1022,22 +1155,28 @@ export async function updateMemberDetails(
   }
 ) {
   const groupId = currentGroupId.value;
-  if (!groupId) return false;
+  if (!groupId) {
+    return false;
+  }
 
   const settingsRef = getRef(`groups/${groupId}/settings`);
 
   try {
     const snapshot = await settingsRef.once('value');
     const settings = (snapshot.val() || {}) as Record<string, unknown>;
-    const currentDetailsList = (settings.memberDetails as Record<string, {
-      phone?: string;
-      email?: string;
-      notes?: string;
-      addedBy?: string;
-      addedDate?: string;
-      shareContactInDirectory?: boolean;
-      shareNotesInDirectory?: boolean;
-    }>) || {};
+    const currentDetailsList =
+      (settings.memberDetails as Record<
+        string,
+        {
+          phone?: string;
+          email?: string;
+          notes?: string;
+          addedBy?: string;
+          addedDate?: string;
+          shareContactInDirectory?: boolean;
+          shareNotesInDirectory?: boolean;
+        }
+      >) || {};
 
     // Get or create member details
     const existingDetails = currentDetailsList[name] || {};
@@ -1048,8 +1187,10 @@ export async function updateMemberDetails(
         phone: updates.phone ?? existingDetails.phone ?? '',
         email: updates.email ?? existingDetails.email ?? '',
         notes: updates.notes ?? existingDetails.notes ?? '',
-        shareContactInDirectory: updates.shareContactInDirectory ?? existingDetails.shareContactInDirectory ?? false,
-        shareNotesInDirectory: updates.shareNotesInDirectory ?? existingDetails.shareNotesInDirectory ?? false,
+        shareContactInDirectory:
+          updates.shareContactInDirectory ?? existingDetails.shareContactInDirectory ?? false,
+        shareNotesInDirectory:
+          updates.shareNotesInDirectory ?? existingDetails.shareNotesInDirectory ?? false,
       },
     };
 
@@ -1072,7 +1213,9 @@ export async function updateMemberDetails(
 // Rename member
 export async function renameMember(oldName: string, newName: string) {
   const groupId = currentGroupId.value;
-  if (!groupId) return false;
+  if (!groupId) {
+    return false;
+  }
 
   const trimmedNewName = newName.trim();
   if (!trimmedNewName) {
@@ -1093,13 +1236,17 @@ export async function renameMember(oldName: string, newName: string) {
     const currentDetailsList = (settings.memberDetails as Record<string, unknown>) || {};
 
     // Check if new name already exists
-    if (currentMembersList.some(m => m.toLowerCase() === trimmedNewName.toLowerCase() && m !== oldName)) {
+    if (
+      currentMembersList.some(
+        (m) => m.toLowerCase() === trimmedNewName.toLowerCase() && m !== oldName
+      )
+    ) {
       showToast('A member with this name already exists', 'error');
       return false;
     }
 
     // Update members array
-    const newMembers = currentMembersList.map(m => m === oldName ? trimmedNewName : m).sort();
+    const newMembers = currentMembersList.map((m) => (m === oldName ? trimmedNewName : m)).sort();
 
     // Move member details to new name key
     const newDetails = { ...currentDetailsList };
@@ -1137,7 +1284,10 @@ export async function renameMember(oldName: string, newName: string) {
     for (const [dateKey, dateCheckins] of Object.entries(allCheckinsData)) {
       if (dateCheckins && typeof dateCheckins === 'object') {
         // Convert to array, update names, then save back
-        const checkinsArray = Object.values(dateCheckins) as Array<{ name?: string; [key: string]: unknown }>;
+        const checkinsArray = Object.values(dateCheckins) as Array<{
+          name?: string;
+          [key: string]: unknown;
+        }>;
         let hasChanges = false;
 
         const updatedCheckins = checkinsArray.map((checkin) => {
@@ -1214,7 +1364,9 @@ export async function saveMatchArrangement(arrangement: {
 }) {
   const groupId = currentGroupId.value;
   const date = selectedDate.value;
-  if (!groupId || !date) return;
+  if (!groupId || !date) {
+    return;
+  }
 
   const arrangedBy = sessionUser.value || 'Admin';
   const fullArrangement = {
@@ -1229,9 +1381,9 @@ export async function saveMatchArrangement(arrangement: {
 
     // Calculate stats for activity log
     const matchCount = Object.keys(arrangement.matches).length;
-    const playerCount = Object.values(arrangement.matches).reduce(
-      (sum, m) => sum + (m.players?.length || 0), 0
-    ) + (arrangement.unassigned?.length || 0);
+    const playerCount =
+      Object.values(arrangement.matches).reduce((sum, m) => sum + (m.players?.length || 0), 0) +
+      (arrangement.unassigned?.length || 0);
 
     // Build human-readable arrangement details
     const matchDescriptions: string[] = [];
@@ -1241,10 +1393,11 @@ export async function saveMatchArrangement(arrangement: {
       const players = matchData?.players || [];
       if (players.length > 0) {
         // Format: "Doubles 1: Alex, Bob, Carol, Dan" or "Singles 1: Alex vs Bob"
-        const matchLabel = matchKey.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase());
-        const playerList = matchKey.startsWith('singles') && players.length === 2
-          ? `${players[0]} vs ${players[1]}`
-          : players.join(', ');
+        const matchLabel = matchKey.replace('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        const playerList =
+          matchKey.startsWith('singles') && players.length === 2
+            ? `${players[0]} vs ${players[1]}`
+            : players.join(', ');
         matchDescriptions.push(`${matchLabel}: ${playerList}`);
       }
     }
@@ -1271,7 +1424,9 @@ export async function saveMatchArrangement(arrangement: {
 export async function clearMatchArrangement() {
   const groupId = currentGroupId.value;
   const date = selectedDate.value;
-  if (!groupId || !date) return;
+  if (!groupId || !date) {
+    return;
+  }
 
   const clearedBy = sessionUser.value || 'Admin';
 

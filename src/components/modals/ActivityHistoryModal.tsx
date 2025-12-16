@@ -22,13 +22,20 @@ interface ActivityItem {
   previousNote?: string;
   oldName?: string;
   firebaseKey?: string; // Key in Firebase for deletion
-  matchCount?: number;  // For arrangement_saved
+  matchCount?: number; // For arrangement_saved
   playerCount?: number; // For arrangement_saved
   arrangementDetails?: string; // For arrangement_saved - human-readable description
 }
 
 // Filter categories that group related actions
-type FilterCategory = 'login' | 'checkin' | 'removal' | 'shared' | 'notes' | 'members' | 'arrangements';
+type FilterCategory =
+  | 'login'
+  | 'checkin'
+  | 'removal'
+  | 'shared'
+  | 'notes'
+  | 'members'
+  | 'arrangements';
 
 const FILTER_CONFIG: Record<FilterCategory, { label: string; actions: string[] }> = {
   login: { label: 'Logins', actions: ['user_login'] },
@@ -47,13 +54,15 @@ const activeFilters = signal<Set<FilterCategory>>(new Set());
 
 async function loadActivityLog() {
   const groupId = currentGroupId.value;
-  if (!groupId) return;
+  if (!groupId) {
+    return;
+  }
 
   isLoading.value = true;
 
   try {
     const db = getDatabase();
-    let allActivities: ActivityItem[] = [];
+    const allActivities: ActivityItem[] = [];
 
     // Always load ALL activities
     const snapshot = await db.ref(`groups/${groupId}/activity`).once('value');
@@ -62,7 +71,9 @@ async function loadActivityLog() {
     if (allActivityData) {
       for (const [date, dateActivities] of Object.entries(allActivityData)) {
         if (dateActivities) {
-          for (const [key, activity] of Object.entries(dateActivities as Record<string, ActivityItem>)) {
+          for (const [key, activity] of Object.entries(
+            dateActivities as Record<string, ActivityItem>
+          )) {
             allActivities.push({ ...activity, date, firebaseKey: key });
           }
         }
@@ -81,23 +92,26 @@ async function loadActivityLog() {
 
 async function deleteActivity(item: ActivityItem) {
   const groupId = currentGroupId.value;
-  if (!groupId || !item.firebaseKey || !item.date) return;
+  if (!groupId || !item.firebaseKey || !item.date) {
+    return;
+  }
 
-  if (!confirm('Remove this activity entry?')) return;
+  if (!confirm('Remove this activity entry?')) {
+    return;
+  }
 
   try {
     const db = getDatabase();
     await db.ref(`groups/${groupId}/activity/${item.date}/${item.firebaseKey}`).remove();
     // Remove from local list
     activityItems.value = activityItems.value.filter(
-      a => !(a.date === item.date && a.firebaseKey === item.firebaseKey)
+      (a) => !(a.date === item.date && a.firebaseKey === item.firebaseKey)
     );
   } catch (error) {
     console.error('Error deleting activity:', error);
     alert('Failed to delete activity');
   }
 }
-
 
 function formatActivityTime(timestamp: number): string {
   return formatTime(timestamp);
@@ -172,8 +186,8 @@ function getActivityDescription(activity: ActivityItem): string {
       return `${by} renamed ${activity.oldName} to ${player}`;
 
     case 'whatsapp_share': {
-      const shareType = type === 'matches' ? 'matches' :
-                        type === 'checkin' ? 'check-in' : 'removal';
+      const shareType =
+        type === 'matches' ? 'matches' : type === 'checkin' ? 'check-in' : 'removal';
       let desc = `${by} shared ${shareType} to WhatsApp`;
       if (player && player !== by) {
         desc += ` (for ${player})`;
@@ -183,7 +197,9 @@ function getActivityDescription(activity: ActivityItem): string {
 
     case 'notes_saved':
     case 'note_added': {
-      const matchLabel = matchKey ? matchKey.replace('-', ' #').replace('forming 1', 'forming') : 'match';
+      const matchLabel = matchKey
+        ? matchKey.replace('-', ' #').replace('forming 1', 'forming')
+        : 'match';
       const notePreview = activity.noteContent
         ? `: "${activity.noteContent.length > 30 ? activity.noteContent.substring(0, 30) + '...' : activity.noteContent}"`
         : '';
@@ -191,7 +207,9 @@ function getActivityDescription(activity: ActivityItem): string {
     }
 
     case 'note_updated': {
-      const matchLabel = matchKey ? matchKey.replace('-', ' #').replace('forming 1', 'forming') : 'match';
+      const matchLabel = matchKey
+        ? matchKey.replace('-', ' #').replace('forming 1', 'forming')
+        : 'match';
       const notePreview = activity.noteContent
         ? `: "${activity.noteContent.length > 30 ? activity.noteContent.substring(0, 30) + '...' : activity.noteContent}"`
         : '';
@@ -199,7 +217,9 @@ function getActivityDescription(activity: ActivityItem): string {
     }
 
     case 'note_removed': {
-      const matchLabel = matchKey ? matchKey.replace('-', ' #').replace('forming 1', 'forming') : 'match';
+      const matchLabel = matchKey
+        ? matchKey.replace('-', ' #').replace('forming 1', 'forming')
+        : 'match';
       return `${by} removed note from ${matchLabel}`;
     }
 
@@ -240,11 +260,11 @@ function getFilteredActivities(): ActivityItem[] {
 
   // Get all actions that should be included based on active filters
   const allowedActions = new Set<string>();
-  activeFilters.value.forEach(category => {
-    FILTER_CONFIG[category].actions.forEach(action => allowedActions.add(action));
+  activeFilters.value.forEach((category) => {
+    FILTER_CONFIG[category].actions.forEach((action) => allowedActions.add(action));
   });
 
-  return activityItems.value.filter(item => allowedActions.has(item.action));
+  return activityItems.value.filter((item) => allowedActions.has(item.action));
 }
 
 function handleClose() {
@@ -268,7 +288,7 @@ export function ActivityHistoryModal() {
 
   if (groupByPlayDate.value) {
     // Group by play date (which date the activity is FOR)
-    filteredActivities.forEach(item => {
+    filteredActivities.forEach((item) => {
       if (!groupedActivities[item.date]) {
         groupedActivities[item.date] = [];
       }
@@ -276,7 +296,7 @@ export function ActivityHistoryModal() {
     });
   } else {
     // Group by when the change was made (from timestamp)
-    filteredActivities.forEach(item => {
+    filteredActivities.forEach((item) => {
       const changeDate = new Date(item.timestamp).toISOString().split('T')[0];
       if (!groupedActivities[changeDate]) {
         groupedActivities[changeDate] = [];
@@ -286,14 +306,12 @@ export function ActivityHistoryModal() {
   }
 
   return (
-    <Modal
-      isOpen={showActivityModal.value}
-      onClose={handleClose}
-      title="Activity History"
-    >
+    <Modal isOpen={showActivityModal.value} onClose={handleClose} title="Activity History">
       {/* Filter chips */}
       <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;">
-        {(Object.entries(FILTER_CONFIG) as [FilterCategory, { label: string; actions: string[] }][]).map(([category, config]) => {
+        {(
+          Object.entries(FILTER_CONFIG) as [FilterCategory, { label: string; actions: string[] }][]
+        ).map(([category, config]) => {
           const isActive = activeFilters.value.has(category);
           return (
             <button
@@ -302,10 +320,16 @@ export function ActivityHistoryModal() {
               style={{
                 padding: '4px 10px',
                 fontSize: '12px',
-                border: isActive ? '1px solid var(--color-primary, #2C6E49)' : '1px solid var(--color-border, #ddd)',
+                border: isActive
+                  ? '1px solid var(--color-primary, #2C6E49)'
+                  : '1px solid var(--color-border, #ddd)',
                 borderRadius: 'var(--radius-2xl, 16px)',
-                background: isActive ? 'var(--color-primary-light, #E8F5E9)' : 'var(--color-bg-card, #fff)',
-                color: isActive ? 'var(--color-primary, #2E7D32)' : 'var(--color-text-secondary, #666)',
+                background: isActive
+                  ? 'var(--color-primary-light, #E8F5E9)'
+                  : 'var(--color-bg-card, #fff)',
+                color: isActive
+                  ? 'var(--color-primary, #2E7D32)'
+                  : 'var(--color-text-secondary, #666)',
                 cursor: 'pointer',
                 fontWeight: isActive ? '500' : '400',
               }}
@@ -316,7 +340,9 @@ export function ActivityHistoryModal() {
         })}
         {activeFilters.value.size > 0 && (
           <button
-            onClick={() => { activeFilters.value = new Set(); }}
+            onClick={() => {
+              activeFilters.value = new Set();
+            }}
             style={{
               padding: '4px 10px',
               fontSize: 'var(--font-size-sm, 12px)',
@@ -334,10 +360,7 @@ export function ActivityHistoryModal() {
 
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <p style="font-size: var(--font-size-sm, 13px); color: var(--color-text-secondary, #666); margin: 0;">
-          {groupByPlayDate.value
-            ? 'Grouped by play date'
-            : 'Grouped by when changes were made'
-          }
+          {groupByPlayDate.value ? 'Grouped by play date' : 'Grouped by when changes were made'}
           {activeFilters.value.size > 0 && ` (${filteredActivities.length} filtered)`}
         </p>
         <label style="font-size: var(--font-size-sm, 13px); color: var(--color-text-secondary, #666); cursor: pointer; display: flex; align-items: center; gap: 4px;">
@@ -354,7 +377,9 @@ export function ActivityHistoryModal() {
 
       <div style="max-height: 400px; overflow-y: auto;">
         {isLoading.value ? (
-          <p style="color: var(--color-text-muted, #999); text-align: center; padding: var(--spacing-4xl, 24px);">Loading...</p>
+          <p style="color: var(--color-text-muted, #999); text-align: center; padding: var(--spacing-4xl, 24px);">
+            Loading...
+          </p>
         ) : filteredActivities.length === 0 ? (
           <p style="color: var(--color-text-muted, #999); text-align: center; padding: var(--spacing-4xl, 24px);">
             {activeFilters.value.size > 0 ? 'No matching activities' : 'No activity recorded yet'}
@@ -384,9 +409,14 @@ export function ActivityHistoryModal() {
                         <div style="font-size: var(--font-size-sm, 12px); color: var(--color-text-muted, #999); margin-top: 4px; display: flex; gap: 8px; flex-wrap: wrap;">
                           <span>{formatActivityTime(item.timestamp)}</span>
                           {groupByPlayDate.value ? (
-                            <span style="color: var(--color-text-secondary, #666);">changed on {formatDate(new Date(item.timestamp).toISOString().split('T')[0])}</span>
+                            <span style="color: var(--color-text-secondary, #666);">
+                              changed on{' '}
+                              {formatDate(new Date(item.timestamp).toISOString().split('T')[0])}
+                            </span>
                           ) : (
-                            <span style="color: var(--color-primary, #2C6E49);">for {formatDate(item.date)}</span>
+                            <span style="color: var(--color-primary, #2C6E49);">
+                              for {formatDate(item.date)}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -406,7 +436,7 @@ export function ActivityHistoryModal() {
                         className="hover-danger"
                       >
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
                         </svg>
                       </button>
                     </div>

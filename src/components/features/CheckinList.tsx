@@ -1,11 +1,22 @@
 import { signal } from '@preact/signals';
-import { currentCheckins, sessionUser, currentGroupId, selectedDate, currentGroupName } from '../App';
+import {
+  currentCheckins,
+  sessionUser,
+  currentGroupId,
+  selectedDate,
+  currentGroupName,
+} from '../App';
 import { removeCheckin, updateCheckin, canRemoveCheckin } from '../../hooks/useFirebase';
-import { formatTime, formatTimeRange, formatDate, normalizeName, getPreferenceLabel } from '../../utils/helpers';
+import {
+  formatTime,
+  formatTimeRange,
+  formatDate,
+  normalizeName,
+  getPreferenceLabel,
+} from '../../utils/helpers';
 import { Modal } from '../ui/Modal';
 import { showSharePrompt, sharePromptData } from '../pages/MainApp';
 import { TennisEmptyState } from '../ui/TennisEffects';
-
 
 // Edit modal state
 const editModalOpen = signal(false);
@@ -27,7 +38,9 @@ const removeGroupName = signal('');
 
 function openRemoveModal(index: number) {
   const result = canRemoveCheckin(index, sessionUser.value);
-  if (!result) return; // Permission denied (toast shown by canRemoveCheckin)
+  if (!result) {
+    return;
+  } // Permission denied (toast shown by canRemoveCheckin)
 
   removeIndex.value = index;
   removeName.value = result.personName;
@@ -50,7 +63,9 @@ function closeRemoveModal() {
 
 async function confirmRemove() {
   const index = removeIndex.value;
-  if (index === null) return;
+  if (index === null) {
+    return;
+  }
 
   // Store data before clearing
   const personName = removeName.value;
@@ -77,7 +92,9 @@ async function confirmRemove() {
 
 function openEditModal(index: number) {
   const checkin = currentCheckins.value[index];
-  if (!checkin) return;
+  if (!checkin) {
+    return;
+  }
 
   editingIndex.value = index;
   editPlayStyle.value = checkin.playStyle || 'both';
@@ -93,7 +110,9 @@ function closeEditModal() {
 }
 
 async function saveEdit() {
-  if (editingIndex.value === null) return;
+  if (editingIndex.value === null) {
+    return;
+  }
 
   const updates: {
     playStyle: string;
@@ -119,8 +138,12 @@ async function saveEdit() {
 function canEdit(checkin: { name?: string; addedBy?: string }): boolean {
   const groupId = currentGroupId.value;
   const personName = checkin.name || '';
-  const isOwner = sessionUser.value && normalizeName(sessionUser.value) === normalizeName(personName);
-  const isAdder = checkin.addedBy && sessionUser.value && normalizeName(sessionUser.value) === normalizeName(checkin.addedBy);
+  const isOwner =
+    sessionUser.value && normalizeName(sessionUser.value) === normalizeName(personName);
+  const isAdder =
+    checkin.addedBy &&
+    sessionUser.value &&
+    normalizeName(sessionUser.value) === normalizeName(checkin.addedBy);
   const isAdmin = groupId && sessionStorage.getItem(`adminAuth_${groupId}`) === 'true';
   return !!(isOwner || isAdder || isAdmin);
 }
@@ -146,11 +169,14 @@ export function CheckinList() {
               {['singles', 'doubles', 'both'].map((style) => (
                 <button
                   key={style}
-                  onClick={() => { editPlayStyle.value = style; }}
+                  onClick={() => {
+                    editPlayStyle.value = style;
+                  }}
                   style={{
                     flex: 1,
                     padding: '10px',
-                    border: editPlayStyle.value === style ? '2px solid #2C6E49' : '2px solid #e0e0e0',
+                    border:
+                      editPlayStyle.value === style ? '2px solid #2C6E49' : '2px solid #e0e0e0',
                     borderRadius: '8px',
                     background: editPlayStyle.value === style ? '#E8F5E9' : '#fff',
                     color: editPlayStyle.value === style ? '#2E7D32' : '#666',
@@ -166,19 +192,25 @@ export function CheckinList() {
 
           {/* Time Range */}
           <div>
-            <label style="display: block; font-weight: 500; margin-bottom: 8px;">Available Time (optional)</label>
+            <label style="display: block; font-weight: 500; margin-bottom: 8px;">
+              Available Time (optional)
+            </label>
             <div style="display: flex; gap: 8px; align-items: center;">
               <input
                 type="time"
                 value={editTimeStart.value}
-                onInput={(e) => { editTimeStart.value = (e.target as HTMLInputElement).value; }}
+                onInput={(e) => {
+                  editTimeStart.value = (e.target as HTMLInputElement).value;
+                }}
                 style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px;"
               />
               <span>to</span>
               <input
                 type="time"
                 value={editTimeEnd.value}
-                onInput={(e) => { editTimeEnd.value = (e.target as HTMLInputElement).value; }}
+                onInput={(e) => {
+                  editTimeEnd.value = (e.target as HTMLInputElement).value;
+                }}
                 style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px;"
               />
             </div>
@@ -191,7 +223,9 @@ export function CheckinList() {
                 <input
                   type="checkbox"
                   checked={editAllowRotation.value}
-                  onChange={(e) => { editAllowRotation.value = (e.target as HTMLInputElement).checked; }}
+                  onChange={(e) => {
+                    editAllowRotation.value = (e.target as HTMLInputElement).checked;
+                  }}
                 />
                 <span>Open to 3-player rotation</span>
               </label>
@@ -229,8 +263,8 @@ export function CheckinList() {
           removeStep.value === 'done'
             ? ''
             : removeIsOwner.value
-            ? 'Remove Your Check-in?'
-            : `Remove ${removeName.value}?`
+              ? 'Remove Your Check-in?'
+              : `Remove ${removeName.value}?`
         }
         showCloseButton={removeStep.value !== 'done'}
       >
@@ -249,7 +283,10 @@ export function CheckinList() {
                     </p>
                     <ul style="margin: 0; padding-left: 20px; color: #666; font-size: 14px;">
                       <li>You'll lose your current spot in the check-in order</li>
-                      <li>If you want to change your preferences, you can <strong>edit</strong> instead</li>
+                      <li>
+                        If you want to change your preferences, you can <strong>edit</strong>{' '}
+                        instead
+                      </li>
                       <li>You can always check in again after removing</li>
                     </ul>
                   </div>
@@ -257,11 +294,13 @@ export function CheckinList() {
               ) : (
                 <>
                   <p style="color: #666; margin: 0; line-height: 1.5;">
-                    Are you sure you want to remove <strong>{removeName.value}</strong> from this date?
+                    Are you sure you want to remove <strong>{removeName.value}</strong> from this
+                    date?
                   </p>
                   <div style="background: #FFF8E1; border-radius: 8px; padding: 12px; border-left: 4px solid #FFB74D;">
                     <p style="margin: 0; color: #666; font-size: 14px;">
-                      They will lose their spot in the check-in order. Consider using <strong>edit</strong> to update their preferences instead.
+                      They will lose their spot in the check-in order. Consider using{' '}
+                      <strong>edit</strong> to update their preferences instead.
                     </p>
                   </div>
                 </>
@@ -310,8 +349,7 @@ export function CheckinList() {
                 <p style="color: #666; margin: 0;">
                   {removeIsOwner.value
                     ? `You've been removed from ${formatDate(removeDate.value)}`
-                    : `${removeName.value} has been removed from ${formatDate(removeDate.value)}`
-                  }
+                    : `${removeName.value} has been removed from ${formatDate(removeDate.value)}`}
                 </p>
               </div>
 
@@ -430,15 +468,18 @@ export function CheckinList() {
     <>
       <div id="checkinList">
         {checkins.map((checkin, index) => {
-          const isCurrentUser = sessionUser.value &&
-            normalizeName(checkin.name) === normalizeName(sessionUser.value);
+          const isCurrentUser =
+            sessionUser.value && normalizeName(checkin.name) === normalizeName(sessionUser.value);
           const itemClass = isCurrentUser ? 'checkin-item current-user' : 'checkin-item';
           const showEditButton = canEdit(checkin);
 
           let addedByInfo = '';
           if (checkin.isGuest) {
             addedByInfo = `guest of ${checkin.addedBy}`;
-          } else if (checkin.addedBy && normalizeName(checkin.addedBy) !== normalizeName(checkin.name)) {
+          } else if (
+            checkin.addedBy &&
+            normalizeName(checkin.addedBy) !== normalizeName(checkin.name)
+          ) {
             addedByInfo = `added by ${checkin.addedBy}`;
           }
 
@@ -455,7 +496,9 @@ export function CheckinList() {
                   {addedByInfo && <span class="guest-indicator"> {addedByInfo}</span>}
                   {timeInfo && <span class="time-badge">{timeInfo}</span>}
                   {checkin.allowRotation === false && (
-                    <span class="time-badge" style="background: #fff3e0; color: #e65100;">No 3s</span>
+                    <span class="time-badge" style="background: #fff3e0; color: #e65100;">
+                      No 3s
+                    </span>
                   )}
                 </span>
                 <span class={`preference-badge ${checkin.playStyle || 'both'}`}>
