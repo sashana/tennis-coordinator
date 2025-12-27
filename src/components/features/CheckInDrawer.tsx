@@ -144,7 +144,7 @@ export function CheckInDrawer() {
         </div>
 
         {/* Header */}
-        <div class="drawer-header">
+        <div class="checkin-header">
           <h2>{isEditMode.value ? 'Edit Check-in' : 'Check In'}</h2>
           <div class="player-display">
             <div class="player-avatar">{targetUser?.charAt(0).toUpperCase()}</div>
@@ -342,12 +342,12 @@ export function CheckInDrawer() {
           border-radius: 2px;
         }
 
-        .drawer-header {
+        .checkin-header {
           text-align: center;
           margin-bottom: 20px;
         }
 
-        .drawer-header h2 {
+        .checkin-header h2 {
           margin: 0 0 12px;
           font-size: 22px;
           color: var(--color-text-primary, #333);

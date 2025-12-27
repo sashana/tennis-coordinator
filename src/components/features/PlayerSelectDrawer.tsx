@@ -156,7 +156,7 @@ export function PlayerSelectDrawer() {
         </div>
 
         {/* Header with tabs */}
-        <div class="drawer-header">
+        <div class="player-select-header">
           <h2>
             {playerSelectMode.value === 'member' && 'Check in a player'}
             {playerSelectMode.value === 'guest' && 'Add Guest'}
@@ -403,12 +403,12 @@ export function PlayerSelectDrawer() {
           border-radius: 2px;
         }
 
-        .drawer-header {
+        .player-select-header {
           text-align: center;
           margin-bottom: 12px;
         }
 
-        .drawer-header h2 {
+        .player-select-header h2 {
           margin: 0 0 10px;
           font-size: 18px;
           color: #333;

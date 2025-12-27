@@ -61,7 +61,7 @@ export function AddMemberDrawer() {
         </div>
 
         {/* Header */}
-        <div class="drawer-header">
+        <div class="add-member-header">
           <h2>Add New Member</h2>
           <p class="drawer-subtitle">Add a teammate to your group</p>
         </div>
@@ -208,12 +208,12 @@ export function AddMemberDrawer() {
           border-radius: 2px;
         }
 
-        .drawer-header {
+        .add-member-header {
           text-align: center;
           margin-bottom: 20px;
         }
 
-        .drawer-header h2 {
+        .add-member-header h2 {
           margin: 0 0 4px;
           font-size: 22px;
           color: #333;

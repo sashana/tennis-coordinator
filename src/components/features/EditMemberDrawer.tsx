@@ -182,7 +182,7 @@ export function EditMemberDrawer() {
         </div>
 
         {/* Header */}
-        <div class="drawer-header">
+        <div class="edit-member-header">
           <h2>{isEditingSelf ? 'Edit Your Profile' : 'Edit Member'}</h2>
           <p class="drawer-subtitle">
             {isEditingSelf
@@ -410,12 +410,12 @@ export function EditMemberDrawer() {
           border-radius: 2px;
         }
 
-        .drawer-header {
+        .edit-member-header {
           text-align: center;
           margin-bottom: 20px;
         }
 
-        .drawer-header h2 {
+        .edit-member-header h2 {
           margin: 0 0 4px;
           font-size: 22px;
           color: #333;
