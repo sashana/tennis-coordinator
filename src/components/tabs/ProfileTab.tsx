@@ -9,6 +9,8 @@ import { openEditMemberDrawer } from '../features/EditMemberDrawer';
 import { SubPage } from '../ui/SubPage';
 import { GroupSettingsContent } from '../features/GroupSettingsContent';
 import { ActivityHistoryContent } from '../features/ActivityHistoryContent';
+import { MyGroupsContent } from '../features/MyGroupsContent';
+import { linkedGroupsCount } from '../../hooks/usePlatformUser';
 
 // Check if user is logged in as group admin
 function isGroupAdmin(): boolean {
@@ -20,7 +22,7 @@ function isGroupAdmin(): boolean {
 }
 
 // Track which sub-page is open
-type SubPageType = 'settings' | 'activity' | 'insights' | 'help' | null;
+type SubPageType = 'settings' | 'activity' | 'insights' | 'help' | 'mygroups' | null;
 
 export function ProfileTab() {
   const [adminStatus, setAdminStatus] = useState(isGroupAdmin());
@@ -114,6 +116,65 @@ export function ProfileTab() {
 
       {/* Action Buttons */}
       <div style="display: flex; flex-direction: column; gap: var(--spacing-md, 8px);">
+        {/* My Groups - available to all users */}
+        <button
+          onClick={() => setActiveSubPage('mygroups')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--spacing-xl, 12px)',
+            padding: 'var(--spacing-2xl, 16px)',
+            background: 'var(--color-bg-card, #fff)',
+            border: '1px solid var(--color-border, #e0e0e0)',
+            borderRadius: 'var(--radius-xl, 12px)',
+            cursor: 'pointer',
+            width: '100%',
+            textAlign: 'left',
+          }}
+        >
+          <div
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: 'var(--radius-full, 50%)',
+              background: 'var(--color-primary-light, #E8F5E9)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="var(--color-primary, #2C6E49)">
+              <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+            </svg>
+          </div>
+          <div style="flex: 1;">
+            <div style="font-size: var(--font-size-lg, 16px); font-weight: 500; color: var(--color-text-primary, #333);">
+              My Groups
+              {linkedGroupsCount.value > 0 && (
+                <span
+                  style={{
+                    marginLeft: '8px',
+                    padding: '2px 8px',
+                    background: 'var(--color-primary, #2C6E49)',
+                    color: '#fff',
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                  }}
+                >
+                  {linkedGroupsCount.value}
+                </span>
+              )}
+            </div>
+            <div style="font-size: var(--font-size-sm, 13px); color: var(--color-text-muted, #888);">
+              View all your groups on this device
+            </div>
+          </div>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-text-disabled, #ccc)">
+            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
+          </svg>
+        </button>
+
         {/* Admin Settings (for admins only) */}
         {adminStatus && (
           <>
@@ -509,6 +570,14 @@ export function ProfileTab() {
         onBack={() => setActiveSubPage(null)}
       >
         <HelpTab />
+      </SubPage>
+
+      <SubPage
+        title="My Groups"
+        isOpen={activeSubPage === 'mygroups'}
+        onBack={() => setActiveSubPage(null)}
+      >
+        <MyGroupsContent />
       </SubPage>
     </div>
   );

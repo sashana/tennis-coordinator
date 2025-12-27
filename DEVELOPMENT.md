@@ -1,44 +1,34 @@
 # Development Environment Guide
 
-This document describes all development and production environments for Tennis Coordinator.
+This document describes the development and production environments for Tennis Coordinator.
 
 ---
 
 ## Architecture Overview
 
-Tennis Coordinator has two parallel codebases:
+Tennis Coordinator is built with **Preact + TypeScript + Vite**.
 
-| Codebase | Description | Status |
-|----------|-------------|--------|
-| **Legacy JS** | Original single-file JavaScript app (`index.html`) | Production (Live) |
-| **TypeScript** | Modern Preact/TypeScript rewrite (`src/`, `app.html`) | Development (v0.9.0) |
-
-Both codebases share the **same Firebase Realtime Database**, ensuring data continuity during the transition.
+| Component | Technology |
+|-----------|------------|
+| **Framework** | Preact |
+| **Language** | TypeScript |
+| **Build Tool** | Vite |
+| **Database** | Firebase Realtime Database |
+| **Hosting** | Firebase Hosting |
 
 ---
 
 ## Environments
 
-### Production Environments
-
-| Environment | URL | Codebase | Status |
-|-------------|-----|----------|--------|
-| **Custom Domain (Primary)** | https://tennis.sportsconnector.com | Legacy JS | **LIVE** - Used by real users |
-| **Firebase Hosting** | https://tennis-coordinator-43f53.web.app | TypeScript | Staging - For testing before migration |
-| **GitHub Pages** | https://sashana.github.io/tennis-coordinator/ | Legacy JS | Backup |
-
-**Important Notes**:
-- `tennis.sportsconnector.com` is the primary production URL shared with real users (Legacy JS)
-- `tennis-coordinator-43f53.web.app` is where the new TypeScript app is deployed for testing
-- When TypeScript is ready for production, it will replace Legacy JS on the custom domain
-
-### Development Environment (Local)
-
 | Environment | URL | How to Start |
 |-------------|-----|--------------|
-| **TypeScript Dev** | http://localhost:3000/app.html?group=ttmd | `npm run dev` |
+| **Local Development** | http://localhost:3000/?group=ttmd | `npm run dev` |
+| **Production** | https://tennis.sportsconnector.com | `npm run build && firebase deploy` |
 
-To compare with Legacy JS behavior, use the live production site at https://tennis.sportsconnector.com.
+**Notes**:
+- `tennis.sportsconnector.com` points to `tennis-coordinator-43f53.web.app` (Firebase Hosting)
+- Both environments run the same TypeScript codebase
+- Both connect to the same Firebase Realtime Database
 
 ---
 
@@ -50,7 +40,6 @@ To compare with Legacy JS behavior, use the live production site at https://tenn
 - **Hosting URL**: https://tennis-coordinator-43f53.web.app
 
 ### Database Structure
-Both codebases read/write to the same paths:
 ```
 groups/
 └── {groupId}/
@@ -74,23 +63,14 @@ groups/
 
 ---
 
-## Codebase Details
+## Codebase Structure
 
-### Legacy JS (`index.html`)
-- **Entry Point**: `/index.html`
-- **Technology**: Vanilla JavaScript, single HTML file
-- **Firebase SDK**: Loaded via CDN
-- **Current Version**: Frozen (no active development)
-- **File Size**: ~3,500 lines
-
-### TypeScript (`src/`)
-- **Entry Point**: `/app.html` → `src/main.tsx`
+- **Entry Point**: `index.html` → `src/main.tsx`
 - **Technology**: Preact + TypeScript + Vite
-- **Firebase SDK**: npm package (`@anthropic-ai/sdk`)
-- **Current Version**: v0.9.0
-- **Test Suite**: 718 tests (Vitest)
+- **Firebase SDK**: Loaded via CDN (compat mode)
+- **Test Suite**: Vitest
 
-#### Key Files
+### Key Files
 ```
 src/
 ├── main.tsx              # App entry point
@@ -118,9 +98,9 @@ src/
 # Install dependencies (first time only)
 npm install
 
-# Start TypeScript dev server with hot reload
+# Start dev server with hot reload
 npm run dev
-# → http://localhost:3000/app.html?group=ttmd
+# → http://localhost:3000/?group=ttmd
 
 # Run tests
 npm test
@@ -131,7 +111,7 @@ npm run test:watch
 
 ### Building for Production
 ```bash
-# Build TypeScript to dist/
+# Build to dist/
 npm run build
 
 # Preview production build locally
@@ -140,9 +120,8 @@ npm run preview -- --port 4000
 
 ### Deploying to Production
 ```bash
-# Deploy to Firebase Hosting
-npm run build
-firebase deploy --only hosting
+# Build and deploy to Firebase Hosting
+npm run build && firebase deploy --only hosting
 ```
 
 ---
@@ -151,9 +130,9 @@ firebase deploy --only hosting
 
 | Version | Date | Milestone |
 |---------|------|-----------|
+| v1.0.0 | Dec 2024 | TypeScript in production |
 | v0.9.0 | Dec 2024 | TypeScript rewrite feature-complete, multi-tenant types |
 | v0.8.x | Nov 2024 | TypeScript migration, core features ported |
-| v0.7.x | Nov 2024 | Legacy JS production features |
 
 ---
 
@@ -164,12 +143,8 @@ The codebase includes preparation for a future multi-club architecture:
 | Phase | Status | Description |
 |-------|--------|-------------|
 | Phase 1: Foundation | Complete | Types, migration script, compatibility layer |
-| Phase 2: User Identity | Paused | Device tokens, user profiles |
+| Phase 2: User Identity | Ready | Device tokens, user profiles |
 | Phase 3+: Club Management | Pending | Full multi-tenant features |
-
-**Why paused**: Phase 2 writes to new Firebase paths (`platform/...`). Must deploy TypeScript to production first to avoid data divergence with Legacy JS.
-
-See `~/.claude/plans/peaceful-noodling-liskov.md` for full migration plan.
 
 ---
 
@@ -185,16 +160,13 @@ npm run build        # Build for production
 # Deployment
 firebase deploy --only hosting    # Deploy to Firebase
 firebase hosting:channel:list     # List hosting channels
-
-# Legacy JS (for comparison)
-npx serve -s . -l 4000           # Serve legacy app locally
 ```
 
 ---
 
 ## Troubleshooting
 
-### TypeScript dev server not starting
+### Dev server not starting
 ```bash
 # Kill any existing processes
 pkill -f "vite"

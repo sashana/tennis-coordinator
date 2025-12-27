@@ -2,6 +2,7 @@ import { useEffect } from 'preact/hooks';
 import { signal, effect } from '@preact/signals';
 import { getDatabase } from '../config/firebase';
 import { createLogger } from '../utils/logger';
+import { linkUserToGroup, updateGroupActivity } from './usePlatformUser';
 
 const themeLogger = createLogger('Theme');
 const notificationLogger = createLogger('Notifications');
@@ -304,6 +305,15 @@ export async function addCheckin(checkin: {
 
     // Log activity
     await logActivity(groupId, date, 'checkin', checkin.name, checkin.addedBy);
+
+    // Link user to group if checking in for self (fire-and-forget)
+    const sessionUserName = sessionUser.value;
+    if (sessionUserName && normalizeName(checkin.name) === normalizeName(sessionUserName)) {
+      linkUserToGroup(groupId, sessionUserName);
+    } else if (sessionUserName) {
+      // User is checking in someone else, just update their activity
+      updateGroupActivity(groupId);
+    }
 
     // Notify users with activity alerts
     checkinLogger.debug('About to call notifyCheckinAlert for:', checkin.name);

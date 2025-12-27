@@ -1,6 +1,7 @@
 import { signal } from '@preact/signals';
 import { sessionUser, showToast, memberDetails, currentGroupId } from '../App';
 import { updateMemberDetails, renameMember, removeMember } from '../../hooks/useFirebase';
+import { currentPlatformUser, updateProfile } from '../../hooks/usePlatformUser';
 
 // Drawer state signals
 export const showEditMemberDrawer = signal(false);
@@ -13,8 +14,20 @@ const memberEmail = signal('');
 const memberNotes = signal('');
 const shareContactInDirectory = signal(false);
 const shareNotesInDirectory = signal(false);
+const skillLevel = signal('');
+const ntrpRating = signal('');
 const saving = signal(false);
 const confirmingRemove = signal(false);
+
+// Skill level options
+const SKILL_LEVELS = [
+  { value: '', label: 'Not specified' },
+  { value: 'beginner', label: 'Beginner' },
+  { value: 'intermediate', label: 'Intermediate' },
+  { value: 'advanced', label: 'Advanced' },
+  { value: 'competitive', label: 'Competitive' },
+  { value: 'pro', label: 'Pro' },
+];
 
 // Check if user is logged in as group admin
 function isGroupAdmin(): boolean {
@@ -32,6 +45,8 @@ function resetForm() {
   memberNotes.value = '';
   shareContactInDirectory.value = false;
   shareNotesInDirectory.value = false;
+  skillLevel.value = '';
+  ntrpRating.value = '';
   saving.value = false;
   confirmingRemove.value = false;
 }
@@ -76,13 +91,35 @@ export function EditMemberDrawer() {
       shareNotesInDirectory: shareNotesInDirectory.value,
     });
 
+    // If editing self, also save skill level and NTRP to platform user
+    if (isEditingSelf && currentPlatformUser.value) {
+      try {
+        const profileUpdates: Record<string, unknown> = {};
+        if (skillLevel.value) {
+          profileUpdates.skillLevel = skillLevel.value;
+        }
+        if (ntrpRating.value) {
+          const rating = parseFloat(ntrpRating.value);
+          if (!isNaN(rating) && rating >= 1.0 && rating <= 7.0) {
+            profileUpdates.ntrpRating = rating;
+          }
+        }
+        if (Object.keys(profileUpdates).length > 0) {
+          await updateProfile(profileUpdates);
+        }
+      } catch (err) {
+        console.warn('Failed to update platform profile:', err);
+        // Don't fail the whole save for this
+      }
+    }
+
     saving.value = false;
 
     if (success) {
-      showToast('Member updated successfully', 'success');
+      showToast('Profile updated', 'success');
       closeDrawer();
     } else {
-      showToast('Failed to update member', 'error');
+      showToast('Failed to update profile', 'error');
     }
   };
 
@@ -203,7 +240,7 @@ export function EditMemberDrawer() {
             Notes <span class="optional-tag">optional</span>
           </label>
           <textarea
-            placeholder="Skill level, how you know them, etc."
+            placeholder="Availability, preferences, etc."
             rows={2}
             value={memberNotes.value}
             onInput={(e) => {
@@ -212,6 +249,47 @@ export function EditMemberDrawer() {
             class="drawer-textarea"
           />
         </div>
+
+        {/* Tennis Profile - only shown when editing self */}
+        {isEditingSelf && (
+          <div class="drawer-section">
+            <label class="field-label">Tennis Profile</label>
+            <div class="tennis-profile-fields">
+              <div class="field-row">
+                <label class="field-sublabel">Skill Level</label>
+                <select
+                  value={skillLevel.value}
+                  onChange={(e) => {
+                    skillLevel.value = (e.target as HTMLSelectElement).value;
+                  }}
+                  class="drawer-select"
+                >
+                  {SKILL_LEVELS.map((level) => (
+                    <option key={level.value} value={level.value}>
+                      {level.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div class="field-row">
+                <label class="field-sublabel">NTRP Rating</label>
+                <input
+                  type="number"
+                  placeholder="e.g., 3.5"
+                  value={ntrpRating.value}
+                  onInput={(e) => {
+                    ntrpRating.value = (e.target as HTMLInputElement).value;
+                  }}
+                  min="1.0"
+                  max="7.0"
+                  step="0.5"
+                  class="drawer-input ntrp-input"
+                />
+              </div>
+            </div>
+            <p class="field-hint">Your skill info is saved across all your groups</p>
+          </div>
+        )}
 
         {/* Privacy Options */}
         <div class="drawer-section">
@@ -528,6 +606,57 @@ export function EditMemberDrawer() {
           opacity: 0.7;
           cursor: not-allowed;
         }
+
+        .drawer-select {
+          width: 100%;
+          padding: 14px 16px;
+          border: 2px solid #e0e0e0;
+          border-radius: 12px;
+          font-size: 16px;
+          box-sizing: border-box;
+          background: white;
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23666' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 12px center;
+          background-size: 24px;
+          padding-right: 40px;
+          transition: border-color 0.2s;
+          cursor: pointer;
+        }
+
+        .drawer-select:focus {
+          outline: none;
+          border-color: var(--color-primary, #2C6E49);
+        }
+
+        .tennis-profile-fields {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .field-row {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .field-sublabel {
+          font-size: 13px;
+          color: #666;
+          font-weight: 500;
+        }
+
+        .field-hint {
+          font-size: 12px;
+          color: #999;
+          margin: 8px 0 0 0;
+        }
+
+        .ntrp-input {
+          max-width: 120px;
+        }
       `}</style>
     </div>
   );
@@ -545,6 +674,17 @@ export function openEditMemberDrawer(memberNameToEdit: string) {
   shareContactInDirectory.value = details?.shareContactInDirectory || false;
   shareNotesInDirectory.value = details?.shareNotesInDirectory || false;
   confirmingRemove.value = false;
+
+  // Load platform user skill info if editing self
+  const isEditingSelf = memberNameToEdit === sessionUser.value;
+  if (isEditingSelf && currentPlatformUser.value) {
+    const profile = currentPlatformUser.value.profile;
+    skillLevel.value = profile.skillLevel || '';
+    ntrpRating.value = profile.ntrpRating?.toString() || '';
+  } else {
+    skillLevel.value = '';
+    ntrpRating.value = '';
+  }
 
   editingMemberName.value = memberNameToEdit;
   showEditMemberDrawer.value = true;

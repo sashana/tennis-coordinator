@@ -2,6 +2,7 @@ import { signal, computed } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
 import { initializeFirebase, getDatabase } from '../config/firebase';
 import { createLogger } from '../utils/logger';
+import { initializePlatformUser } from '../hooks/usePlatformUser';
 
 const logger = createLogger('App');
 import { LandingPage } from './pages/LandingPage';
@@ -129,6 +130,12 @@ export function App() {
     async function init() {
       try {
         initializeFirebase();
+
+        // Initialize platform user (fire-and-forget, doesn't block app)
+        initializePlatformUser().catch((err) => {
+          logger.warn('Platform user init failed (non-fatal):', err);
+        });
+
         const groupId = await getGroupIdFromUrl();
         currentGroupId.value = groupId;
 

@@ -3,6 +3,7 @@ import { Modal } from './Modal';
 import { currentGroupName, currentGroupId, sessionUser, coreMembers, showToast } from '../App';
 import { selectedName, isFormExpanded } from '../pages/MainApp';
 import { getDatabase } from '../../config/firebase';
+import { linkUserToGroup } from '../../hooks/usePlatformUser';
 
 export const showWelcomeModal = signal(false);
 const searchQuery = signal('');
@@ -31,6 +32,8 @@ function handleNameClick(name: string) {
     localStorage.setItem(`sessionUser_${groupId}`, name);
     // Log the login to activity history
     logUserLogin(groupId, name);
+    // Link user to group for cross-group identity (fire-and-forget)
+    linkUserToGroup(groupId, name);
   }
 
   // Also set the dropdown selection and expand the form
