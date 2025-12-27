@@ -4,43 +4,16 @@ export function LandingPage() {
   return (
     <div class="landing-page">
       <div class="landing-container">
-        <h1>🎾 Tennis Coordinator</h1>
-        <p class="landing-tagline">Turn your love for tennis into more games.</p>
-        <p class="landing-subtitle">
-          No more "Who can play?" texts. Check in → get matched → play.
-        </p>
-
-        <div class="landing-section">
-          <h2>Why It Works</h2>
-          <div class="landing-features">
-            <div class="feature-item">
-              <span class="feature-icon">♦</span>
-              <div>
-                <strong>Frictionless</strong>
-                <span>Check in with a few taps. No accounts, no apps to download.</span>
-              </div>
-            </div>
-            <div class="feature-item">
-              <span class="feature-icon">♦</span>
-              <div>
-                <strong>Flexible</strong>
-                <span>Handles doubles, singles, odd numbers, guests, and preferences.</span>
-              </div>
-            </div>
-            <div class="feature-item">
-              <span class="feature-icon">♦</span>
-              <div>
-                <strong>For Any Group</strong>
-                <span>Start with your regular doubles crew. Scale to club-wide coordination when ready.</span>
-              </div>
-            </div>
-            <div class="feature-item">
-              <span class="feature-icon">♦</span>
-              <div>
-                <strong>Real-Time</strong>
-                <span>Everyone sees who's playing instantly.</span>
-              </div>
-            </div>
+        <div class="landing-hero">
+          <div class="hero-logo">🎾</div>
+          <p class="landing-tagline">Turn your love for tennis into more games.</p>
+          <p class="landing-subtitle">
+            No more "Who can play?" texts. Just check in and play.
+          </p>
+          <div class="trust-bar">
+            <span>No app to download</span>
+            <span>No account needed</span>
+            <span>Free forever</span>
           </div>
         </div>
 
@@ -51,48 +24,83 @@ export function LandingPage() {
               <span class="step-number">1</span>
               <div>
                 <strong>Create a Group</strong>
-                <span>Get a shareable link in 30 seconds</span>
+                <span>30 seconds. Share the link.</span>
               </div>
             </div>
             <div class="step-item">
               <span class="step-number">2</span>
               <div>
                 <strong>Check In</strong>
-                <span>Select your name, play style, and when you're available</span>
+                <span>Tap your name. Say when you can play.</span>
               </div>
             </div>
             <div class="step-item">
               <span class="step-number">3</span>
               <div>
-                <strong>Auto-Match</strong>
-                <span>System organizes matches based on who's playing</span>
+                <strong>Games Form</strong>
+                <span>You'll know when you have a match.</span>
               </div>
             </div>
             <div class="step-item">
               <span class="step-number">4</span>
               <div>
                 <strong>Play</strong>
-                <span>Show up and enjoy the game</span>
+                <span>Less texting. More tennis.</span>
               </div>
             </div>
           </div>
         </div>
 
         <div class="landing-cta">
-          <p class="cta-headline">Ready to organize your crew?</p>
           <button class="start-group-btn" onClick={openCreateGroupDrawer}>
             Start Your Group
           </button>
           <p class="cta-secondary">
-            Already have a group link? Just visit your URL to join.
+            Free forever. 30 seconds to set up.
           </p>
+        </div>
+
+        <div class="landing-section">
+          <h2>Why Tennis Players Love It</h2>
+          <div class="landing-features">
+            <div class="feature-item">
+              <span class="feature-icon">✓</span>
+              <div>
+                <strong>No One Has to Organize</strong>
+                <span>Everyone checks in themselves.</span>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">✓</span>
+              <div>
+                <strong>Always Know Who's In</strong>
+                <span>See instantly when you have a game.</span>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">✓</span>
+              <div>
+                <strong>Plans Change? No Problem</strong>
+                <span>Changes reach everyone instantly.</span>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">✓</span>
+              <div>
+                <strong>Any Format Works</strong>
+                <span>Doubles, singles, any number.</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="landing-footer">
           <a href="whats-new.html" class="whatsnew-link">
             What's New
           </a>
-          <span class="footer-separator">|</span>
+          <span class="footer-note">
+            Already have a group? Just visit your link to join.
+          </span>
           <a
             href="#admin"
             class="admin-link"
@@ -102,7 +110,7 @@ export function LandingPage() {
               window.location.reload();
             }}
           >
-            Site Administrator? Access Site Admin →
+            Admin
           </a>
         </div>
       </div>
@@ -111,37 +119,32 @@ export function LandingPage() {
       <CreateGroupDrawer />
 
       <style>{`
-        .cta-headline {
-          font-size: 18px;
-          font-weight: 600;
-          color: #333;
-          margin-bottom: 16px;
-        }
-
         .start-group-btn {
           display: inline-block;
-          margin: 0 0 16px 0;
-          padding: 16px 32px;
-          background: var(--color-primary, #2C6E49);
-          color: white;
+          margin: 0 0 12px 0;
+          padding: 16px 36px;
+          background: white;
+          color: #2C6E49;
           border: none;
           border-radius: 12px;
           font-size: 18px;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s;
-          box-shadow: 0 4px 12px rgba(44, 110, 73, 0.25);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .start-group-btn:hover {
-          background: var(--color-primary-dark, #1a402b);
+          background: #f5f5f5;
           transform: translateY(-2px);
-          box-shadow: 0 6px 16px rgba(44, 110, 73, 0.3);
+          box-shadow:
+            0 6px 16px rgba(0, 0, 0, 0.2),
+            0 0 20px rgba(212, 225, 87, 0.3);
         }
 
         .cta-secondary {
-          color: #666;
-          font-size: 14px;
+          color: rgba(255, 255, 255, 0.9);
+          font-size: 13px;
           margin: 0;
         }
       `}</style>
