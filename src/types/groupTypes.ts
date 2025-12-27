@@ -46,10 +46,10 @@ export const GROUP_ARCHETYPES: GroupArchetypeConfig[] = [
     description:
       'Your tennis crew, organized. Invite friends, coordinate matches, and share via WhatsApp, text, or in-app alerts. Any format: doubles, singles, or mixed.',
     features: [
-      'Invite-only access',
-      'Any match format',
-      'PIN-protected',
-      'Share via WhatsApp, text, or alerts',
+      'Invite-only, PIN-protected',
+      'Weather-aware scheduling',
+      'Auto-balanced match making',
+      'One-click share to WhatsApp/SMS',
     ],
     namePlaceholder: 'e.g., Tuesday Tennis Gang',
     available: true,
