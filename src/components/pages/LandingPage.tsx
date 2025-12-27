@@ -7,8 +7,7 @@ export function LandingPage() {
         <h1>🎾 Tennis Coordinator</h1>
         <p class="landing-tagline">Turn your love for tennis into more games.</p>
         <p class="landing-subtitle">
-          A simple tool that helps tennis groups self-organize matches with minimal friction—so you
-          spend less time coordinating and more time on the court.
+          No more "Who can play?" texts. Check in → get matched → play.
         </p>
 
         <div class="landing-section">
