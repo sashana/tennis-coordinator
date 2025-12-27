@@ -14,6 +14,12 @@ const addingMember = signal(false);
 const editingMemberInfo = signal<{ groupId: string; originalName: string } | null>(null);
 const editMemberNewName = signal('');
 
+// New UI state
+const searchQuery = signal('');
+const activeTab = signal<'active' | 'archived'>('active');
+const openMenuId = signal<string | null>(null);
+const detailsDrawerGroup = signal<string | null>(null);
+
 export function AdminPage() {
   useEffect(() => {
     initializePage();
@@ -176,6 +182,161 @@ export function AdminPage() {
     } catch (error) {
       console.error('Error removing member:', error);
       showToast('Failed to remove member', 'error');
+    }
+  }
+
+  async function archiveGroup(groupId: string, groupName: string) {
+    const confirmed = confirm(
+      `ARCHIVE: "${groupName}"\n\nThis will:\n• Mark the group as archived (hidden from active lists)\n• Disable the share link\n• Preserve all data for historical purposes\n• Keep user links for future history features\n\nThe group can be unarchived later if needed.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const db = getDatabase();
+      const group = groups.value[groupId];
+      const shortCode = group?.metadata?.shortCode;
+
+      // 1. Mark group as archived
+      await db.ref(`groups/${groupId}/metadata/archived`).set(true);
+      await db.ref(`groups/${groupId}/metadata/archivedAt`).set(Date.now());
+
+      // 2. Remove from shortCodeIndex (disable the share link)
+      if (shortCode) {
+        await db.ref(`shortCodeIndex/${shortCode}`).remove();
+      }
+
+      // Update local state
+      const updatedGroups = { ...groups.value };
+      if (updatedGroups[groupId]) {
+        updatedGroups[groupId] = {
+          ...updatedGroups[groupId],
+          metadata: {
+            ...updatedGroups[groupId].metadata,
+            archived: true,
+            archivedAt: Date.now(),
+          },
+        };
+      }
+      groups.value = updatedGroups;
+
+      showToast(`Archived "${groupName}"`, 'success');
+    } catch (error) {
+      console.error('Error archiving group:', error);
+      showToast('Failed to archive group', 'error');
+    }
+  }
+
+  async function unarchiveGroup(groupId: string, groupName: string) {
+    try {
+      const db = getDatabase();
+      const group = groups.value[groupId];
+      const shortCode = group?.metadata?.shortCode;
+
+      // 1. Remove archived flag
+      await db.ref(`groups/${groupId}/metadata/archived`).remove();
+      await db.ref(`groups/${groupId}/metadata/archivedAt`).remove();
+
+      // 2. Restore shortCodeIndex entry
+      if (shortCode) {
+        await db.ref(`shortCodeIndex/${shortCode}`).set(groupId);
+      }
+
+      // Update local state
+      const updatedGroups = { ...groups.value };
+      if (updatedGroups[groupId]?.metadata) {
+        const { archived, archivedAt, ...restMetadata } = updatedGroups[groupId].metadata;
+        updatedGroups[groupId] = {
+          ...updatedGroups[groupId],
+          metadata: restMetadata,
+        };
+      }
+      groups.value = updatedGroups;
+
+      showToast(`Unarchived "${groupName}"`, 'success');
+    } catch (error) {
+      console.error('Error unarchiving group:', error);
+      showToast('Failed to unarchive group', 'error');
+    }
+  }
+
+  async function systemDeleteGroup(groupId: string, groupName: string) {
+    const confirmed = confirm(
+      `SYSTEM DELETE: "${groupName}"\n\nThis will permanently remove ALL traces:\n• Group data (members, check-ins, notes, settings)\n• Short code index entry\n• All platform user links\n\nUse this only for test data cleanup.\n\nThis action cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const db = getDatabase();
+
+      // Get the group's short code to also delete from shortCodeIndex
+      const group = groups.value[groupId];
+      const shortCode = group?.metadata?.shortCode;
+
+      // 1. Delete the group data
+      await db.ref(`groups/${groupId}`).remove();
+
+      // 2. Delete from shortCodeIndex if exists
+      if (shortCode) {
+        await db.ref(`shortCodeIndex/${shortCode}`).remove();
+      }
+
+      // 3. Clean up platform user links to this group
+      // Also remove platform users that have no remaining group links
+      const platformUsersSnapshot = await db.ref('platform/users').once('value');
+      const platformUsers = platformUsersSnapshot.val() || {};
+
+      const cleanupPromises: Promise<void>[] = [];
+      let usersRemoved = 0;
+
+      for (const deviceToken of Object.keys(platformUsers)) {
+        const userGroupLinks = platformUsers[deviceToken]?.groupLinks;
+        if (userGroupLinks && userGroupLinks[groupId]) {
+          // Check if this is their only group link
+          const groupLinkCount = Object.keys(userGroupLinks).length;
+          if (groupLinkCount === 1) {
+            // This was their only group - remove the entire platform user
+            cleanupPromises.push(db.ref(`platform/users/${deviceToken}`).remove());
+            usersRemoved++;
+          } else {
+            // They have other groups - just remove this link
+            cleanupPromises.push(
+              db.ref(`platform/users/${deviceToken}/groupLinks/${groupId}`).remove()
+            );
+          }
+        }
+      }
+
+      if (cleanupPromises.length > 0) {
+        await Promise.all(cleanupPromises);
+      }
+
+      // Update local state
+      const updatedGroups = { ...groups.value };
+      delete updatedGroups[groupId];
+      groups.value = updatedGroups;
+
+      // Collapse if this group was expanded
+      if (expandedGroup.value === groupId) {
+        expandedGroup.value = null;
+      }
+
+      const linksRemoved = cleanupPromises.length;
+      let message = `System deleted "${groupName}"`;
+      if (usersRemoved > 0) {
+        message += ` (${usersRemoved} orphaned user${usersRemoved > 1 ? 's' : ''} removed)`;
+      } else if (linksRemoved > 0) {
+        message += ` (${linksRemoved} user link${linksRemoved > 1 ? 's' : ''} removed)`;
+      }
+      showToast(message, 'success');
+    } catch (error) {
+      console.error('Error in system delete:', error);
+      showToast('Failed to delete group', 'error');
     }
   }
 
@@ -360,186 +521,257 @@ export function AdminPage() {
     return sum + (group.settings?.members?.length || 0);
   }, 0);
 
+  // Filter groups by search and tab
+  const filteredGroups = groupEntries.filter(([, group]: [string, any]) => {
+    const isArchived = group.metadata?.archived === true;
+    const matchesTab = activeTab.value === 'archived' ? isArchived : !isArchived;
+
+    if (!matchesTab) return false;
+
+    if (searchQuery.value.trim()) {
+      const query = searchQuery.value.toLowerCase();
+      const name = (group.settings?.groupName || '').toLowerCase();
+      const creator = (group.metadata?.creator?.name || '').toLowerCase();
+      const location = (group.settings?.location?.name || '').toLowerCase();
+      return name.includes(query) || creator.includes(query) || location.includes(query);
+    }
+
+    return true;
+  });
+
+  const activeCount = groupEntries.filter(([, g]) => !g.metadata?.archived).length;
+  const archivedCount = groupEntries.filter(([, g]) => g.metadata?.archived).length;
+
+  function toggleMenu(groupId: string) {
+    openMenuId.value = openMenuId.value === groupId ? null : groupId;
+  }
+
+  function closeMenu() {
+    openMenuId.value = null;
+  }
+
+  function copyShareLink(shortCode: string) {
+    const url = `${window.location.origin}/${shortCode}`;
+    navigator.clipboard.writeText(url);
+    showToast('Share link copied!', 'success');
+    closeMenu();
+  }
+
+  function openDetails(groupId: string) {
+    detailsDrawerGroup.value = groupId;
+    closeMenu();
+  }
+
+  function closeDetails() {
+    detailsDrawerGroup.value = null;
+    expandedGroup.value = null;
+  }
+
+  const detailsGroup = detailsDrawerGroup.value ? groups.value[detailsDrawerGroup.value] : null;
+
   return (
-    <div class="site-admin-page">
+    <div class="site-admin-page" onClick={() => openMenuId.value && closeMenu()}>
       <div class="site-admin-dashboard">
         <header class="site-admin-dashboard-header">
           <div class="header-left">
             <h1>🎾 Site Administration</h1>
-            <p class="header-subtitle">Tennis Coordinator Platform</p>
           </div>
           <button onClick={handleLogout} class="logout-button">
             Sign Out
           </button>
         </header>
 
-        <div class="site-admin-stats">
-          <div class="stat-card">
-            <span class="stat-value">{groupEntries.length}</span>
-            <span class="stat-label">Tennis Groups</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-value">{totalMembers}</span>
-            <span class="stat-label">Total Members</span>
-          </div>
+        {/* Search bar */}
+        <div class="admin-search-bar">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            placeholder="Search groups by name, creator, or location..."
+            value={searchQuery.value}
+            onInput={(e) => {
+              searchQuery.value = (e.target as HTMLInputElement).value;
+            }}
+            class="admin-search-input"
+          />
+          {searchQuery.value && (
+            <button
+              class="search-clear"
+              onClick={() => { searchQuery.value = ''; }}
+            >
+              ×
+            </button>
+          )}
         </div>
 
+        {/* Tabs */}
+        <div class="admin-tabs">
+          <button
+            class={`admin-tab ${activeTab.value === 'active' ? 'active' : ''}`}
+            onClick={() => { activeTab.value = 'active'; }}
+          >
+            Active ({activeCount})
+          </button>
+          <button
+            class={`admin-tab ${activeTab.value === 'archived' ? 'active' : ''}`}
+            onClick={() => { activeTab.value = 'archived'; }}
+          >
+            Archived ({archivedCount})
+          </button>
+        </div>
+
+        {/* Groups list */}
         <section class="site-admin-section">
-          <h2>All Tennis Groups</h2>
-          {groupEntries.length === 0 ? (
+          {filteredGroups.length === 0 ? (
             <div class="empty-state">
-              <p>No tennis groups have been created yet.</p>
+              {searchQuery.value ? (
+                <p>No groups match "{searchQuery.value}"</p>
+              ) : activeTab.value === 'archived' ? (
+                <p>No archived groups.</p>
+              ) : (
+                <p>No active groups yet.</p>
+              )}
             </div>
           ) : (
-            <div class="groups-grid">
-              {groupEntries.map(([groupId, group]: [string, any]) => {
+            <div class="groups-list">
+              {filteredGroups.map(([groupId, group]: [string, any]) => {
                 const members = group.settings?.members || [];
-                const isExpanded = expandedGroup.value === groupId;
+                const isMenuOpen = openMenuId.value === groupId;
+                const creatorName = group.metadata?.creator?.name;
+                const createdAt = group.metadata?.createdAt;
 
                 return (
-                  <div key={groupId} class={`group-card ${isExpanded ? 'expanded' : ''}`}>
-                    <div class="group-card-header">
-                      <h3>{group.settings?.groupName || groupId}</h3>
-                      <span class="group-id">#{groupId}</span>
-                    </div>
-                    <div class="group-card-body">
-                      <div class="group-stat">
-                        <span class="group-stat-icon">👥</span>
-                        <span>{members.length} members</span>
+                  <div key={groupId} class="group-row">
+                    <div class="group-row-main">
+                      <div class="group-row-info">
+                        <h3 class="group-row-name">
+                          {group.settings?.groupName || 'Unnamed Group'}
+                        </h3>
+                        <div class="group-row-meta">
+                          <span class="group-row-members">👥 {members.length}</span>
+                          {group.settings?.location?.name && (
+                            <span class="group-row-location">
+                              📍 {group.settings.location.name}
+                            </span>
+                          )}
+                        </div>
+                        {(creatorName || createdAt) && (
+                          <div class="group-row-creator">
+                            {createdAt && (
+                              <span>
+                                Created {new Date(createdAt).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                })}
+                              </span>
+                            )}
+                            {creatorName && <span> by {creatorName}</span>}
+                          </div>
+                        )}
                       </div>
-                      {group.settings?.location?.name && (
-                        <div class="group-stat">
-                          <span class="group-stat-icon">📍</span>
-                          <span>{group.settings.location.name}</span>
-                        </div>
-                      )}
-                    </div>
 
-                    {/* Expandable member management */}
-                    {isExpanded && (
-                      <div class="group-members-section">
-                        <div class="members-header">
-                          <h4>Members</h4>
-                        </div>
-
-                        {/* Add member form */}
-                        <div class="add-member-form">
-                          <input
-                            type="text"
-                            placeholder="Enter member name"
-                            value={newMemberName.value}
-                            onInput={(e) => {
-                              newMemberName.value = (e.target as HTMLInputElement).value;
+                      <div class="group-row-actions">
+                        {activeTab.value === 'active' ? (
+                          <a
+                            href={`#${groupId}`}
+                            class="view-group-btn"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              // Set group and admin auth for site admin access
+                              sessionStorage.setItem(`pinAuth_${groupId}`, 'true');
+                              sessionStorage.setItem(`adminAuth_${groupId}`, 'true');
+                              window.location.hash = groupId;
+                              window.location.reload();
                             }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                addMemberToGroup(groupId);
-                              }
-                            }}
-                            class="member-input"
-                            disabled={addingMember.value}
-                          />
-                          <button
-                            onClick={() => addMemberToGroup(groupId)}
-                            class="add-member-btn"
-                            disabled={addingMember.value}
                           >
-                            {addingMember.value ? '...' : 'Add'}
+                            View Group →
+                          </a>
+                        ) : (
+                          <button
+                            onClick={() => unarchiveGroup(groupId, group.settings?.groupName || groupId)}
+                            class="unarchive-btn"
+                          >
+                            Unarchive
                           </button>
-                        </div>
+                        )}
 
-                        {/* Member list */}
-                        <div class="members-list">
-                          {members.length === 0 ? (
-                            <p class="no-members">No members yet. Add the first member above.</p>
-                          ) : (
-                            members.map((member: string) => {
-                              const isEditing =
-                                editingMemberInfo.value?.groupId === groupId &&
-                                editingMemberInfo.value?.originalName === member;
-                              return (
-                                <div key={member} class="member-item">
-                                  {isEditing ? (
-                                    <>
-                                      <input
-                                        type="text"
-                                        value={editMemberNewName.value}
-                                        onInput={(e) => {
-                                          editMemberNewName.value = (
-                                            e.target as HTMLInputElement
-                                          ).value;
-                                        }}
-                                        onKeyDown={(e) => {
-                                          if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            saveEditMember();
-                                          } else if (e.key === 'Escape') {
-                                            editingMemberInfo.value = null;
-                                          }
-                                        }}
-                                        class="edit-member-input"
-                                        autoFocus
-                                      />
-                                      <button
-                                        onClick={saveEditMember}
-                                        class="save-member-btn"
-                                        title="Save"
-                                      >
-                                        ✓
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          editingMemberInfo.value = null;
-                                        }}
-                                        class="cancel-edit-btn"
-                                        title="Cancel"
-                                      >
-                                        ✕
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <span class="member-name">{member}</span>
-                                      <button
-                                        onClick={() => startEditMember(groupId, member)}
-                                        class="edit-member-btn"
-                                        title="Edit name"
-                                      >
-                                        ✎
-                                      </button>
-                                      <button
-                                        onClick={() => removeMemberFromGroup(groupId, member)}
-                                        class="remove-member-btn"
-                                        title="Remove member"
-                                      >
-                                        ×
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
-                              );
-                            })
+                        {/* Kebab menu */}
+                        <div class="kebab-menu-container">
+                          <button
+                            class="kebab-menu-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleMenu(groupId);
+                            }}
+                          >
+                            ⋮
+                          </button>
+                          {isMenuOpen && (
+                            <div class="kebab-menu" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                class="kebab-menu-item"
+                                onClick={() => {
+                                  openDetails(groupId);
+                                }}
+                              >
+                                <span class="menu-icon">👥</span>
+                                Manage Members
+                              </button>
+                              {group.metadata?.shortCode && (
+                                <button
+                                  class="kebab-menu-item"
+                                  onClick={() => copyShareLink(group.metadata.shortCode)}
+                                >
+                                  <span class="menu-icon">🔗</span>
+                                  Copy Share Link
+                                </button>
+                              )}
+                              <button
+                                class="kebab-menu-item"
+                                onClick={() => openDetails(groupId)}
+                              >
+                                <span class="menu-icon">ℹ️</span>
+                                View Details
+                              </button>
+                              <div class="kebab-menu-divider" />
+                              {activeTab.value === 'active' ? (
+                                <button
+                                  class="kebab-menu-item"
+                                  onClick={() => {
+                                    closeMenu();
+                                    archiveGroup(groupId, group.settings?.groupName || groupId);
+                                  }}
+                                >
+                                  <span class="menu-icon">📦</span>
+                                  Archive Group
+                                </button>
+                              ) : (
+                                <button
+                                  class="kebab-menu-item"
+                                  onClick={() => {
+                                    closeMenu();
+                                    unarchiveGroup(groupId, group.settings?.groupName || groupId);
+                                  }}
+                                >
+                                  <span class="menu-icon">📤</span>
+                                  Unarchive Group
+                                </button>
+                              )}
+                              <div class="kebab-menu-divider" />
+                              <button
+                                class="kebab-menu-item danger"
+                                onClick={() => {
+                                  closeMenu();
+                                  systemDeleteGroup(groupId, group.settings?.groupName || groupId);
+                                }}
+                              >
+                                <span class="menu-icon">🗑️</span>
+                                System Delete
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
-                    )}
-
-                    <div class="group-card-footer">
-                      <button onClick={() => toggleGroupExpand(groupId)} class="manage-members-btn">
-                        {isExpanded ? 'Hide Members' : 'Manage Members'}
-                      </button>
-                      <a
-                        href={`#${groupId}`}
-                        class="view-group-link"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          window.location.hash = groupId;
-                          window.location.reload();
-                        }}
-                      >
-                        View Group →
-                      </a>
                     </div>
                   </div>
                 );
@@ -548,6 +780,206 @@ export function AdminPage() {
           )}
         </section>
       </div>
+
+      {/* Details Drawer */}
+      {detailsDrawerGroup.value && detailsGroup && (
+        <div class="details-drawer-overlay" onClick={closeDetails}>
+          <div class="details-drawer" onClick={(e) => e.stopPropagation()}>
+            <div class="drawer-header">
+              <h2>{detailsGroup.settings?.groupName || 'Group Details'}</h2>
+              <button class="drawer-close" onClick={closeDetails}>×</button>
+            </div>
+
+            <div class="drawer-content">
+              {/* Group Info Section */}
+              <div class="drawer-section">
+                <h3>Group Info</h3>
+                <div class="detail-row">
+                  <span class="detail-label">Members:</span>
+                  <span class="detail-value">{detailsGroup.settings?.members?.length || 0}</span>
+                </div>
+                {detailsGroup.settings?.location?.name && (
+                  <div class="detail-row">
+                    <span class="detail-label">Location:</span>
+                    <span class="detail-value">{detailsGroup.settings.location.name}</span>
+                  </div>
+                )}
+                {detailsGroup.metadata?.shortCode && (
+                  <div class="detail-row">
+                    <span class="detail-label">Short Code:</span>
+                    <span class="detail-value code">{detailsGroup.metadata.shortCode}</span>
+                  </div>
+                )}
+                {detailsGroup.metadata?.archetype && (
+                  <div class="detail-row">
+                    <span class="detail-label">Type:</span>
+                    <span class="detail-value">{detailsGroup.metadata.archetype}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Creator Section */}
+              {detailsGroup.metadata?.creator && (
+                <div class="drawer-section">
+                  <h3>Creator</h3>
+                  <div class="detail-row">
+                    <span class="detail-label">Name:</span>
+                    <span class="detail-value">{detailsGroup.metadata.creator.name}</span>
+                  </div>
+                  {detailsGroup.metadata.creator.email && (
+                    <div class="detail-row">
+                      <span class="detail-label">Email:</span>
+                      <a href={`mailto:${detailsGroup.metadata.creator.email}`} class="detail-link">
+                        {detailsGroup.metadata.creator.email}
+                      </a>
+                    </div>
+                  )}
+                  {detailsGroup.metadata.creator.phone && (
+                    <div class="detail-row">
+                      <span class="detail-label">Phone:</span>
+                      <a href={`tel:${detailsGroup.metadata.creator.phone}`} class="detail-link">
+                        {detailsGroup.metadata.creator.phone}
+                      </a>
+                    </div>
+                  )}
+                  {detailsGroup.metadata.createdAt && (
+                    <div class="detail-row">
+                      <span class="detail-label">Created:</span>
+                      <span class="detail-value">
+                        {new Date(detailsGroup.metadata.createdAt).toLocaleDateString('en-US', {
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* PINs Section */}
+              <div class="drawer-section">
+                <h3>Access PINs</h3>
+                <div class="detail-row">
+                  <span class="detail-label">Group PIN:</span>
+                  <span class="detail-value code">{detailsGroup.settings?.groupPin || 'Not set'}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Admin PIN:</span>
+                  <span class="detail-value code">{detailsGroup.settings?.adminPin || 'Not set'}</span>
+                </div>
+              </div>
+
+              {/* Members Section */}
+              <div class="drawer-section">
+                <h3>Members ({detailsGroup.settings?.members?.length || 0})</h3>
+
+                {/* Add member form */}
+                <div class="add-member-form">
+                  <input
+                    type="text"
+                    placeholder="Add new member..."
+                    value={newMemberName.value}
+                    onInput={(e) => {
+                      newMemberName.value = (e.target as HTMLInputElement).value;
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addMemberToGroup(detailsDrawerGroup.value!);
+                      }
+                    }}
+                    class="member-input"
+                    disabled={addingMember.value}
+                  />
+                  <button
+                    onClick={() => addMemberToGroup(detailsDrawerGroup.value!)}
+                    class="add-member-btn"
+                    disabled={addingMember.value}
+                  >
+                    {addingMember.value ? '...' : 'Add'}
+                  </button>
+                </div>
+
+                {/* Member list */}
+                <div class="members-list">
+                  {(detailsGroup.settings?.members || []).length === 0 ? (
+                    <p class="no-members">No members yet.</p>
+                  ) : (
+                    (detailsGroup.settings?.members || []).map((member: string) => {
+                      const isEditing =
+                        editingMemberInfo.value?.groupId === detailsDrawerGroup.value &&
+                        editingMemberInfo.value?.originalName === member;
+                      return (
+                        <div key={member} class="member-item">
+                          {isEditing ? (
+                            <>
+                              <input
+                                type="text"
+                                value={editMemberNewName.value}
+                                onInput={(e) => {
+                                  editMemberNewName.value = (e.target as HTMLInputElement).value;
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    saveEditMember();
+                                  } else if (e.key === 'Escape') {
+                                    editingMemberInfo.value = null;
+                                  }
+                                }}
+                                class="edit-member-input"
+                                autoFocus
+                              />
+                              <button onClick={saveEditMember} class="save-member-btn" title="Save">
+                                ✓
+                              </button>
+                              <button
+                                onClick={() => { editingMemberInfo.value = null; }}
+                                class="cancel-edit-btn"
+                                title="Cancel"
+                              >
+                                ✕
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <span class="member-name">{member}</span>
+                              <button
+                                onClick={() => startEditMember(detailsDrawerGroup.value!, member)}
+                                class="edit-member-btn"
+                                title="Edit name"
+                              >
+                                ✎
+                              </button>
+                              <button
+                                onClick={() => removeMemberFromGroup(detailsDrawerGroup.value!, member)}
+                                class="remove-member-btn"
+                                title="Remove member"
+                              >
+                                ×
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* Technical Info */}
+              <div class="drawer-section technical">
+                <h3>Technical</h3>
+                <div class="detail-row">
+                  <span class="detail-label">Group ID:</span>
+                  <span class="detail-value code small">{detailsDrawerGroup.value}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

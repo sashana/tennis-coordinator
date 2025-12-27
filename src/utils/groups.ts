@@ -162,7 +162,7 @@ export function groupExists(groupId: string, availableGroups: AvailableGroups): 
 export function createDefaultGroupSettings(groupName: string): GroupSettings {
   return {
     groupName,
-    coreMembers: [],
+    members: [],
     memberDetails: {},
     groupPin: generateDefaultPin(),
     adminPin: generateDefaultPin(),
@@ -204,7 +204,7 @@ export function mergeGroupSettings(
  */
 export function isGroupSettingsComplete(settings: Partial<GroupSettings>): boolean {
   return Boolean(
-    settings.groupName && settings.groupPin && settings.adminPin && settings.coreMembers
+    settings.groupName && settings.groupPin && settings.adminPin && settings.members
   );
 }
 

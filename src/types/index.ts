@@ -212,7 +212,7 @@ export interface MatchArrangement {
 
 export interface GroupSettings {
   groupName: string;
-  coreMembers: string[];
+  members: string[];
   memberDetails?: MemberDetailsMap;
   groupPin: string;
   adminPin: string;

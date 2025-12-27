@@ -44,26 +44,50 @@ export function showToast(message: string, type: 'success' | 'error' | 'info' = 
   }, 3000);
 }
 
-// Resolve short code to actual group ID
-async function resolveShortCode(code: string): Promise<string | null> {
+// Resolve short code or group ID to actual group ID
+async function resolveShortCodeOrGroupId(code: string): Promise<string | null> {
   try {
     const db = getDatabase();
+
+    // First, try the shortCodeIndex for fast lookup (new groups)
+    const indexSnapshot = await db.ref(`shortCodeIndex/${code.toUpperCase()}`).once('value');
+    if (indexSnapshot.exists()) {
+      const groupId = indexSnapshot.val();
+      logger.debug(`Resolved short code "${code}" via index to group ID: ${groupId}`);
+      return groupId;
+    }
+
+    // Check if the code is a direct group ID
+    const directGroupSnapshot = await db.ref(`groups/${code}`).once('value');
+    if (directGroupSnapshot.exists()) {
+      logger.debug(`"${code}" is a direct group ID`);
+      return code;
+    }
+
+    // Fallback: scan groups for legacy short codes in settings
     const groupsSnapshot = await db.ref('groups').once('value');
     const groups = (groupsSnapshot.val() || {}) as Record<
       string,
-      { settings?: { shortCode?: string } }
+      { settings?: { shortCode?: string }; metadata?: { shortCode?: string } }
     >;
 
     for (const [groupId, groupData] of Object.entries(groups)) {
-      if (groupData.settings && groupData.settings.shortCode === code) {
-        logger.debug(`Resolved short code "${code}" to group ID: ${groupId}`);
+      // Check settings.shortCode (legacy)
+      if (groupData.settings?.shortCode === code) {
+        logger.debug(`Resolved short code "${code}" via settings to group ID: ${groupId}`);
+        return groupId;
+      }
+      // Check metadata.shortCode (new groups)
+      if (groupData.metadata?.shortCode === code.toUpperCase()) {
+        logger.debug(`Resolved short code "${code}" via metadata to group ID: ${groupId}`);
         return groupId;
       }
     }
-    logger.debug(`No match found for short code "${code}", using as-is`);
+
+    logger.debug(`No match found for "${code}"`);
     return null;
   } catch (error) {
-    logger.error('resolveShortCode Error:', error);
+    logger.error('resolveShortCodeOrGroupId Error:', error);
     return null;
   }
 }
@@ -83,18 +107,28 @@ async function getGroupIdFromUrl(): Promise<string | null> {
 
     if (groupPath && groupPath !== 'index.html' && groupPath !== 'app.html') {
       history.replaceState(null, '', redirect);
-      // Check if it's a short code
-      const resolvedGroupId = await resolveShortCode(groupPath);
-      return resolvedGroupId || groupPath;
+      // Check if it's a short code - only use if it resolves to a real group
+      const resolvedGroupId = await resolveShortCodeOrGroupId(groupPath);
+      if (resolvedGroupId) {
+        return resolvedGroupId;
+      }
+      // Short code doesn't exist, redirect to landing
+      history.replaceState(null, '', '/');
+      return null;
     }
   }
 
   // Check hash for group ID (e.g., /app.html#ttmd)
   const hash = window.location.hash.replace(/^#\/?/, '');
   if (hash && hash !== 'admin') {
-    // Check if it's a short code
-    const resolvedGroupId = await resolveShortCode(hash);
-    return resolvedGroupId || hash;
+    // Check if it's a short code - only use if it resolves to a real group
+    const resolvedGroupId = await resolveShortCodeOrGroupId(hash);
+    if (resolvedGroupId) {
+      return resolvedGroupId;
+    }
+    // Short code doesn't exist, redirect to landing
+    history.replaceState(null, '', '/');
+    return null;
   }
   if (hash === 'admin') {
     return 'admin';
@@ -104,9 +138,14 @@ async function getGroupIdFromUrl(): Promise<string | null> {
   const params = new URLSearchParams(window.location.search);
   const groupParam = params.get('group');
   if (groupParam) {
-    // Check if it's a short code
-    const resolvedGroupId = await resolveShortCode(groupParam);
-    return resolvedGroupId || groupParam;
+    // Check if it's a short code - only use if it resolves to a real group
+    const resolvedGroupId = await resolveShortCodeOrGroupId(groupParam);
+    if (resolvedGroupId) {
+      return resolvedGroupId;
+    }
+    // Short code doesn't exist, redirect to landing
+    history.replaceState(null, '', '/');
+    return null;
   }
 
   // Check pathname
@@ -120,9 +159,14 @@ async function getGroupIdFromUrl(): Promise<string | null> {
     return null;
   }
 
-  // Check if it's a short code
-  const resolvedGroupId = await resolveShortCode(groupPath);
-  return resolvedGroupId || groupPath;
+  // Check if it's a short code - only use if it resolves to a real group
+  const resolvedGroupId = await resolveShortCodeOrGroupId(groupPath);
+  if (resolvedGroupId) {
+    return resolvedGroupId;
+  }
+  // Short code doesn't exist, redirect to landing
+  history.replaceState(null, '', '/');
+  return null;
 }
 
 export function App() {

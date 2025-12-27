@@ -106,7 +106,8 @@ export function useGroupData() {
           const settings = (snapshot.val() || {}) as Record<string, unknown>;
 
           currentGroupName.value = (settings.groupName as string) || 'Unknown Group';
-          coreMembers.value = (settings.members as string[]) || [];
+          // Read from 'members' field, fallback to 'coreMembers' for compatibility
+          coreMembers.value = (settings.members as string[]) || (settings.coreMembers as string[]) || [];
           memberDetails.value = (settings.memberDetails as Record<string, unknown>) || {};
 
           // Check if current session user was renamed by admin

@@ -1,3 +1,5 @@
+import { CreateGroupDrawer, openCreateGroupDrawer } from '../features/CreateGroupDrawer';
+
 export function LandingPage() {
   return (
     <div class="landing-page">
@@ -72,9 +74,12 @@ export function LandingPage() {
 
         <div class="landing-cta">
           <p>
-            To access your tennis group, visit your group's unique URL or contact your group admin
-            for the link.
+            Have a group link? Visit your group's unique URL to get started.
           </p>
+          <p class="or-divider">or</p>
+          <button class="start-group-btn-secondary" onClick={openCreateGroupDrawer}>
+            Start Your Own Group
+          </button>
         </div>
 
         <div class="landing-footer">
@@ -95,6 +100,56 @@ export function LandingPage() {
           </a>
         </div>
       </div>
+
+      {/* Create Group Drawer */}
+      <CreateGroupDrawer />
+
+      <style>{`
+        .start-group-btn {
+          display: inline-block;
+          margin: 20px 0;
+          padding: 16px 32px;
+          background: var(--color-primary, #2C6E49);
+          color: white;
+          border: none;
+          border-radius: 12px;
+          font-size: 18px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          box-shadow: 0 4px 12px rgba(44, 110, 73, 0.25);
+        }
+
+        .start-group-btn:hover {
+          background: var(--color-primary-dark, #1a402b);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(44, 110, 73, 0.3);
+        }
+
+        .or-divider {
+          color: #999;
+          font-size: 14px;
+          margin: 12px 0;
+        }
+
+        .start-group-btn-secondary {
+          display: inline-block;
+          padding: 12px 24px;
+          background: transparent;
+          color: var(--color-primary, #2C6E49);
+          border: 2px solid var(--color-primary, #2C6E49);
+          border-radius: 8px;
+          font-size: 16px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .start-group-btn-secondary:hover {
+          background: var(--color-primary, #2C6E49);
+          color: white;
+        }
+      `}</style>
     </div>
   );
 }

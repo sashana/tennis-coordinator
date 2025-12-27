@@ -356,7 +356,7 @@ export function getSettingsPath(): string {
  */
 export interface UnifiedGroupSettings {
   groupName: string;
-  coreMembers: string[];
+  members: string[];
   memberDetails?: Record<string, { phone?: string; email?: string; notes?: string }>;
   groupPin: string;
   adminPin: string;
@@ -371,7 +371,7 @@ export interface UnifiedGroupSettings {
 export function legacyToUnifiedSettings(legacy: GroupSettings): UnifiedGroupSettings {
   return {
     groupName: legacy.groupName,
-    coreMembers: legacy.coreMembers,
+    members: legacy.members,
     memberDetails: legacy.memberDetails,
     groupPin: legacy.groupPin,
     adminPin: legacy.adminPin,
@@ -385,7 +385,7 @@ export function legacyToUnifiedSettings(legacy: GroupSettings): UnifiedGroupSett
 export function independentGroupToUnifiedSettings(group: IndependentGroup): UnifiedGroupSettings {
   return {
     groupName: group.name,
-    coreMembers: Object.values(group.members).map((m) => m.displayName),
+    members: Object.values(group.members).map((m) => m.displayName),
     groupPin: group.settings.groupPin || '',
     adminPin: group.settings.adminPin || '',
     location: group.location,
@@ -409,7 +409,7 @@ export function clubGroupToUnifiedSettings(group: ClubGroup, club: Club): Unifie
 
   return {
     groupName: group.name,
-    coreMembers: memberNames,
+    members: memberNames,
     groupPin: '', // Club groups use club-level PIN
     adminPin: group.settings.adminPin || '',
     location: group.location || club.info.location,

@@ -7,6 +7,9 @@ import { linkUserToGroup } from '../../hooks/usePlatformUser';
 
 export const showWelcomeModal = signal(false);
 const searchQuery = signal('');
+const showAddSelf = signal(false);
+const newMemberName = signal('');
+const isAddingSelf = signal(false);
 
 async function logUserLogin(groupId: string, userName: string) {
   try {
@@ -40,13 +43,52 @@ function handleNameClick(name: string) {
   selectedName.value = name;
   isFormExpanded.value = true;
 
-  // Close modal
+  // Close modal and reset add-self state
   showWelcomeModal.value = false;
+  showAddSelf.value = false;
+  newMemberName.value = '';
 
   // Scroll to top to ensure header is visible (especially on mobile browsers)
   window.scrollTo(0, 0);
 
   showToast(`Welcome, ${name}!`, 'success');
+}
+
+async function handleAddSelf() {
+  const name = newMemberName.value.trim();
+  if (!name) {
+    showToast('Please enter your name', 'error');
+    return;
+  }
+
+  const groupId = currentGroupId.value;
+  if (!groupId) return;
+
+  // Check if name already exists (case-insensitive)
+  const existingMembers = coreMembers.value;
+  if (existingMembers.some((m) => m.toLowerCase() === name.toLowerCase())) {
+    showToast('This name is already in the group', 'error');
+    return;
+  }
+
+  isAddingSelf.value = true;
+
+  try {
+    const db = getDatabase();
+    const updatedMembers = [...existingMembers, name];
+    await db.ref(`groups/${groupId}/settings/members`).set(updatedMembers);
+
+    // Update local state
+    coreMembers.value = updatedMembers;
+
+    // Now proceed as if they clicked their name
+    handleNameClick(name);
+  } catch (error) {
+    console.error('Error adding self to group:', error);
+    showToast('Failed to add yourself. Please try again.', 'error');
+  } finally {
+    isAddingSelf.value = false;
+  }
 }
 
 export function WelcomeModal() {
@@ -87,7 +129,62 @@ export function WelcomeModal() {
               <span class="member-name">{name}</span>
             </button>
           ))}
-          {filteredMembers.length === 0 && <p class="no-results">No members found</p>}
+          {filteredMembers.length === 0 && !showAddSelf.value && (
+            <p class="no-results">No members found</p>
+          )}
+        </div>
+
+        {/* Add yourself section */}
+        <div class="add-self-section">
+          {!showAddSelf.value ? (
+            <button
+              class="add-self-link"
+              onClick={() => {
+                showAddSelf.value = true;
+              }}
+            >
+              Not in the list? <strong>Add yourself</strong>
+            </button>
+          ) : (
+            <div class="add-self-form">
+              <p class="add-self-label">Enter your name to join:</p>
+              <div class="add-self-input-row">
+                <input
+                  type="text"
+                  class="add-self-input"
+                  placeholder="Your name"
+                  value={newMemberName.value}
+                  onInput={(e) => {
+                    newMemberName.value = (e.target as HTMLInputElement).value;
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddSelf();
+                    }
+                  }}
+                  disabled={isAddingSelf.value}
+                  autoFocus
+                />
+                <button
+                  class="add-self-btn"
+                  onClick={handleAddSelf}
+                  disabled={isAddingSelf.value || !newMemberName.value.trim()}
+                >
+                  {isAddingSelf.value ? '...' : 'Join'}
+                </button>
+              </div>
+              <button
+                class="add-self-cancel"
+                onClick={() => {
+                  showAddSelf.value = false;
+                  newMemberName.value = '';
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -210,6 +307,95 @@ export function WelcomeModal() {
           color: #9ca3af;
           padding: 24px;
           font-size: 14px;
+        }
+
+        .add-self-section {
+          border-top: 1px solid #e5e7eb;
+          padding: 16px 4px 0;
+          margin-top: 8px;
+        }
+
+        .add-self-link {
+          width: 100%;
+          padding: 12px;
+          background: transparent;
+          border: none;
+          font-size: 14px;
+          color: #6b7280;
+          cursor: pointer;
+          text-align: center;
+        }
+
+        .add-self-link:hover {
+          color: var(--color-primary, #2C6E49);
+        }
+
+        .add-self-link strong {
+          color: var(--color-primary, #2C6E49);
+        }
+
+        .add-self-form {
+          padding: 0 4px;
+        }
+
+        .add-self-label {
+          font-size: 13px;
+          color: #6b7280;
+          margin: 0 0 10px 0;
+          text-align: center;
+        }
+
+        .add-self-input-row {
+          display: flex;
+          gap: 8px;
+        }
+
+        .add-self-input {
+          flex: 1;
+          padding: 12px 16px;
+          border: 2px solid #e0e0e0;
+          border-radius: 10px;
+          font-size: 15px;
+          outline: none;
+        }
+
+        .add-self-input:focus {
+          border-color: var(--color-primary, #2C6E49);
+        }
+
+        .add-self-btn {
+          padding: 12px 20px;
+          background: var(--color-primary, #2C6E49);
+          border: none;
+          border-radius: 10px;
+          font-size: 15px;
+          font-weight: 600;
+          color: white;
+          cursor: pointer;
+        }
+
+        .add-self-btn:hover:not(:disabled) {
+          background: var(--color-primary-dark, #1a402b);
+        }
+
+        .add-self-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .add-self-cancel {
+          width: 100%;
+          padding: 10px;
+          margin-top: 8px;
+          background: transparent;
+          border: none;
+          font-size: 13px;
+          color: #9ca3af;
+          cursor: pointer;
+        }
+
+        .add-self-cancel:hover {
+          color: #6b7280;
         }
       `}</style>
     </Modal>

@@ -14,6 +14,7 @@ import {
   type GroupLink,
 } from '../../hooks/usePlatformUser';
 import { getDatabase } from '../../config/firebase';
+import { CreateGroupDrawer, openCreateGroupDrawer } from './CreateGroupDrawer';
 
 // Group metadata cache
 const groupNames = signal<Record<string, string>>({});
@@ -99,24 +100,74 @@ export function MyGroupsContent() {
 
   if (linkedGroups.length === 0) {
     return (
-      <div style="padding: 40px 20px; text-align: center;">
-        <div style="font-size: 48px; margin-bottom: 16px;">
-          <svg viewBox="0 0 24 24" width="48" height="48" fill="var(--color-text-disabled, #ccc)">
-            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-          </svg>
+      <>
+        <div style="padding: 40px 20px; text-align: center;">
+          <div style="font-size: 48px; margin-bottom: 16px;">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="var(--color-text-disabled, #ccc)">
+              <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+            </svg>
+          </div>
+          <p style="color: var(--color-text-muted, #888); margin: 0 0 8px 0; font-size: 16px;">
+            No groups yet
+          </p>
+          <p style="color: var(--color-text-disabled, #aaa); margin: 0 0 20px 0; font-size: 14px;">
+            Join a group or start your own
+          </p>
+          <button
+            onClick={openCreateGroupDrawer}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '14px 24px',
+              background: 'var(--color-primary, #2C6E49)',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 600,
+            }}
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+            </svg>
+            Start a Group
+          </button>
         </div>
-        <p style="color: var(--color-text-muted, #888); margin: 0 0 8px 0; font-size: 16px;">
-          No groups yet
-        </p>
-        <p style="color: var(--color-text-disabled, #aaa); margin: 0; font-size: 14px;">
-          Groups you join will appear here
-        </p>
-      </div>
+        <CreateGroupDrawer />
+      </>
     );
   }
 
   return (
     <div style="padding: 8px 0;">
+      {/* Create New Group Button */}
+      <button
+        onClick={openCreateGroupDrawer}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          width: '100%',
+          padding: '14px',
+          marginBottom: '16px',
+          background: 'var(--color-primary-light, #E8F5E9)',
+          border: '2px dashed var(--color-primary, #2C6E49)',
+          borderRadius: '12px',
+          cursor: 'pointer',
+          color: 'var(--color-primary, #2C6E49)',
+          fontSize: '15px',
+          fontWeight: 500,
+        }}
+      >
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+        </svg>
+        Create New Group
+      </button>
+
       <p style="color: var(--color-text-muted, #888); font-size: 13px; margin: 0 0 16px 0; padding: 0 4px;">
         {linkedGroups.length} group{linkedGroups.length !== 1 ? 's' : ''} on this device
       </p>
@@ -188,6 +239,9 @@ export function MyGroupsContent() {
           </button>
         ))}
       </div>
+
+      {/* Create Group Drawer */}
+      <CreateGroupDrawer />
     </div>
   );
 }

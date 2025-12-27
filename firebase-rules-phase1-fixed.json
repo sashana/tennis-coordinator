@@ -76,6 +76,12 @@
             ".read": true,
             ".write": true
           }
+        },
+
+        "metadata": {
+          ".read": true,
+          ".write": "!data.exists()",
+          ".validate": "newData.hasChildren(['archetype', 'createdAt', 'createdBy', 'shortCode', 'creator'])"
         }
       }
     },
@@ -103,6 +109,23 @@
     "settings": {
       ".read": true,
       ".write": false
+    },
+
+    "shortCodeIndex": {
+      ".read": true,
+      ".write": true,
+      "$shortCode": {
+        ".validate": "newData.isString()"
+      }
+    },
+
+    "platform": {
+      "users": {
+        "$deviceToken": {
+          ".read": true,
+          ".write": true
+        }
+      }
     }
   }
 }

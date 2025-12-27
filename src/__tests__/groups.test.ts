@@ -249,9 +249,9 @@ describe('createDefaultGroupSettings', () => {
     expect(settings.groupName).toBe('My Group');
   });
 
-  it('creates empty core members array', () => {
+  it('creates empty members array', () => {
     const settings = createDefaultGroupSettings('My Group');
-    expect(settings.coreMembers).toEqual([]);
+    expect(settings.members).toEqual([]);
   });
 
   it('creates default PINs', () => {
@@ -285,7 +285,7 @@ describe('generateDefaultPin', () => {
 describe('mergeGroupSettings', () => {
   const existing: GroupSettings = {
     groupName: 'Original',
-    coreMembers: ['Alice'],
+    members: ['Alice'],
     memberDetails: { Alice: { phone: '123', addedBy: 'Admin', addedDate: Date.now() } },
     groupPin: '1234',
     adminPin: '5678',
@@ -317,7 +317,7 @@ describe('isGroupSettingsComplete', () => {
       groupName: 'Group',
       groupPin: '1234',
       adminPin: '5678',
-      coreMembers: ['Alice'],
+      members: ['Alice'],
     };
     expect(isGroupSettingsComplete(settings)).toBe(true);
   });
@@ -326,7 +326,7 @@ describe('isGroupSettingsComplete', () => {
     const settings: Partial<GroupSettings> = {
       groupPin: '1234',
       adminPin: '5678',
-      coreMembers: ['Alice'],
+      members: ['Alice'],
     };
     expect(isGroupSettingsComplete(settings)).toBe(false);
   });
@@ -335,7 +335,7 @@ describe('isGroupSettingsComplete', () => {
     const settings: Partial<GroupSettings> = {
       groupName: 'Group',
       adminPin: '5678',
-      coreMembers: ['Alice'],
+      members: ['Alice'],
     };
     expect(isGroupSettingsComplete(settings)).toBe(false);
   });

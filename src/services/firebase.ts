@@ -102,10 +102,10 @@ export class FirebaseService {
       return null;
     }
 
-    // Apply defaults
+    // Apply defaults (read 'members', fallback to 'coreMembers' for legacy data)
     return {
       groupName: settings.groupName || 'Unknown Group',
-      coreMembers: settings.coreMembers || [],
+      members: settings.members || settings.coreMembers || [],
       memberDetails: settings.memberDetails || {},
       groupPin: settings.groupPin || '14675',
       adminPin: settings.adminPin || '3250',
