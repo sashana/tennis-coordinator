@@ -1,7 +1,7 @@
 import { signal } from '@preact/signals';
 import { sessionUser, showToast, memberDetails, currentGroupId } from '../App';
 import { updateMemberDetails, renameMember, removeMember } from '../../hooks/useFirebase';
-import { currentPlatformUser, updateProfile } from '../../hooks/usePlatformUser';
+import { currentPlatformUser, updateProfile, refreshPlatformUser } from '../../hooks/usePlatformUser';
 
 // Drawer state signals
 export const showEditMemberDrawer = signal(false);
@@ -674,48 +674,63 @@ export function EditMemberDrawer() {
   );
 }
 
+// Helper function to load platform user data into form
+function loadPlatformUserData(details: Record<string, unknown> | undefined) {
+  const profile = currentPlatformUser.value?.profile;
+  if (!profile) {
+    // No platform user, use group details
+    memberPhone.value = (details?.phone as string) || '';
+    memberEmail.value = (details?.email as string) || '';
+    skillLevel.value = '';
+    ntrpRating.value = '';
+    return;
+  }
+
+  // Lazy migration: if platform user has no contact but group does, migrate it
+  if (!profile.phone && !profile.email && (details?.phone || details?.email)) {
+    const migrationUpdates: Record<string, string> = {};
+    if (details?.phone) migrationUpdates.phone = details.phone as string;
+    if (details?.email) migrationUpdates.email = details.email as string;
+
+    // Migrate in background (fire-and-forget)
+    updateProfile(migrationUpdates).catch((err) => {
+      console.warn('Contact migration failed (non-fatal):', err);
+    });
+
+    // Use group details for this session (will be in platform next time)
+    memberPhone.value = (details?.phone as string) || '';
+    memberEmail.value = (details?.email as string) || '';
+  } else {
+    // Prefer platform user contact info (shared), fall back to group details
+    memberPhone.value = profile.phone || (details?.phone as string) || '';
+    memberEmail.value = profile.email || (details?.email as string) || '';
+  }
+
+  skillLevel.value = profile.skillLevel || '';
+  ntrpRating.value = profile.ntrpRating?.toString() || '';
+}
+
 // Helper function to open drawer for editing a specific member
-export function openEditMemberDrawer(memberNameToEdit: string) {
+export async function openEditMemberDrawer(memberNameToEdit: string) {
   // Load current member details from group
   const details = memberDetails.value?.[memberNameToEdit];
 
   memberName.value = memberNameToEdit;
-  memberNotes.value = details?.notes || '';
-  shareContactInDirectory.value = details?.shareContactInDirectory || false;
-  shareNotesInDirectory.value = details?.shareNotesInDirectory || false;
+  memberNotes.value = (details?.notes as string) || '';
+  shareContactInDirectory.value = details?.shareContactInDirectory === true;
+  shareNotesInDirectory.value = details?.shareNotesInDirectory === true;
   confirmingRemove.value = false;
 
   // Load from platform user if editing self (shared across groups)
   const isEditingSelf = memberNameToEdit === sessionUser.value;
-  if (isEditingSelf && currentPlatformUser.value) {
-    const profile = currentPlatformUser.value.profile;
-
-    // Lazy migration: if platform user has no contact but group does, migrate it
-    if (!profile.phone && !profile.email && (details?.phone || details?.email)) {
-      const migrationUpdates: Record<string, string> = {};
-      if (details?.phone) migrationUpdates.phone = details.phone;
-      if (details?.email) migrationUpdates.email = details.email;
-
-      // Migrate in background (fire-and-forget)
-      updateProfile(migrationUpdates).catch((err) => {
-        console.warn('Contact migration failed (non-fatal):', err);
-      });
-
-      // Use group details for this session (will be in platform next time)
-      memberPhone.value = details?.phone || '';
-      memberEmail.value = details?.email || '';
-    } else {
-      // Prefer platform user contact info (shared), fall back to group details
-      memberPhone.value = profile.phone || details?.phone || '';
-      memberEmail.value = profile.email || details?.email || '';
-    }
-
-    skillLevel.value = profile.skillLevel || '';
-    ntrpRating.value = profile.ntrpRating?.toString() || '';
+  if (isEditingSelf) {
+    // Refresh platform user data to get latest (e.g., after switching groups)
+    await refreshPlatformUser();
+    loadPlatformUserData(details);
   } else {
     // Not editing self - use group-specific details
-    memberPhone.value = details?.phone || '';
-    memberEmail.value = details?.email || '';
+    memberPhone.value = (details?.phone as string) || '';
+    memberEmail.value = (details?.email as string) || '';
     skillLevel.value = '';
     ntrpRating.value = '';
   }

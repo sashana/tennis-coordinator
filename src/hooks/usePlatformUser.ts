@@ -176,6 +176,27 @@ export async function initializePlatformUser(): Promise<void> {
 }
 
 /**
+ * Refresh platform user data from Firebase
+ * Call this when you need fresh data (e.g., after switching groups)
+ */
+export async function refreshPlatformUser(): Promise<void> {
+  try {
+    const token = deviceToken.value;
+    if (!token) return;
+
+    const db = getDatabase();
+    if (!db) return;
+
+    const snapshot = await db.ref(getPlatformUserPath(token)).once('value');
+    if (snapshot.exists()) {
+      currentPlatformUser.value = snapshot.val() as PlatformUserRecord;
+    }
+  } catch (error) {
+    console.warn('[PlatformUser] Refresh failed (non-fatal):', error);
+  }
+}
+
+/**
  * Link current user to a group
  * Called when user selects their name in a group or checks in
  * Also syncs platform contact info to group memberDetails
