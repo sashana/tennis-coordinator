@@ -15,7 +15,6 @@ import type {
   ActivityByDate,
   NotificationPreferences,
   NotificationItem,
-  UserPreferences,
   MemberDetailsMap,
   MatchArrangement,
 } from '@/types';
@@ -47,8 +46,6 @@ export const firebasePaths = {
   matchNotes: (groupId: string, date: string) => `groups/${groupId}/matchNotes/${date}`,
   matchNote: (groupId: string, date: string, matchKey: string) =>
     `groups/${groupId}/matchNotes/${date}/${matchKey}`,
-  userPreferences: () => 'userPreferences',
-  siteSettings: () => 'siteSettings',
   userNotificationPrefs: (groupId: string, userName: string) =>
     `groups/${groupId}/userNotifications/${normalizeName(userName)}/preferences`,
   userNotifications: (groupId: string, userName: string) =>
@@ -164,19 +161,6 @@ export class FirebaseService {
   }
 
   // ============================================
-  // User Preferences
-  // ============================================
-
-  async loadUserPreferences(): Promise<UserPreferences> {
-    const snapshot = await this.ref(firebasePaths.userPreferences()).once('value');
-    return (snapshot.val() as UserPreferences) || {};
-  }
-
-  async saveUserPreferences(preferences: UserPreferences): Promise<void> {
-    await this.ref(firebasePaths.userPreferences()).set(preferences);
-  }
-
-  // ============================================
   // Activity Log
   // ============================================
 
@@ -286,19 +270,6 @@ export class FirebaseService {
 
   async clearNotifications(groupId: string, userName: string): Promise<void> {
     await this.ref(firebasePaths.userNotifications(groupId, userName)).remove();
-  }
-
-  // ============================================
-  // Site Settings
-  // ============================================
-
-  async loadSiteSettings(): Promise<{ gaTrackingId?: string }> {
-    const snapshot = await this.ref(firebasePaths.siteSettings()).once('value');
-    return (snapshot.val() as { gaTrackingId?: string }) || {};
-  }
-
-  async saveSiteSettings(settings: { gaTrackingId?: string }): Promise<void> {
-    await this.ref(firebasePaths.siteSettings()).set(settings);
   }
 
   // ============================================
