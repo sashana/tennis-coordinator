@@ -43,12 +43,13 @@ export const GROUP_ARCHETYPES: GroupArchetypeConfig[] = [
   {
     id: 'tight-knit',
     name: 'Tight-knit Group',
-    description: 'Perfect for a close group of friends who play together regularly.',
+    description:
+      'Your tennis crew, organized. Invite friends, coordinate matches, and share via WhatsApp, text, or in-app alerts. Any format: doubles, singles, or mixed.',
     features: [
-      'Invite-only membership',
-      'Doubles-focused matching',
-      'PIN-protected access',
-      'Shared match coordination',
+      'Invite-only access',
+      'Any match format',
+      'PIN-protected',
+      'Share via WhatsApp, text, or alerts',
     ],
     namePlaceholder: 'e.g., Tuesday Tennis Gang',
     available: true,
