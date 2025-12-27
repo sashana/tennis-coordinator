@@ -27,6 +27,9 @@ export interface PlatformUserProfile {
   lastActiveAt: number;
   skillLevel?: 'beginner' | 'intermediate' | 'advanced' | 'competitive' | 'pro';
   ntrpRating?: number;
+  // Shared contact info
+  phone?: string;
+  email?: string;
 }
 
 /**
@@ -175,6 +178,7 @@ export async function initializePlatformUser(): Promise<void> {
 /**
  * Link current user to a group
  * Called when user selects their name in a group or checks in
+ * Also syncs platform contact info to group memberDetails
  */
 export async function linkUserToGroup(groupId: string, memberName: string): Promise<void> {
   try {
@@ -226,6 +230,32 @@ export async function linkUserToGroup(groupId: string, memberName: string): Prom
     // If displayName is empty, set it from the first group
     if (currentPlatformUser.value?.profile.displayName === '') {
       await updateProfile({ displayName: memberName });
+    }
+
+    // Sync platform contact info to group memberDetails (auto-fill for new groups)
+    const profile = currentPlatformUser.value?.profile;
+    if (profile && (profile.phone || profile.email)) {
+      try {
+        const memberDetailsRef = db.ref(`groups/${groupId}/settings/memberDetails/${memberName}`);
+        const detailsSnapshot = await memberDetailsRef.once('value');
+        const existingDetails = detailsSnapshot.val() || {};
+
+        // Only update if we have platform contact info and group doesn't have it yet
+        const updates: Record<string, unknown> = {};
+        if (profile.phone && !existingDetails.phone) {
+          updates.phone = profile.phone;
+        }
+        if (profile.email && !existingDetails.email) {
+          updates.email = profile.email;
+        }
+
+        if (Object.keys(updates).length > 0) {
+          await memberDetailsRef.update(updates);
+        }
+      } catch (err) {
+        // Non-fatal - contact sync is a nice-to-have
+        console.warn('[PlatformUser] Contact sync failed (non-fatal):', err);
+      }
     }
   } catch (error) {
     // Fire-and-forget - don't break the app

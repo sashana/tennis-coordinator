@@ -10,7 +10,7 @@ import { SubPage } from '../ui/SubPage';
 import { GroupSettingsContent } from '../features/GroupSettingsContent';
 import { ActivityHistoryContent } from '../features/ActivityHistoryContent';
 import { MyGroupsContent } from '../features/MyGroupsContent';
-import { linkedGroupsCount } from '../../hooks/usePlatformUser';
+import { linkedGroupsCount, currentPlatformUser } from '../../hooks/usePlatformUser';
 
 // Check if user is logged in as group admin
 function isGroupAdmin(): boolean {
@@ -36,9 +36,12 @@ export function ProfileTab() {
     return () => clearInterval(interval);
   }, []);
 
-  // Get current contact info for display
+  // Get current contact info for display (prefer platform user, fall back to group details)
   const currentDetails =
     sessionUser.value && memberDetails.value ? memberDetails.value[sessionUser.value] : null;
+  const platformProfile = currentPlatformUser.value?.profile;
+  const displayPhone = platformProfile?.phone || currentDetails?.phone;
+  const displayEmail = platformProfile?.email || currentDetails?.email;
 
   const handleChangeUser = () => {
     if (confirm('Change user? This will clear your current session.')) {
@@ -104,8 +107,8 @@ export function ProfileTab() {
             {sessionUser.value || 'Not set'}
           </div>
           <div style="font-size: var(--font-size-sm, 13px); color: var(--color-text-muted, #888);">
-            {currentDetails?.phone || currentDetails?.email
-              ? [currentDetails?.phone, currentDetails?.email].filter(Boolean).join(' • ')
+            {displayPhone || displayEmail
+              ? [displayPhone, displayEmail].filter(Boolean).join(' • ')
               : 'Tap to add contact info'}
           </div>
         </div>

@@ -91,10 +91,22 @@ export function EditMemberDrawer() {
       shareNotesInDirectory: shareNotesInDirectory.value,
     });
 
-    // If editing self, also save skill level and NTRP to platform user
+    // If editing self, also save to platform user (shared across groups)
     if (isEditingSelf && currentPlatformUser.value) {
       try {
         const profileUpdates: Record<string, unknown> = {};
+
+        // Contact info (shared across groups)
+        const phone = memberPhone.value.trim();
+        const email = memberEmail.value.trim();
+        if (phone) {
+          profileUpdates.phone = phone;
+        }
+        if (email) {
+          profileUpdates.email = email;
+        }
+
+        // Tennis profile
         if (skillLevel.value) {
           profileUpdates.skillLevel = skillLevel.value;
         }
@@ -664,24 +676,46 @@ export function EditMemberDrawer() {
 
 // Helper function to open drawer for editing a specific member
 export function openEditMemberDrawer(memberNameToEdit: string) {
-  // Load current member details
+  // Load current member details from group
   const details = memberDetails.value?.[memberNameToEdit];
 
   memberName.value = memberNameToEdit;
-  memberPhone.value = details?.phone || '';
-  memberEmail.value = details?.email || '';
   memberNotes.value = details?.notes || '';
   shareContactInDirectory.value = details?.shareContactInDirectory || false;
   shareNotesInDirectory.value = details?.shareNotesInDirectory || false;
   confirmingRemove.value = false;
 
-  // Load platform user skill info if editing self
+  // Load from platform user if editing self (shared across groups)
   const isEditingSelf = memberNameToEdit === sessionUser.value;
   if (isEditingSelf && currentPlatformUser.value) {
     const profile = currentPlatformUser.value.profile;
+
+    // Lazy migration: if platform user has no contact but group does, migrate it
+    if (!profile.phone && !profile.email && (details?.phone || details?.email)) {
+      const migrationUpdates: Record<string, string> = {};
+      if (details?.phone) migrationUpdates.phone = details.phone;
+      if (details?.email) migrationUpdates.email = details.email;
+
+      // Migrate in background (fire-and-forget)
+      updateProfile(migrationUpdates).catch((err) => {
+        console.warn('Contact migration failed (non-fatal):', err);
+      });
+
+      // Use group details for this session (will be in platform next time)
+      memberPhone.value = details?.phone || '';
+      memberEmail.value = details?.email || '';
+    } else {
+      // Prefer platform user contact info (shared), fall back to group details
+      memberPhone.value = profile.phone || details?.phone || '';
+      memberEmail.value = profile.email || details?.email || '';
+    }
+
     skillLevel.value = profile.skillLevel || '';
     ntrpRating.value = profile.ntrpRating?.toString() || '';
   } else {
+    // Not editing self - use group-specific details
+    memberPhone.value = details?.phone || '';
+    memberEmail.value = details?.email || '';
     skillLevel.value = '';
     ntrpRating.value = '';
   }

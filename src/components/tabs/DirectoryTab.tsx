@@ -2,6 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { currentGroupId, coreMembers, memberDetails, allCheckins, sessionUser } from '../App';
 import { openAddMemberDrawer } from '../features/AddMemberDrawer';
 import { openEditMemberDrawer } from '../features/EditMemberDrawer';
+import { currentPlatformUser } from '../../hooks/usePlatformUser';
 
 // Check if user is logged in as group admin
 function isGroupAdmin(): boolean {
@@ -201,11 +202,17 @@ export function DirectoryTab() {
           return filteredMembers.map((memberName) => {
             const details = memberDetails.value?.[memberName];
             const lastPlayDate = getLastPlayDate(memberName);
+            const isCurrentUser = sessionUser.value && memberName === sessionUser.value;
+
+            // For current user, prefer platform user contact info (shared across groups)
+            const platformProfile = isCurrentUser ? currentPlatformUser.value?.profile : null;
+            const effectivePhone = platformProfile?.phone || details?.phone;
+            const effectiveEmail = platformProfile?.email || details?.email;
+
             const shareContact = details?.shareContactInDirectory === true;
-            const hasContact = shareContact && (details?.phone || details?.email);
+            const hasContact = shareContact && (effectivePhone || effectiveEmail);
             const shareNotes = details?.shareNotesInDirectory === true;
             const hasNotes = shareNotes && details?.notes;
-            const isCurrentUser = sessionUser.value && memberName === sessionUser.value;
 
             return (
               <div
@@ -316,11 +323,11 @@ export function DirectoryTab() {
                           flexWrap: 'wrap',
                         }}
                       >
-                        {details.phone && (
+                        {effectivePhone && (
                           <>
                             {/* WhatsApp */}
                             <a
-                              href={`https://wa.me/${details.phone.replace(/\D/g, '')}`}
+                              href={`https://wa.me/${effectivePhone.replace(/\D/g, '')}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               style={{
@@ -345,7 +352,7 @@ export function DirectoryTab() {
                             </a>
                             {/* SMS */}
                             <a
-                              href={`sms:${details.phone}`}
+                              href={`sms:${effectivePhone}`}
                               style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -368,9 +375,9 @@ export function DirectoryTab() {
                             </a>
                           </>
                         )}
-                        {details.email && (
+                        {effectiveEmail && (
                           <a
-                            href={`mailto:${details.email}`}
+                            href={`mailto:${effectiveEmail}`}
                             style={{
                               display: 'flex',
                               alignItems: 'center',
