@@ -48,6 +48,7 @@ export const GROUP_ARCHETYPES: GroupArchetypeConfig[] = [
     features: [
       'Invite-only, PIN-protected',
       'Weather-aware scheduling',
+      'Frictionless self-organization',
       'Auto-balanced match making',
       'One-click share to WhatsApp/SMS',
     ],
