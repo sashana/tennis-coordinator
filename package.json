@@ -1,6 +1,6 @@
 {
   "name": "tennis-coordinator",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A Progressive Web App (PWA) for coordinating tennis matches, managing player check-ins, and organizing match groups with intelligent player matching.",
   "main": "sw.js",
   "scripts": {
