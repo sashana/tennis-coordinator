@@ -13,7 +13,7 @@ export type PlayStyle = 'singles' | 'doubles' | 'both';
 // Sport Identity Types
 // ============================================
 
-export type SportId = 'tennis' | 'pickleball' | 'squash' | 'padel' | 'badminton';
+export type SportId = 'tennis' | 'pickleball' | 'squash' | 'padel' | 'badminton' | 'hub';
 
 // ============================================
 // Theme Configuration

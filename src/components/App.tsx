@@ -6,10 +6,12 @@ import { initializePlatformUser } from '../hooks/usePlatformUser';
 
 const logger = createLogger('App');
 import { LandingPage } from './pages/LandingPage';
+import { HubLandingPage } from './pages/HubLandingPage';
 import { MainApp } from './pages/MainApp';
 import { AdminPage } from './pages/AdminPage';
 import { Toast } from './ui/Toast';
 import { SportLoadingScreen } from './ui/SportEffects';
+import { sport } from '../config/sport';
 
 // App State Signals
 export const currentGroupId = signal<string | null>(null);
@@ -203,6 +205,20 @@ export function App() {
 
   if (isLoading.value) {
     return <SportLoadingScreen text="Loading..." />;
+  }
+
+  // Hub site shows only the hub landing page
+  if (sport.id === 'hub') {
+    return (
+      <>
+        <HubLandingPage />
+        <div class="toast-container">
+          {toasts.value.map((toast) => (
+            <Toast key={toast.id} message={toast.message} type={toast.type} />
+          ))}
+        </div>
+      </>
+    );
   }
 
   return (

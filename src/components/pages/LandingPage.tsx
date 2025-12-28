@@ -119,17 +119,6 @@ export function LandingPage() {
           <span class="footer-note">
             Already have a group? Just visit your link to join.
           </span>
-          <a
-            href="#admin"
-            class="admin-link"
-            onClick={(e) => {
-              e.preventDefault();
-              window.location.hash = 'admin';
-              window.location.reload();
-            }}
-          >
-            Admin
-          </a>
         </div>
       </div>
 

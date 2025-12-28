@@ -10,11 +10,13 @@
 import type { SportConfig, SportId, ThemeConfig } from '@/types/sportConfig';
 import { tennis } from './sports/tennis';
 import { pickleball } from './sports/pickleball';
+import { hub } from './sports/hub';
 
 // Map of all available sport configs
 const sportConfigs: Record<SportId, SportConfig> = {
   tennis,
   pickleball,
+  hub,
   // Future sports will be added here:
   // squash,
   // padel,
@@ -25,6 +27,7 @@ const sportConfigs: Record<SportId, SportConfig> = {
 const subdomainToSport: Record<string, SportId> = {
   tennis: 'tennis',
   pickleball: 'pickleball',
+  www: 'hub',
   // Add more as needed
 };
 

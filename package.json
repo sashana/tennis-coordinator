@@ -7,10 +7,12 @@
     "dev": "vite",
     "dev:tennis": "VITE_SPORT=tennis vite",
     "dev:pickleball": "VITE_SPORT=pickleball vite",
+    "dev:hub": "VITE_SPORT=hub vite",
     "build": "vite build",
     "build:tennis": "VITE_SPORT=tennis vite build",
     "build:pickleball": "VITE_SPORT=pickleball vite build",
-    "build:all": "npm run build:tennis && npm run build:pickleball",
+    "build:hub": "VITE_SPORT=hub vite build",
+    "build:all": "npm run build:tennis && npm run build:pickleball && npm run build:hub",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -21,6 +23,7 @@
     "type-check": "tsc --noEmit",
     "deploy:tennis": "npm run build:tennis && firebase deploy --only hosting:tennis",
     "deploy:pickleball": "npm run build:pickleball && firebase deploy --only hosting:pickleball",
+    "deploy:hub": "npm run build:hub && firebase deploy --only hosting:hub",
     "deploy:all": "npm run build:all && firebase deploy --only hosting"
   },
   "repository": {
