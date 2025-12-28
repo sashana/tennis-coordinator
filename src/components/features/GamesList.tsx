@@ -1,775 +1,35 @@
-import { signal } from '@preact/signals';
-import { useState, useEffect } from 'preact/hooks';
-import {
-  currentCheckins,
-  sessionUser,
-  currentGroupId,
-  selectedDate,
-  currentGroupName,
-  showToast,
-} from '../App';
-import {
-  removeCheckin,
-  updateCheckin,
-  canRemoveCheckin,
-  matchNotes,
-  saveMatchNote,
-  resetDay,
-  groupSettings,
-  matchArrangement,
-  saveMatchArrangement,
-  clearMatchArrangement,
-  useMatchArrangement,
-} from '../../hooks/useFirebase';
-import {
-  formatTime,
-  formatTimeRange,
-  formatDate,
-  normalizeName,
-  getPreferenceLabel,
-} from '../../utils/helpers';
-import { Modal } from '../ui/Modal';
-import { showSharePrompt, sharePromptData } from '../pages/MainApp';
+/**
+ * GamesList - Main component for displaying organized matches
+ */
+import { currentCheckins, currentGroupId, selectedDate } from '../App';
+import { resetDay, matchArrangement, useMatchArrangement } from '../../hooks/useFirebase';
+import { formatDate } from '../../utils/helpers';
 import { organizeMatches } from '../../utils/matching';
-import { weatherCache, getWeatherDescription } from './WeatherWidget';
-import { openCheckInDrawer } from './CheckInDrawer';
 import { SportEmptyState } from '../ui/SportEffects';
-import { getPlayerCount, sport } from '../../config/sport';
-const sportEmoji = sport.sportEmoji;
-import type { CheckinData } from '../../types';
-
-// Compact view mode - stored in localStorage (defaults to compact/true)
-const compactViewMode = signal(localStorage.getItem('games_compact_view') !== 'false');
-
-// Edit modal state
-const editModalOpen = signal(false);
-const editingIndex = signal<number | null>(null);
-const editPlayStyle = signal('both');
-const editTimeStart = signal('');
-const editTimeEnd = signal('');
-const editAllowRotation = signal(true);
-
-// Remove confirmation modal state
-const removeModalOpen = signal(false);
-const removeIndex = signal<number | null>(null);
-const removeName = signal('');
-const removeIsOwner = signal(false);
-const removeStep = signal<'confirm' | 'done'>('confirm');
-const removeDate = signal('');
-const removeGroupName = signal('');
-
-// State for inline share dropdown
-const activeShareDropdown = signal<string | null>(null);
-
-// State for main games share dropdown
-const mainShareDropdownOpen = signal(false);
-
-// Arrange mode state
-const arrangeMode = signal(false);
-const selectedPlayer = signal<{ name: string; matchKey: string } | null>(null);
-const tempArrangement = signal<{
-  matches: Record<string, { players: string[]; note?: string }>;
-  unassigned: string[];
-} | null>(null);
-
-// Close dropdown when clicking outside
-if (typeof document !== 'undefined') {
-  document.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    if (!target.closest('.share-dropdown') && !target.closest('[data-share-button]')) {
-      if (activeShareDropdown.value) {
-        activeShareDropdown.value = null;
-      }
-      if (mainShareDropdownOpen.value) {
-        mainShareDropdownOpen.value = false;
-      }
-    }
-  });
-}
-
-function openRemoveModal(index: number) {
-  const result = canRemoveCheckin(index, sessionUser.value);
-  if (!result) {
-    return;
-  }
-
-  removeIndex.value = index;
-  removeName.value = result.personName;
-  removeIsOwner.value = result.isOwner;
-  removeStep.value = 'confirm';
-  removeDate.value = selectedDate.value || '';
-  removeGroupName.value = currentGroupName.value;
-  removeModalOpen.value = true;
-}
-
-function closeRemoveModal() {
-  removeModalOpen.value = false;
-  removeIndex.value = null;
-  removeName.value = '';
-  removeIsOwner.value = false;
-  removeStep.value = 'confirm';
-  removeDate.value = '';
-  removeGroupName.value = '';
-}
-
-async function confirmRemove() {
-  const index = removeIndex.value;
-  if (index === null) {
-    return;
-  }
-
-  const personName = removeName.value;
-  const isOwner = removeIsOwner.value;
-  const date = removeDate.value;
-
-  removeIndex.value = null;
-
-  await removeCheckin(index, sessionUser.value);
-
-  closeRemoveModal();
-
-  sharePromptData.value = {
-    action: 'removal',
-    name: personName,
-    date: date,
-    isOwner: isOwner,
-  };
-  showSharePrompt.value = true;
-}
-
-function openEditModal(index: number) {
-  const checkin = currentCheckins.value[index];
-  if (!checkin) {
-    return;
-  }
-
-  editingIndex.value = index;
-  editPlayStyle.value = checkin.playStyle || 'both';
-  editTimeStart.value = checkin.timeRange?.start || '';
-  editTimeEnd.value = checkin.timeRange?.end || '';
-  editAllowRotation.value = checkin.allowRotation !== false;
-  editModalOpen.value = true;
-}
-
-function closeEditModal() {
-  editModalOpen.value = false;
-  editingIndex.value = null;
-}
-
-async function saveEdit() {
-  if (editingIndex.value === null) {
-    return;
-  }
-
-  const updates: {
-    playStyle: string;
-    timeRange?: { start: string; end: string };
-    allowRotation: boolean;
-  } = {
-    playStyle: editPlayStyle.value,
-    allowRotation: editAllowRotation.value,
-  };
-
-  if (editTimeStart.value || editTimeEnd.value) {
-    updates.timeRange = {
-      start: editTimeStart.value,
-      end: editTimeEnd.value,
-    };
-  }
-
-  await updateCheckin(editingIndex.value, updates, sessionUser.value);
-  closeEditModal();
-}
-
-function canEdit(checkin: { name?: string; addedBy?: string }): boolean {
-  const groupId = currentGroupId.value;
-  const personName = checkin.name || '';
-  const isOwner =
-    sessionUser.value && normalizeName(sessionUser.value) === normalizeName(personName);
-  const isAdder =
-    checkin.addedBy &&
-    sessionUser.value &&
-    normalizeName(sessionUser.value) === normalizeName(checkin.addedBy);
-  const isAdmin = groupId && sessionStorage.getItem(`adminAuth_${groupId}`) === 'true';
-  return !!(isOwner || isAdder || isAdmin);
-}
-
-// Per-match booking details input (uses matchKey prop for stable storage)
-function MatchNoteInput({ matchKey }: { matchKey: string }) {
-  const existingNote = matchNotes.value[matchKey] || '';
-  const [localValue, setLocalValue] = useState(existingNote);
-
-  // Sync local value when external note changes
-  useEffect(() => {
-    setLocalValue(matchNotes.value[matchKey] || '');
-  }, [matchNotes.value[matchKey]]);
-
-  const handleBlur = () => {
-    const trimmedValue = localValue.trim();
-    const currentNote = matchNotes.value[matchKey] || '';
-    // Only save if value actually changed
-    if (trimmedValue !== currentNote) {
-      saveMatchNote(matchKey, trimmedValue);
-    }
-  };
-
-  return (
-    <div style="padding: 8px 12px; background: var(--color-bg-muted, #f9f9f9); border-radius: var(--radius-lg, 8px); margin-top: 8px;">
-      <div style="font-size: 11px; color: var(--color-gray-base, #666); margin-bottom: 4px; font-weight: 500;">
-        Booking Details
-      </div>
-      <input
-        type="text"
-        placeholder="e.g. Courtside Court 1, 12PM"
-        value={localValue}
-        onInput={(e) => {
-          setLocalValue((e.target as HTMLInputElement).value);
-        }}
-        onBlur={handleBlur}
-        style={{
-          width: '100%',
-          padding: '8px 12px',
-          border: '1px solid var(--color-border, #e0e0e0)',
-          borderRadius: '6px',
-          fontSize: '14px',
-          background: 'white',
-        }}
-      />
-    </div>
-  );
-}
-
-// Compact player list - each player on separate line with time slot and preference
-function CompactPlayerList({ players, checkins }: { players: any[]; checkins: any[] }) {
-  const currentUserName = sessionUser.value ? normalizeName(sessionUser.value) : '';
-
-  return (
-    <div style="padding: 4px 0;">
-      {players.map((player: any) => {
-        const isCurrentUser = currentUserName && normalizeName(player.name) === currentUserName;
-        const globalIdx = checkins.findIndex(
-          (c) =>
-            normalizeName(c.name) === normalizeName(player.name) && c.timestamp === player.timestamp
-        );
-
-        const timeInfo = player.timeRange
-          ? formatTimeRange(player.timeRange.start, player.timeRange.end)
-          : '';
-
-        return (
-          <div
-            key={player.name}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '6px 12px',
-              borderBottom: '1px solid var(--color-border-light, #f0f0f0)',
-              fontSize: '14px',
-              background: isCurrentUser ? 'var(--color-primary-light, #E8F5E9)' : 'transparent',
-            }}
-          >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span
-                style={{
-                  color: 'var(--color-text-muted, #999)',
-                  fontSize: '13px',
-                  minWidth: '20px',
-                }}
-              >
-                {globalIdx >= 0 ? `${globalIdx + 1}.` : ''}
-              </span>
-              <span
-                style={
-                  isCurrentUser ? { fontWeight: 600, color: 'var(--color-primary, #2C6E49)' } : {}
-                }
-              >
-                {player.name}
-              </span>
-              {isCurrentUser && (
-                <span
-                  style={{
-                    fontSize: '10px',
-                    background: 'var(--color-primary, #2C6E49)',
-                    color: 'white',
-                    padding: '1px 4px',
-                    borderRadius: '4px',
-                  }}
-                >
-                  YOU
-                </span>
-              )}
-              {timeInfo && (
-                <span
-                  style={{
-                    fontSize: '12px',
-                    color: 'var(--color-text-muted, #999)',
-                    marginLeft: '4px',
-                  }}
-                >
-                  {timeInfo}
-                </span>
-              )}
-            </span>
-            <span
-              style={{
-                fontSize: '11px',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                background:
-                  player.playStyle === 'singles'
-                    ? 'var(--color-blue-light, #E3F2FD)'
-                    : player.playStyle === 'doubles'
-                      ? 'var(--color-orange-light, #FFF3E0)'
-                      : 'var(--color-primary-light, #E8F5E9)',
-                color:
-                  player.playStyle === 'singles'
-                    ? 'var(--color-blue-base, #1976D2)'
-                    : player.playStyle === 'doubles'
-                      ? 'var(--color-orange-base, #F57C00)'
-                      : 'var(--color-primary, #2C6E49)',
-                fontWeight: 500,
-              }}
-            >
-              {getPreferenceLabel(player.playStyle || 'both')}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// Toggle compact/detailed view
-function toggleCompactView() {
-  const newValue = !compactViewMode.value;
-  compactViewMode.value = newValue;
-  localStorage.setItem('games_compact_view', String(newValue));
-}
-
-// Check-in tile component - reuses exact styling from CheckinList
-function CheckinTile({ checkin, globalIndex }: { checkin: any; globalIndex: number }) {
-  const isCurrentUser =
-    sessionUser.value && normalizeName(checkin.name) === normalizeName(sessionUser.value);
-  const showEditButton = canEdit(checkin);
-
-  let addedByInfo = '';
-  if (checkin.isGuest) {
-    addedByInfo = `guest of ${checkin.addedBy}`;
-  } else if (checkin.addedBy && normalizeName(checkin.addedBy) !== normalizeName(checkin.name)) {
-    addedByInfo = `added by ${checkin.addedBy}`;
-  }
-
-  const timeInfo = checkin.timeRange
-    ? formatTimeRange(checkin.timeRange.start, checkin.timeRange.end)
-    : '';
-
-  const handleEditClick = () => {
-    // Open the drawer in edit mode for this user
-    openCheckInDrawer(checkin.name, true);
-  };
-
-  return (
-    <div class={isCurrentUser ? 'checkin-item current-user' : 'checkin-item'}>
-      <span>
-        <span class="checkin-name">
-          {globalIndex + 1}. {checkin.name}
-          {isCurrentUser && <span class="current-user-badge">YOU</span>}
-          {addedByInfo && <span class="guest-indicator"> {addedByInfo}</span>}
-          {timeInfo && <span class="time-badge">{timeInfo}</span>}
-          {checkin.allowRotation === false && (
-            <span
-              class="time-badge"
-              style="background: var(--color-orange-light, #fff3e0); color: var(--color-orange-dark, #e65100);"
-            >
-              No 3s
-            </span>
-          )}
-        </span>
-        <span class={`preference-badge ${checkin.playStyle || 'both'}`}>
-          {getPreferenceLabel(checkin.playStyle || 'both')}
-        </span>
-        <span class="checkin-time">{formatTime(checkin.timestamp)}</span>
-      </span>
-      {showEditButton && (
-        <button
-          class="edit-btn"
-          onClick={handleEditClick}
-          title="Edit check-in"
-          style={{
-            background: 'white',
-            color: 'var(--color-primary, #2C6E49)',
-            border: '1px solid var(--color-border, #e0e0e0)',
-            borderRadius: '8px',
-            padding: '0',
-            width: '32px',
-            height: '32px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            transition: 'all 0.2s',
-          }}
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-          </svg>
-        </button>
-      )}
-    </div>
-  );
-}
-
-function generateNeedPlayersMessage(match: any, date: string): string {
-  const dateObj = new Date(date + 'T00:00:00');
-  const dateStr = dateObj.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-  });
-
-  const playerNames = match.players.map((p: any) => p.name).join(' & ');
-  const groupId = currentGroupId.value;
-  const appUrl = `${window.location.origin}${window.location.pathname}#${groupId}`;
-
-  if (match.type === 'doubles-forming') {
-    const needed = match.needed || getPlayerCount('doubles') - match.players.length;
-    const neededText = needed === 1 ? '1 more player needed' : `${needed} more players needed`;
-
-    let message = `${sportEmoji} ${neededText} for doubles!\n`;
-    message += `📅 ${dateStr}\n`;
-    message += `👥 ${playerNames} ${match.players.length === 1 ? 'is' : 'are'} in\n\n`;
-    message += `Can you make it? ${appUrl}`;
-
-    return message;
-  } else if (match.type === 'singles-forming') {
-    const player = match.players[0];
-
-    let message = `${sportEmoji} 1 more player needed for singles!\n`;
-    message += `📅 ${dateStr}\n`;
-    message += `👤 ${player.name} is in`;
-    if (player.timeRange) {
-      message += ` (${formatTimeRange(player.timeRange.start, player.timeRange.end)})`;
-    }
-    message += `\n\nCan you make it? ${appUrl}`;
-
-    return message;
-  }
-
-  return '';
-}
-
-function shareNeedPlayers(match: any, date: string, method: 'whatsapp' | 'sms' | 'copy') {
-  const message = generateNeedPlayersMessage(match, date);
-
-  if (method === 'whatsapp') {
-    const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/?text=${encoded}`, '_blank');
-  } else if (method === 'sms') {
-    const encoded = encodeURIComponent(message);
-    window.open(`sms:?body=${encoded}`, '_blank');
-  } else if (method === 'copy') {
-    navigator.clipboard
-      .writeText(message)
-      .then(() => {
-        showToast('Message copied!', 'success');
-      })
-      .catch(() => {
-        showToast('Failed to copy', 'error');
-      });
-  }
-
-  activeShareDropdown.value = null;
-}
-
-function NeedPlayersButton({ match, matchKey }: { match: any; matchKey: string; needed: number }) {
-  const date = selectedDate.value || '';
-  const isOpen = activeShareDropdown.value === matchKey;
-
-  return (
-    <div style="position: relative; display: inline-block;">
-      <button
-        data-share-button
-        onClick={(e) => {
-          e.stopPropagation();
-          activeShareDropdown.value = isOpen ? null : matchKey;
-        }}
-        style={{
-          background: isOpen
-            ? 'var(--color-orange-dark, #e65100)'
-            : 'var(--color-orange-primary, #ff9800)',
-          border: 'none',
-          borderRadius: '12px',
-          padding: '4px 10px',
-          fontSize: '11px',
-          fontWeight: '600',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          color: 'white',
-          transition: 'all 0.2s',
-          boxShadow: '0 1px 4px rgba(255, 152, 0, 0.3)',
-        }}
-      >
-        <span>Invite</span>
-        <svg
-          viewBox="0 0 24 24"
-          width="12"
-          height="12"
-          fill="currentColor"
-          style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
-        >
-          <path d="M7 10l5 5 5-5z" />
-        </svg>
-      </button>
-
-      {isOpen && (
-        <div
-          class="share-dropdown"
-          style={{
-            position: 'absolute',
-            top: '100%',
-            right: '0',
-            marginTop: '4px',
-            background: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            zIndex: 100,
-            overflow: 'hidden',
-            minWidth: '140px',
-          }}
-        >
-          <button
-            onClick={() => shareNeedPlayers(match, date, 'whatsapp')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 14px',
-              width: '100%',
-              border: 'none',
-              background: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              color: 'var(--color-whatsapp, #25D366)',
-            }}
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-            </svg>
-            WhatsApp
-          </button>
-          <button
-            onClick={() => shareNeedPlayers(match, date, 'sms')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 14px',
-              width: '100%',
-              border: 'none',
-              background: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              color: 'var(--color-sms, #2196F3)',
-              borderTop: '1px solid #f0f0f0',
-            }}
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" />
-            </svg>
-            SMS
-          </button>
-          <button
-            onClick={() => shareNeedPlayers(match, date, 'copy')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 14px',
-              width: '100%',
-              border: 'none',
-              background: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              color: 'var(--color-gray-base, #666)',
-              borderTop: '1px solid #f0f0f0',
-            }}
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-              <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-            </svg>
-            Copy
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function generateWhatsAppMessage(matches: any[], _checkins: any[], date: string): string {
-  const dateObj = new Date(date + 'T00:00:00');
-  const dateStr = dateObj.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-  });
-
-  let message = `${dateStr}\n`;
-
-  let singlesCount = 0;
-  let rotationCount = 0;
-
-  matches.forEach((match) => {
-    if (match.type === 'doubles') {
-      const players = match.players.map((p: any) => p.name);
-      message += `Doubles: ${players.join(', ')}\n`;
-
-      const times = match.players
-        .filter((p: any) => p.timeRange)
-        .map((p: any) => formatTimeRange(p.timeRange.start, p.timeRange.end));
-      if (times.length > 0) {
-        message += `${times[0]}\n`;
-      }
-
-      const matchKey = `doubles-${match.number}`;
-      if (matchNotes.value[matchKey]) {
-        message += `📝 ${matchNotes.value[matchKey]}\n`;
-      }
-      message += '\n';
-    } else if (match.type === 'singles') {
-      singlesCount++;
-      const players = match.players.map((p: any) => p.name);
-      message += `Singles: ${players.join(', ')}\n`;
-
-      const bothFlexible = match.players.every((p: any) => (p.playStyle || 'both') === 'both');
-      const anyOpenToRotation = match.players.some((p: any) => p.allowRotation === true);
-      if (bothFlexible && anyOpenToRotation) {
-        message += `Open to more players\n`;
-      }
-
-      const times = match.players
-        .filter((p: any) => p.timeRange)
-        .map((p: any) => formatTimeRange(p.timeRange.start, p.timeRange.end));
-      if (times.length > 0) {
-        message += `${times[0]}\n`;
-      }
-
-      const matchKey = `singles-${singlesCount}`;
-      if (matchNotes.value[matchKey]) {
-        message += `📝 ${matchNotes.value[matchKey]}\n`;
-      }
-      message += '\n';
-    } else if (match.type === 'singles-or-practice') {
-      rotationCount++;
-      message += `Rotation: ${match.players.map((p: any) => p.name).join(', ')}\n`;
-
-      const times = match.players
-        .filter((p: any) => p.timeRange)
-        .map((p: any) => formatTimeRange(p.timeRange.start, p.timeRange.end));
-      if (times.length > 0) {
-        message += `${times[0]}\n`;
-      }
-
-      const matchKey = `rotation-${rotationCount}`;
-      if (matchNotes.value[matchKey]) {
-        message += `📝 ${matchNotes.value[matchKey]}\n`;
-      }
-      message += '\n';
-    } else if (match.type === 'doubles-forming') {
-      const players = match.players.map((p: any) => p.name);
-      const neededText = match.needed === 1 ? 'need 1 more' : `need ${match.needed} more`;
-      message += `Doubles (forming): ${players.join(', ')}\n`;
-      message += `${neededText}\n`;
-
-      if (match.canRotate) {
-        message += `Can rotate if no 4th\n`;
-      } else if (match.canPlaySingles && (match.eitherCount || 0) >= 2) {
-        message += `Will play singles if no more join\n`;
-      } else if ((match.eitherCount || 0) === 1 && match.players.length === 1) {
-        message += `Can play singles if 1 more joins\n`;
-      }
-
-      const times = match.players
-        .filter((p: any) => p.timeRange)
-        .map((p: any) => formatTimeRange(p.timeRange.start, p.timeRange.end));
-      if (times.length > 0) {
-        message += `${times[0]}\n`;
-      }
-
-      const matchKey = 'doubles-forming-1';
-      if (matchNotes.value[matchKey]) {
-        message += `📝 ${matchNotes.value[matchKey]}\n`;
-      }
-      message += '\n';
-    } else if (match.type === 'singles-forming') {
-      const player = match.players[0];
-      message += `Singles (forming): ${player.name}\n`;
-      message += `need 1 more\n`;
-
-      if (player.timeRange) {
-        message += `${formatTimeRange(player.timeRange.start, player.timeRange.end)}\n`;
-      }
-      message += '\n';
-    }
-  });
-
-  const standbyMatches = matches.filter((m: any) => m.type === 'waiting');
-  if (standbyMatches.length > 0) {
-    const standbyPlayers = standbyMatches.flatMap((m: any) => m.players.map((p: any) => p.name));
-    if (standbyPlayers.length > 0) {
-      message += `Standby: ${standbyPlayers.join(', ')}\n`;
-    }
-  }
-
-  const location = groupSettings.value.location;
-  const lat = location?.lat ?? 37.2358;
-  const lon = location?.lon ?? -121.9623;
-  const cacheKey = `${lat},${lon},${date}`;
-  const weatherData = weatherCache.value[cacheKey];
-  if (weatherData) {
-    const weatherDesc = getWeatherDescription(weatherData.weatherCode);
-    message += `${weatherDesc}, ${weatherData.tempMax}°F`;
-  }
-
-  return message.trim();
-}
-
-function shareToWhatsApp(matches: any[], checkins: any[], date: string) {
-  const message = generateWhatsAppMessage(matches, checkins, date);
-  const encoded = encodeURIComponent(message);
-  window.open(`https://wa.me/?text=${encoded}`, '_blank');
-}
-
-function shareGames(
-  matches: any[],
-  checkins: any[],
-  date: string,
-  method: 'whatsapp' | 'sms' | 'copy'
-) {
-  const message = generateWhatsAppMessage(matches, checkins, date);
-
-  if (method === 'whatsapp') {
-    const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/?text=${encoded}`, '_blank');
-  } else if (method === 'sms') {
-    const encoded = encodeURIComponent(message);
-    window.open(`sms:?body=${encoded}`, '_blank');
-  } else if (method === 'copy') {
-    navigator.clipboard
-      .writeText(message)
-      .then(() => {
-        showToast('Message copied!', 'success');
-      })
-      .catch(() => {
-        showToast('Failed to copy', 'error');
-      });
-  }
-
-  mainShareDropdownOpen.value = false;
-}
+import { getPlayerCount } from '../../config/sport';
+
+// Import from extracted components
+import {
+  compactViewMode,
+  toggleCompactView,
+  arrangeMode,
+  selectedPlayer,
+  tempArrangement,
+  mainShareDropdownOpen,
+} from './games/gamesState';
+import { CheckinTile, findGlobalIndex } from './games/CheckinTile';
+import { CompactPlayerList } from './games/CompactPlayerList';
+import { MatchNoteInput } from './games/MatchNoteInput';
+import { NeedPlayersButton, shareGames } from './games/ShareDropdown';
+import {
+  ArrangeModeView,
+  startArrangeMode,
+  cancelArrangeMode,
+  saveArrangement,
+  clearArrangement,
+} from './games/ArrangeMode';
+import { EditCheckinModal } from './games/EditCheckinModal';
+import { RemoveCheckinModal } from './games/RemoveCheckinModal';
 
 function handleResetDay() {
   const date = selectedDate.value;
@@ -786,180 +46,507 @@ function handleResetDay() {
   }
 }
 
-// Helper to find the global index of a player in the original checkins array
-function findGlobalIndex(checkins: any[], player: any): number {
-  return checkins.findIndex(
-    (c) => normalizeName(c.name) === normalizeName(player.name) && c.timestamp === player.timestamp
+// Main share dropdown UI
+function MainShareDropdown({
+  matches,
+  checkins,
+  date,
+}: {
+  matches: any[];
+  checkins: any[];
+  date: string;
+}) {
+  return (
+    <div style="position: relative;">
+      <button
+        data-share-button
+        onClick={() => {
+          mainShareDropdownOpen.value = !mainShareDropdownOpen.value;
+        }}
+        title="Share Games"
+        style={{
+          background: mainShareDropdownOpen.value
+            ? 'var(--color-primary-dark, #1a402b)'
+            : 'var(--color-primary, #2C6E49)',
+          color: 'white',
+          border: 'none',
+          borderRadius: '20px',
+          padding: '8px 16px',
+          fontSize: '14px',
+          fontWeight: '600',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+        }}
+      >
+        Share
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" />
+        </svg>
+      </button>
+      {mainShareDropdownOpen.value && (
+        <div
+          class="share-dropdown"
+          style={{
+            position: 'absolute',
+            top: '100%',
+            right: '0',
+            marginTop: '8px',
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+            zIndex: 100,
+            overflow: 'hidden',
+            minWidth: '160px',
+          }}
+        >
+          <button
+            onClick={() => shareGames(matches, checkins, date, 'whatsapp')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '12px 16px',
+              width: '100%',
+              border: 'none',
+              background: 'white',
+              cursor: 'pointer',
+              fontSize: '14px',
+              color: 'var(--color-gray-dark, #333)',
+            }}
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-whatsapp, #25D366)">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+            </svg>
+            WhatsApp
+          </button>
+          <button
+            onClick={() => shareGames(matches, checkins, date, 'sms')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '12px 16px',
+              width: '100%',
+              border: 'none',
+              background: 'white',
+              cursor: 'pointer',
+              fontSize: '14px',
+              color: 'var(--color-gray-dark, #333)',
+            }}
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-sms, #2196F3)">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" />
+            </svg>
+            SMS
+          </button>
+          <button
+            onClick={() => shareGames(matches, checkins, date, 'copy')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '12px 16px',
+              width: '100%',
+              border: 'none',
+              background: 'white',
+              cursor: 'pointer',
+              fontSize: '14px',
+              color: 'var(--color-gray-dark, #333)',
+            }}
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-gray-base, #666)">
+              <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+            </svg>
+            Copy
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
-// Initialize temp arrangement from current matches
-function initializeTempArrangement(matches: any[], _checkins: CheckinData[]) {
-  const arrangement: {
-    matches: Record<string, { players: string[]; note?: string }>;
-    unassigned: string[];
-  } = {
-    matches: {},
-    unassigned: [],
-  };
+// Render match players in either compact or detailed view
+function MatchPlayerList({
+  players,
+  checkins,
+  isCompact,
+}: {
+  players: any[];
+  checkins: any[];
+  isCompact: boolean;
+}) {
+  if (isCompact) {
+    return <CompactPlayerList players={players} checkins={checkins} />;
+  }
 
-  let doublesCount = 0;
+  return (
+    <div id="checkinList">
+      {players.map((player: any) => {
+        const globalIndex = findGlobalIndex(checkins, player);
+        return <CheckinTile key={globalIndex} checkin={player} globalIndex={globalIndex} />;
+      })}
+    </div>
+  );
+}
+
+// Match card for doubles matches
+function DoublesMatch({
+  match,
+  checkins,
+  isCompact,
+}: {
+  match: any;
+  checkins: any[];
+  isCompact: boolean;
+}) {
+  const matchKey = `doubles-${match.number}`;
+
+  return (
+    <div class="match-group" style="margin-bottom: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h3 style="margin: 0;">Doubles {match.number}</h3>
+        <span style="display: flex; align-items: center; gap: 4px; color: #2C6E49; font-size: 13px; font-weight: 600;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+          </svg>
+          Ready
+        </span>
+      </div>
+      <MatchPlayerList players={match.players} checkins={checkins} isCompact={isCompact} />
+      <MatchNoteInput matchKey={matchKey} />
+    </div>
+  );
+}
+
+// Match card for singles matches
+function SinglesMatch({
+  match,
+  singlesNumber,
+  checkins,
+  isCompact,
+}: {
+  match: any;
+  singlesNumber: number;
+  checkins: any[];
+  isCompact: boolean;
+}) {
+  const matchKey = `singles-${singlesNumber}`;
+  const bothFlexible = match.players.every((p: any) => (p.playStyle || 'both') === 'both');
+  const anyOpenToRotation = match.players.some((p: any) => p.allowRotation === true);
+  const isProvisional = bothFlexible && anyOpenToRotation;
+
+  return (
+    <div class="match-group singles-group" style="margin-bottom: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h3 style="margin: 0;">Singles{singlesNumber > 1 ? ` ${singlesNumber}` : ''}</h3>
+        <span style="display: flex; align-items: center; gap: 4px; color: #2C6E49; font-size: 13px; font-weight: 600;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+          </svg>
+          Ready
+        </span>
+      </div>
+      <MatchPlayerList players={match.players} checkins={checkins} isCompact={isCompact} />
+      {!isCompact && isProvisional && (
+        <p style="color: var(--color-gray-base, #666); font-size: 13px; margin: 8px 0 4px 0; font-style: italic; padding: 0 12px;">
+          Open to more players
+        </p>
+      )}
+      <MatchNoteInput matchKey={matchKey} />
+    </div>
+  );
+}
+
+// Match card for rotation (3 players)
+function RotationMatch({
+  match,
+  rotationNumber,
+  checkins,
+  isCompact,
+}: {
+  match: any;
+  rotationNumber: number;
+  checkins: any[];
+  isCompact: boolean;
+}) {
+  const matchKey = `rotation-${rotationNumber}`;
+
+  return (
+    <div class="match-group singles-group" style="margin-bottom: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h3 style="margin: 0;">Rotation (3 players)</h3>
+        <span style="display: flex; align-items: center; gap: 4px; color: #2C6E49; font-size: 13px; font-weight: 600;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+          </svg>
+          Ready
+        </span>
+      </div>
+      <MatchPlayerList players={match.players} checkins={checkins} isCompact={isCompact} />
+      <MatchNoteInput matchKey={matchKey} />
+    </div>
+  );
+}
+
+// Match card for forming doubles
+function DoublesFormingMatch({
+  match,
+  checkins,
+  isCompact,
+}: {
+  match: any;
+  checkins: any[];
+  isCompact: boolean;
+}) {
+  const matchKey = 'doubles-forming-1';
+  const needed = match.needed || getPlayerCount('doubles') - match.players.length;
+
+  let fallbackText = '';
+  if (match.canRotate) {
+    fallbackText = 'Can rotate if no 4th';
+  } else if (match.canPlaySingles && (match.eitherCount || 0) >= 2) {
+    fallbackText = 'Will play singles if no more join';
+  } else if ((match.eitherCount || 0) === 1 && match.players.length === 1) {
+    fallbackText = 'Can play singles if 1 more joins';
+  }
+
+  return (
+    <div class="match-group forming-group" style="margin-bottom: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h3 style="margin: 0;">Doubles</h3>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="display: flex; align-items: center; gap: 4px; color: #F57C00; font-size: 12px; font-weight: 600;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+              <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+            </svg>
+            Need {needed}
+          </span>
+          <NeedPlayersButton match={match} matchKey={matchKey} needed={needed} />
+        </div>
+      </div>
+      <MatchPlayerList players={match.players} checkins={checkins} isCompact={isCompact} />
+      {!isCompact && fallbackText && (
+        <p style="color: var(--color-gray-base, #666); font-size: 13px; margin: 8px 0 4px 0; font-style: italic; padding: 0 12px;">
+          {fallbackText}
+        </p>
+      )}
+      <MatchNoteInput matchKey={matchKey} />
+    </div>
+  );
+}
+
+// Match card for forming singles
+function SinglesFormingMatch({
+  match,
+  checkins,
+  isCompact,
+}: {
+  match: any;
+  checkins: any[];
+  isCompact: boolean;
+}) {
+  const matchKey = 'singles-forming-1';
+
+  return (
+    <div class="match-group forming-group" style="margin-bottom: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h3 style="margin: 0;">Singles</h3>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="display: flex; align-items: center; gap: 4px; color: #F57C00; font-size: 12px; font-weight: 600;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+              <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+            </svg>
+            Need 1
+          </span>
+          <NeedPlayersButton match={match} matchKey={matchKey} needed={1} />
+        </div>
+      </div>
+      <MatchPlayerList players={match.players} checkins={checkins} isCompact={isCompact} />
+      <MatchNoteInput matchKey={matchKey} />
+    </div>
+  );
+}
+
+// Match card for waiting players
+function WaitingMatch({
+  match,
+  checkins,
+  isCompact,
+}: {
+  match: any;
+  checkins: any[];
+  isCompact: boolean;
+}) {
+  return (
+    <div class="match-group waiting-group" style="margin-bottom: 16px;">
+      <h3 style="margin: 0 0 8px 0;">Waiting for Match</h3>
+      <MatchPlayerList players={match.players} checkins={checkins} isCompact={isCompact} />
+    </div>
+  );
+}
+
+// Custom arrangement view (when admin has manually arranged matches)
+function CustomArrangementView({ checkins }: { checkins: any[] }) {
+  const arrangement = matchArrangement.value;
+  if (!arrangement?.matches) return null;
+
+  return (
+    <>
+      {Object.entries(arrangement.matches).map(([matchKey, matchData]) => {
+        const isDoubles = matchKey.startsWith('doubles');
+        const matchNum = matchKey.split('-')[1];
+        const expectedCount = isDoubles ? 4 : 2;
+        const players = matchData?.players || [];
+        const isComplete = players.length >= expectedCount;
+
+        const playersWithData = players.map((playerName: string) => {
+          const checkin = checkins.find((c) => c.name === playerName);
+          return checkin || { name: playerName, timestamp: 0 };
+        });
+
+        return (
+          <div
+            key={matchKey}
+            class={`match-group ${isComplete ? '' : 'forming-group'}`}
+            style="margin-bottom: 16px;"
+          >
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <h3 style="margin: 0;">
+                {isDoubles ? 'Doubles' : 'Singles'} {matchNum}
+              </h3>
+              {isComplete ? (
+                <span style="display: flex; align-items: center; gap: 4px; color: var(--color-primary, #2C6E49); font-size: 13px; font-weight: 600;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                  </svg>
+                  Ready
+                </span>
+              ) : (
+                <span style="display: flex; align-items: center; gap: 4px; color: #F57C00; font-size: 12px; font-weight: 600;">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                  </svg>
+                  Need {expectedCount - players.length}
+                </span>
+              )}
+            </div>
+            <div id="checkinList">
+              {playersWithData.map((player: any) => {
+                const globalIndex = findGlobalIndex(checkins, player);
+                return (
+                  <CheckinTile
+                    key={globalIndex >= 0 ? globalIndex : player.name}
+                    checkin={player}
+                    globalIndex={globalIndex >= 0 ? globalIndex : -1}
+                  />
+                );
+              })}
+            </div>
+            <MatchNoteInput matchKey={matchKey} />
+          </div>
+        );
+      })}
+
+      {arrangement.unassigned && arrangement.unassigned.length > 0 && (
+        <div class="match-group waiting-group" style="margin-bottom: 16px;">
+          <h3 style="margin: 0 0 8px 0;">Unassigned</h3>
+          <div id="checkinList">
+            {arrangement.unassigned.map((playerName: string) => {
+              const checkin = checkins.find((c) => c.name === playerName);
+              const player = checkin || { name: playerName, timestamp: 0 };
+              const globalIndex = checkin ? findGlobalIndex(checkins, player) : -1;
+              return (
+                <CheckinTile
+                  key={globalIndex >= 0 ? globalIndex : playerName}
+                  checkin={player}
+                  globalIndex={globalIndex >= 0 ? globalIndex : -1}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// Auto-organized matches view
+function AutoOrganizedMatchesView({
+  matches,
+  checkins,
+  warnings,
+}: {
+  matches: any[];
+  checkins: any[];
+  warnings: string[];
+}) {
+  const isCompact = compactViewMode.value;
   let singlesCount = 0;
+  let rotationCount = 0;
 
-  matches.forEach((match) => {
-    const playerNames = match.players.map((p: any) => p.name);
+  return (
+    <>
+      {warnings.length > 0 && (
+        <div class="warning-box">
+          {warnings.map((warning, idx) => (
+            <div key={idx}>{warning}</div>
+          ))}
+        </div>
+      )}
 
-    if (match.type === 'doubles' || match.type === 'doubles-forming') {
-      doublesCount++;
-      const matchKey = `doubles-${doublesCount}`;
-      arrangement.matches[matchKey] = {
-        players: playerNames,
-        note: matchNotes.value[matchKey] || '',
-      };
-    } else if (
-      match.type === 'singles' ||
-      match.type === 'singles-forming' ||
-      match.type === 'singles-or-practice'
-    ) {
-      singlesCount++;
-      const matchKey = `singles-${singlesCount}`;
-      arrangement.matches[matchKey] = {
-        players: playerNames,
-        note: matchNotes.value[matchKey] || '',
-      };
-    } else if (match.type === 'waiting') {
-      arrangement.unassigned.push(...playerNames);
-    }
-  });
+      {matches.map((match, idx) => {
+        if (match.type === 'doubles') {
+          return <DoublesMatch key={idx} match={match} checkins={checkins} isCompact={isCompact} />;
+        }
 
-  return arrangement;
-}
+        if (match.type === 'singles') {
+          singlesCount++;
+          return (
+            <SinglesMatch
+              key={idx}
+              match={match}
+              singlesNumber={singlesCount}
+              checkins={checkins}
+              isCompact={isCompact}
+            />
+          );
+        }
 
-// Handle player selection/swap in arrange mode
-function handleArrangeClick(playerName: string, matchKey: string) {
-  if (!arrangeMode.value || !tempArrangement.value) {
-    return;
-  }
+        if (match.type === 'singles-or-practice') {
+          rotationCount++;
+          return (
+            <RotationMatch
+              key={idx}
+              match={match}
+              rotationNumber={rotationCount}
+              checkins={checkins}
+              isCompact={isCompact}
+            />
+          );
+        }
 
-  const current = selectedPlayer.value;
+        if (match.type === 'doubles-forming') {
+          return (
+            <DoublesFormingMatch key={idx} match={match} checkins={checkins} isCompact={isCompact} />
+          );
+        }
 
-  if (!current) {
-    // First selection
-    selectedPlayer.value = { name: playerName, matchKey };
-  } else if (current.name === playerName && current.matchKey === matchKey) {
-    // Clicking same player - deselect
-    selectedPlayer.value = null;
-  } else {
-    // Second selection - swap players
-    const arr = tempArrangement.value;
-    const newMatches = { ...arr.matches };
-    const newUnassigned = [...arr.unassigned];
+        if (match.type === 'singles-forming') {
+          return (
+            <SinglesFormingMatch key={idx} match={match} checkins={checkins} isCompact={isCompact} />
+          );
+        }
 
-    // Remove both players from their current positions
-    // First player
-    if (current.matchKey === 'unassigned') {
-      const idx = newUnassigned.indexOf(current.name);
-      if (idx > -1) {
-        newUnassigned.splice(idx, 1);
-      }
-    } else {
-      const match = newMatches[current.matchKey];
-      if (match) {
-        match.players = match.players.filter((p: string) => p !== current.name);
-      }
-    }
+        if (match.type === 'waiting') {
+          return <WaitingMatch key={idx} match={match} checkins={checkins} isCompact={isCompact} />;
+        }
 
-    // Second player
-    if (matchKey === 'unassigned') {
-      const idx = newUnassigned.indexOf(playerName);
-      if (idx > -1) {
-        newUnassigned.splice(idx, 1);
-      }
-    } else {
-      const match = newMatches[matchKey];
-      if (match) {
-        match.players = match.players.filter((p: string) => p !== playerName);
-      }
-    }
-
-    // Add players to their new positions
-    // First player goes to second player's position
-    if (matchKey === 'unassigned') {
-      newUnassigned.push(current.name);
-    } else {
-      newMatches[matchKey].players.push(current.name);
-    }
-
-    // Second player goes to first player's position
-    if (current.matchKey === 'unassigned') {
-      newUnassigned.push(playerName);
-    } else {
-      newMatches[current.matchKey].players.push(playerName);
-    }
-
-    tempArrangement.value = {
-      matches: newMatches,
-      unassigned: newUnassigned,
-    };
-    selectedPlayer.value = null;
-    showToast(`Swapped ${current.name} and ${playerName}`, 'info');
-  }
-}
-
-// Start arrange mode
-function startArrangeMode(matches: any[], checkins: CheckinData[]) {
-  try {
-    // Use existing arrangement if present and valid, otherwise initialize from current matches
-    if (
-      matchArrangement.value &&
-      matchArrangement.value.matches &&
-      typeof matchArrangement.value.matches === 'object'
-    ) {
-      tempArrangement.value = {
-        matches: { ...matchArrangement.value.matches },
-        unassigned: Array.isArray(matchArrangement.value.unassigned)
-          ? [...matchArrangement.value.unassigned]
-          : [],
-      };
-    } else {
-      tempArrangement.value = initializeTempArrangement(matches, checkins);
-    }
-    selectedPlayer.value = null;
-    arrangeMode.value = true;
-  } catch (err) {
-    console.error('Error starting arrange mode:', err);
-    // Fallback: try to initialize from checkins directly
-    tempArrangement.value = {
-      matches: {},
-      unassigned: checkins.map((c) => c.name),
-    };
-    selectedPlayer.value = null;
-    arrangeMode.value = true;
-  }
-}
-
-// Cancel arrange mode
-function cancelArrangeMode() {
-  arrangeMode.value = false;
-  selectedPlayer.value = null;
-  tempArrangement.value = null;
-}
-
-// Save arrangement
-async function saveArrangement() {
-  if (!tempArrangement.value) {
-    return;
-  }
-  await saveMatchArrangement(tempArrangement.value);
-  arrangeMode.value = false;
-  selectedPlayer.value = null;
-  tempArrangement.value = null;
-}
-
-// Clear saved arrangement
-async function clearArrangement() {
-  await clearMatchArrangement();
-  cancelArrangeMode();
+        return null;
+      })}
+    </>
+  );
 }
 
 export function GamesList() {
@@ -968,13 +555,11 @@ export function GamesList() {
 
   const checkins = currentCheckins.value;
   const date = selectedDate.value || '';
-  const editingCheckin = editingIndex.value !== null ? checkins[editingIndex.value] : null;
 
   // Check if user is group admin
   const groupId = currentGroupId.value;
   const isAdmin = groupId && sessionStorage.getItem(`adminAuth_${groupId}`) === 'true';
   const isArrangeMode = arrangeMode.value;
-  // Only consider arrangement valid if it has matches object
   const hasCustomArrangement = !!(
     matchArrangement.value &&
     matchArrangement.value.matches &&
@@ -984,301 +569,8 @@ export function GamesList() {
   // Modals - render outside early return
   const modals = (
     <>
-      {/* Edit Modal */}
-      <Modal
-        isOpen={editModalOpen.value}
-        onClose={closeEditModal}
-        title={`Edit ${editingCheckin?.name || ''}'s Preferences`}
-      >
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-          <div>
-            <label style="display: block; font-weight: 500; margin-bottom: 8px;">Play Style</label>
-            <div style="display: flex; gap: 8px;">
-              {['singles', 'doubles', 'both'].map((style) => (
-                <button
-                  key={style}
-                  onClick={() => {
-                    editPlayStyle.value = style;
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '10px',
-                    border:
-                      editPlayStyle.value === style
-                        ? '2px solid var(--color-primary, #2C6E49)'
-                        : '2px solid var(--color-border, #e0e0e0)',
-                    borderRadius: '8px',
-                    background:
-                      editPlayStyle.value === style
-                        ? 'var(--color-primary-light, #E8F5E9)'
-                        : '#fff',
-                    color:
-                      editPlayStyle.value === style
-                        ? 'var(--color-primary, #2E7D32)'
-                        : 'var(--color-gray-base, #666)',
-                    cursor: 'pointer',
-                    fontWeight: editPlayStyle.value === style ? '600' : '400',
-                  }}
-                >
-                  {style === 'singles' ? 'Singles' : style === 'doubles' ? 'Doubles' : 'Either'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label style="display: block; font-weight: 500; margin-bottom: 8px;">
-              Available Time (optional)
-            </label>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <input
-                type="time"
-                value={editTimeStart.value}
-                onInput={(e) => {
-                  editTimeStart.value = (e.target as HTMLInputElement).value;
-                }}
-                style="flex: 1; padding: 8px; border: 1px solid var(--color-gray-light, #ddd); border-radius: 6px;"
-              />
-              <span>to</span>
-              <input
-                type="time"
-                value={editTimeEnd.value}
-                onInput={(e) => {
-                  editTimeEnd.value = (e.target as HTMLInputElement).value;
-                }}
-                style="flex: 1; padding: 8px; border: 1px solid var(--color-gray-light, #ddd); border-radius: 6px;"
-              />
-            </div>
-          </div>
-
-          {editPlayStyle.value === 'singles' && (
-            <div>
-              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                <input
-                  type="checkbox"
-                  checked={editAllowRotation.value}
-                  onChange={(e) => {
-                    editAllowRotation.value = (e.target as HTMLInputElement).checked;
-                  }}
-                />
-                <span>Open to 3-player rotation</span>
-              </label>
-              <p style="font-size: 12px; color: var(--color-gray-base, #666); margin: 4px 0 0 24px;">
-                If unchecked, you'll only be matched for 2-player singles
-              </p>
-            </div>
-          )}
-
-          <button
-            onClick={saveEdit}
-            style={{
-              padding: '12px',
-              background: 'var(--color-primary, #2C6E49)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '16px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              marginTop: '8px',
-            }}
-          >
-            Save Changes
-          </button>
-        </div>
-      </Modal>
-
-      {/* Remove Confirmation Modal */}
-      <Modal
-        isOpen={removeModalOpen.value}
-        onClose={closeRemoveModal}
-        title={
-          removeStep.value === 'done'
-            ? ''
-            : removeIsOwner.value
-              ? 'Remove Your Check-in?'
-              : `Remove ${removeName.value}?`
-        }
-        showCloseButton={removeStep.value !== 'done'}
-      >
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-          {removeStep.value === 'confirm' ? (
-            <>
-              {removeIsOwner.value ? (
-                <>
-                  <p style="color: var(--color-gray-base, #666); margin: 0; line-height: 1.5;">
-                    Are you sure you want to remove yourself from this date?
-                  </p>
-                  <div style="background: #FFF8E1; border-radius: 8px; padding: 12px; border-left: 4px solid #FFB74D;">
-                    <p style="margin: 0 0 8px 0; font-weight: 500; color: #E65100;">
-                      Things to consider:
-                    </p>
-                    <ul style="margin: 0; padding-left: 20px; color: var(--color-gray-base, #666); font-size: 14px;">
-                      <li>You'll lose your current spot in the check-in order</li>
-                      <li>
-                        If you want to change your preferences, you can <strong>edit</strong>{' '}
-                        instead
-                      </li>
-                      <li>You can always check in again after removing</li>
-                    </ul>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p style="color: var(--color-gray-base, #666); margin: 0; line-height: 1.5;">
-                    Are you sure you want to remove <strong>{removeName.value}</strong> from this
-                    date?
-                  </p>
-                  <div style="background: #FFF8E1; border-radius: 8px; padding: 12px; border-left: 4px solid #FFB74D;">
-                    <p style="margin: 0; color: var(--color-gray-base, #666); font-size: 14px;">
-                      They will lose their spot in the check-in order. Consider using{' '}
-                      <strong>edit</strong> to update their preferences instead.
-                    </p>
-                  </div>
-                </>
-              )}
-
-              <div style="display: flex; gap: 12px; margin-top: 8px;">
-                <button
-                  onClick={closeRemoveModal}
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    background: 'var(--color-gray-lightest, #f5f5f5)',
-                    color: 'var(--color-gray-base, #666)',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmRemove}
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    background: '#ef5350',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Yes, Remove
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div style="text-align: center; padding: 8px 0;">
-                <div style="font-size: 48px; margin-bottom: 8px;">✓</div>
-                <p style="color: var(--color-gray-base, #666); margin: 0;">
-                  {removeIsOwner.value
-                    ? `You've been removed from ${formatDate(removeDate.value)}`
-                    : `${removeName.value} has been removed from ${formatDate(removeDate.value)}`}
-                </p>
-              </div>
-
-              <div>
-                <p style="margin: 0 0 8px 0; font-size: 13px; color: var(--color-gray-base, #666); text-align: center;">
-                  Let others know:
-                </p>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
-                  <a
-                    href={`https://wa.me/?text=${encodeURIComponent(
-                      removeIsOwner.value
-                        ? `I'm out on ${formatDate(removeDate.value)}.`
-                        : `Hi ${removeName.value}, I removed you from ${formatDate(removeDate.value)}. Let me know if you have questions!`
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: '8px 16px',
-                      background: 'var(--color-whatsapp, #25D366)',
-                      color: 'white',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    WhatsApp
-                  </a>
-                  <a
-                    href={`sms:?body=${encodeURIComponent(
-                      removeIsOwner.value
-                        ? `I'm out on ${formatDate(removeDate.value)}.`
-                        : `Hi ${removeName.value}, I removed you from ${formatDate(removeDate.value)}. Let me know if you have questions!`
-                    )}`}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: '8px 16px',
-                      background: '#007AFF',
-                      color: 'white',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    Text
-                  </a>
-                  <a
-                    href={`mailto:?subject=${encodeURIComponent(
-                      removeIsOwner.value
-                        ? `I'm Out on ${formatDate(removeDate.value)}`
-                        : `${removeGroupName.value} - Check-in Removed`
-                    )}&body=${encodeURIComponent(
-                      removeIsOwner.value
-                        ? `I'm out on ${formatDate(removeDate.value)}.`
-                        : `Hi ${removeName.value},\n\nI removed you from ${formatDate(removeDate.value)}.\n\nLet me know if you have questions!`
-                    )}`}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: '8px 16px',
-                      background: '#EA4335',
-                      color: 'white',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    Email
-                  </a>
-                </div>
-              </div>
-
-              <button
-                onClick={closeRemoveModal}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  background: 'var(--color-primary, #2C6E49)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  marginTop: '8px',
-                }}
-              >
-                Done
-              </button>
-            </>
-          )}
-        </div>
-      </Modal>
+      <EditCheckinModal />
+      <RemoveCheckinModal />
     </>
   );
 
@@ -1295,8 +587,8 @@ export function GamesList() {
   }
 
   const { matches, warnings } = organizeMatches(checkins);
-
   const hasMatches = matches.some((m) => (m.type as string) !== 'waiting' || m.players.length > 0);
+
   if (!hasMatches && warnings.length === 0) {
     return (
       <>
@@ -1309,15 +601,13 @@ export function GamesList() {
     );
   }
 
-  let singlesCount = 0;
-  let rotationCount = 0;
-
   return (
     <>
       <div
         class="games-list"
         style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #f0f0f0;"
       >
+        {/* Header */}
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <h2 style="margin: 0; font-size: var(--font-size-xl, 18px); font-weight: 600;">
@@ -1341,6 +631,8 @@ export function GamesList() {
               </span>
             )}
           </div>
+
+          {/* Action buttons */}
           <div style="display: flex; gap: 8px; align-items: center;">
             {/* Compact/Detailed toggle */}
             {!isArrangeMode && (
@@ -1377,6 +669,7 @@ export function GamesList() {
                 )}
               </button>
             )}
+
             {/* Arrange mode controls */}
             {isArrangeMode ? (
               <>
@@ -1431,128 +724,7 @@ export function GamesList() {
             ) : (
               <>
                 {hasMatches && (
-                  <div style="position: relative;">
-                    <button
-                      data-share-button
-                      onClick={() => {
-                        mainShareDropdownOpen.value = !mainShareDropdownOpen.value;
-                      }}
-                      title="Share Games"
-                      style={{
-                        background: mainShareDropdownOpen.value
-                          ? 'var(--color-primary-dark, #1a402b)'
-                          : 'var(--color-primary, #2C6E49)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '20px',
-                        padding: '8px 16px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                      }}
-                    >
-                      Share
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                        <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" />
-                      </svg>
-                    </button>
-                    {mainShareDropdownOpen.value && (
-                      <div
-                        class="share-dropdown"
-                        style={{
-                          position: 'absolute',
-                          top: '100%',
-                          right: '0',
-                          marginTop: '8px',
-                          background: 'white',
-                          borderRadius: '12px',
-                          boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
-                          zIndex: 100,
-                          overflow: 'hidden',
-                          minWidth: '160px',
-                        }}
-                      >
-                        <button
-                          onClick={() => shareGames(matches, checkins, date, 'whatsapp')}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '12px 16px',
-                            width: '100%',
-                            border: 'none',
-                            background: 'white',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            color: 'var(--color-gray-dark, #333)',
-                          }}
-                        >
-                          <svg
-                            viewBox="0 0 24 24"
-                            width="20"
-                            height="20"
-                            fill="var(--color-whatsapp, #25D366)"
-                          >
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                          </svg>
-                          WhatsApp
-                        </button>
-                        <button
-                          onClick={() => shareGames(matches, checkins, date, 'sms')}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '12px 16px',
-                            width: '100%',
-                            border: 'none',
-                            background: 'white',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            color: 'var(--color-gray-dark, #333)',
-                          }}
-                        >
-                          <svg
-                            viewBox="0 0 24 24"
-                            width="20"
-                            height="20"
-                            fill="var(--color-sms, #2196F3)"
-                          >
-                            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" />
-                          </svg>
-                          SMS
-                        </button>
-                        <button
-                          onClick={() => shareGames(matches, checkins, date, 'copy')}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '12px 16px',
-                            width: '100%',
-                            border: 'none',
-                            background: 'white',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            color: 'var(--color-gray-dark, #333)',
-                          }}
-                        >
-                          <svg
-                            viewBox="0 0 24 24"
-                            width="20"
-                            height="20"
-                            fill="var(--color-gray-base, #666)"
-                          >
-                            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-                          </svg>
-                          Copy
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  <MainShareDropdown matches={matches} checkins={checkins} date={date} />
                 )}
                 {isAdmin && checkins.length >= 2 && (
                   <button
@@ -1630,453 +802,15 @@ export function GamesList() {
         )}
 
         {/* Arrange mode view */}
-        {isArrangeMode && tempArrangement.value && (
-          <>
-            {Object.entries(tempArrangement.value.matches || {}).map(([matchKey, matchData]) => {
-              const isDoubles = matchKey.startsWith('doubles');
-              const matchNum = matchKey.split('-')[1];
-              const players = matchData?.players || [];
-              // Skip empty matches
-              if (players.length === 0) {
-                return null;
-              }
-              return (
-                <div
-                  key={matchKey}
-                  class="match-group"
-                  style={{
-                    marginBottom: '16px',
-                    border: '2px dashed var(--color-purple-arrange, #9C27B0)',
-                    borderRadius: '8px',
-                    padding: '8px',
-                  }}
-                >
-                  <h3 style="margin: 0 0 8px 0;">
-                    {isDoubles ? `Doubles ${matchNum}` : `Singles ${matchNum}`}
-                    <span
-                      style={{
-                        fontSize: '12px',
-                        color: 'var(--color-gray-base, #666)',
-                        marginLeft: '8px',
-                      }}
-                    >
-                      ({players.length}/{isDoubles ? 4 : 2})
-                    </span>
-                  </h3>
-                  <div style="display: flex; flex-direction: column; gap: 4px;">
-                    {players.map((playerName: string) => {
-                      const isSelected =
-                        selectedPlayer.value?.name === playerName &&
-                        selectedPlayer.value?.matchKey === matchKey;
-                      return (
-                        <div
-                          key={playerName}
-                          onClick={() => handleArrangeClick(playerName, matchKey)}
-                          style={{
-                            padding: '10px 12px',
-                            background: isSelected
-                              ? 'var(--color-purple-arrange, #9C27B0)'
-                              : 'var(--color-gray-lightest, #f5f5f5)',
-                            color: isSelected ? 'white' : 'var(--color-gray-dark, #333)',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontWeight: '500',
-                            transition: 'all 0.15s',
-                            border: isSelected
-                              ? '2px solid var(--color-purple-arrange-dark, #7B1FA2)'
-                              : '2px solid transparent',
-                          }}
-                        >
-                          {playerName}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+        {isArrangeMode && tempArrangement.value && <ArrangeModeView />}
 
-            {/* Unassigned players */}
-            {tempArrangement.value.unassigned.length > 0 && (
-              <div
-                class="match-group"
-                style={{
-                  marginBottom: '16px',
-                  border: '2px dashed #9e9e9e',
-                  borderRadius: '8px',
-                  padding: '8px',
-                  background: '#fafafa',
-                }}
-              >
-                <h3 style="margin: 0 0 8px 0; color: var(--color-gray-base, #666);">Unassigned</h3>
-                <div style="display: flex; flex-direction: column; gap: 4px;">
-                  {tempArrangement.value.unassigned.map((playerName: string) => {
-                    const isSelected =
-                      selectedPlayer.value?.name === playerName &&
-                      selectedPlayer.value?.matchKey === 'unassigned';
-                    return (
-                      <div
-                        key={playerName}
-                        onClick={() => handleArrangeClick(playerName, 'unassigned')}
-                        style={{
-                          padding: '10px 12px',
-                          background: isSelected ? 'var(--color-purple-arrange, #9C27B0)' : '#fff',
-                          color: isSelected ? 'white' : 'var(--color-gray-dark, #333)',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontWeight: '500',
-                          transition: 'all 0.15s',
-                          border: isSelected
-                            ? '2px solid var(--color-purple-arrange-dark, #7B1FA2)'
-                            : '2px solid var(--color-border, #e0e0e0)',
-                        }}
-                      >
-                        {playerName}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </>
+        {/* Custom arrangement view */}
+        {!isArrangeMode && hasCustomArrangement && <CustomArrangementView checkins={checkins} />}
+
+        {/* Auto-organized matches view */}
+        {!isArrangeMode && !hasCustomArrangement && (
+          <AutoOrganizedMatchesView matches={matches} checkins={checkins} warnings={warnings} />
         )}
-
-        {!isArrangeMode && !hasCustomArrangement && warnings.length > 0 && (
-          <div class="warning-box">
-            {warnings.map((warning, idx) => (
-              <div key={idx}>{warning}</div>
-            ))}
-          </div>
-        )}
-
-        {/* Render custom arrangement view when saved */}
-        {!isArrangeMode &&
-          hasCustomArrangement &&
-          matchArrangement.value &&
-          matchArrangement.value.matches && (
-            <>
-              {Object.entries(matchArrangement.value.matches).map(([matchKey, matchData]) => {
-                const isDoubles = matchKey.startsWith('doubles');
-                const matchNum = matchKey.split('-')[1];
-                const expectedCount = isDoubles ? 4 : 2;
-                const players = matchData?.players || [];
-                const isComplete = players.length >= expectedCount;
-
-                // Get full checkin data for each player
-                const playersWithData = players.map((playerName) => {
-                  const checkin = checkins.find((c) => c.name === playerName);
-                  return checkin || { name: playerName, timestamp: 0 };
-                });
-
-                return (
-                  <div
-                    key={matchKey}
-                    class={`match-group ${isComplete ? '' : 'forming-group'}`}
-                    style="margin-bottom: 16px;"
-                  >
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                      <h3 style="margin: 0;">
-                        {isDoubles ? 'Doubles' : 'Singles'} {matchNum}
-                      </h3>
-                      {isComplete ? (
-                        <span style="display: flex; align-items: center; gap: 4px; color: var(--color-primary, #2C6E49); font-size: 13px; font-weight: 600;">
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                          </svg>
-                          Ready
-                        </span>
-                      ) : (
-                        <span style="display: flex; align-items: center; gap: 4px; color: #F57C00; font-size: 12px; font-weight: 600;">
-                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                            <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
-                          </svg>
-                          Need {expectedCount - players.length}
-                        </span>
-                      )}
-                    </div>
-                    <div id="checkinList">
-                      {playersWithData.map((player: any) => {
-                        const globalIndex = findGlobalIndex(checkins, player);
-                        return (
-                          <CheckinTile
-                            key={globalIndex >= 0 ? globalIndex : player.name}
-                            checkin={player}
-                            globalIndex={globalIndex >= 0 ? globalIndex : -1}
-                          />
-                        );
-                      })}
-                    </div>
-                    <MatchNoteInput matchKey={matchKey} />
-                  </div>
-                );
-              })}
-
-              {/* Unassigned players from custom arrangement */}
-              {matchArrangement.value.unassigned &&
-                matchArrangement.value.unassigned.length > 0 && (
-                  <div class="match-group waiting-group" style="margin-bottom: 16px;">
-                    <h3 style="margin: 0 0 8px 0;">Unassigned</h3>
-                    <div id="checkinList">
-                      {matchArrangement.value.unassigned.map((playerName: string) => {
-                        const checkin = checkins.find((c) => c.name === playerName);
-                        const player = checkin || { name: playerName, timestamp: 0 };
-                        const globalIndex = checkin ? findGlobalIndex(checkins, player) : -1;
-                        return (
-                          <CheckinTile
-                            key={globalIndex >= 0 ? globalIndex : playerName}
-                            checkin={player}
-                            globalIndex={globalIndex >= 0 ? globalIndex : -1}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-            </>
-          )}
-
-        {!isArrangeMode &&
-          !hasCustomArrangement &&
-          matches.map((match, idx) => {
-            if (match.type === 'doubles') {
-              const matchKey = `doubles-${match.number}`;
-              const isCompact = compactViewMode.value;
-              return (
-                <div key={idx} class="match-group" style="margin-bottom: 16px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <h3 style="margin: 0;">Doubles {match.number}</h3>
-                    <span style="display: flex; align-items: center; gap: 4px; color: #2C6E49; font-size: 13px; font-weight: 600;">
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                      </svg>
-                      Ready
-                    </span>
-                  </div>
-                  {isCompact ? (
-                    <CompactPlayerList players={match.players} checkins={checkins} />
-                  ) : (
-                    <div id="checkinList">
-                      {match.players.map((player: any) => {
-                        const globalIndex = findGlobalIndex(checkins, player);
-                        return (
-                          <CheckinTile
-                            key={globalIndex}
-                            checkin={player}
-                            globalIndex={globalIndex}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                  <MatchNoteInput matchKey={matchKey} />
-                </div>
-              );
-            }
-
-            if (match.type === 'singles') {
-              singlesCount++;
-              const matchKey = `singles-${singlesCount}`;
-              const isCompact = compactViewMode.value;
-
-              const bothFlexible = match.players.every(
-                (p: any) => (p.playStyle || 'both') === 'both'
-              );
-              const anyOpenToRotation = match.players.some((p: any) => p.allowRotation === true);
-              const isProvisional = bothFlexible && anyOpenToRotation;
-
-              return (
-                <div key={idx} class="match-group singles-group" style="margin-bottom: 16px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <h3 style="margin: 0;">Singles{singlesCount > 1 ? ` ${singlesCount}` : ''}</h3>
-                    <span style="display: flex; align-items: center; gap: 4px; color: #2C6E49; font-size: 13px; font-weight: 600;">
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                      </svg>
-                      Ready
-                    </span>
-                  </div>
-                  {isCompact ? (
-                    <CompactPlayerList players={match.players} checkins={checkins} />
-                  ) : (
-                    <div id="checkinList">
-                      {match.players.map((player: any) => {
-                        const globalIndex = findGlobalIndex(checkins, player);
-                        return (
-                          <CheckinTile
-                            key={globalIndex}
-                            checkin={player}
-                            globalIndex={globalIndex}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                  {!isCompact && isProvisional && (
-                    <p style="color: var(--color-gray-base, #666); font-size: 13px; margin: 8px 0 4px 0; font-style: italic; padding: 0 12px;">
-                      Open to more players
-                    </p>
-                  )}
-                  <MatchNoteInput matchKey={matchKey} />
-                </div>
-              );
-            }
-
-            if (match.type === 'singles-or-practice') {
-              rotationCount++;
-              const matchKey = `rotation-${rotationCount}`;
-              const isCompact = compactViewMode.value;
-
-              return (
-                <div key={idx} class="match-group singles-group" style="margin-bottom: 16px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <h3 style="margin: 0;">Rotation (3 players)</h3>
-                    <span style="display: flex; align-items: center; gap: 4px; color: #2C6E49; font-size: 13px; font-weight: 600;">
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                      </svg>
-                      Ready
-                    </span>
-                  </div>
-                  {isCompact ? (
-                    <CompactPlayerList players={match.players} checkins={checkins} />
-                  ) : (
-                    <div id="checkinList">
-                      {match.players.map((player: any) => {
-                        const globalIndex = findGlobalIndex(checkins, player);
-                        return (
-                          <CheckinTile
-                            key={globalIndex}
-                            checkin={player}
-                            globalIndex={globalIndex}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                  <MatchNoteInput matchKey={matchKey} />
-                </div>
-              );
-            }
-
-            if (match.type === 'doubles-forming') {
-              const matchKey = 'doubles-forming-1';
-              const needed = match.needed || getPlayerCount('doubles') - match.players.length;
-              const isCompact = compactViewMode.value;
-
-              let fallbackText = '';
-              if (match.canRotate) {
-                fallbackText = 'Can rotate if no 4th';
-              } else if (match.canPlaySingles && (match.eitherCount || 0) >= 2) {
-                fallbackText = 'Will play singles if no more join';
-              } else if ((match.eitherCount || 0) === 1 && match.players.length === 1) {
-                fallbackText = 'Can play singles if 1 more joins';
-              }
-
-              return (
-                <div key={idx} class="match-group forming-group" style="margin-bottom: 16px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <h3 style="margin: 0;">Doubles</h3>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <span style="display: flex; align-items: center; gap: 4px; color: #F57C00; font-size: 12px; font-weight: 600;">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                          <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
-                        </svg>
-                        Need {needed}
-                      </span>
-                      <NeedPlayersButton match={match} matchKey={matchKey} needed={needed} />
-                    </div>
-                  </div>
-                  {isCompact ? (
-                    <CompactPlayerList players={match.players} checkins={checkins} />
-                  ) : (
-                    <div id="checkinList">
-                      {match.players.map((player: any) => {
-                        const globalIndex = findGlobalIndex(checkins, player);
-                        return (
-                          <CheckinTile
-                            key={globalIndex}
-                            checkin={player}
-                            globalIndex={globalIndex}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                  {!isCompact && fallbackText && (
-                    <p style="color: var(--color-gray-base, #666); font-size: 13px; margin: 8px 0 4px 0; font-style: italic; padding: 0 12px;">
-                      {fallbackText}
-                    </p>
-                  )}
-                  <MatchNoteInput matchKey={matchKey} />
-                </div>
-              );
-            }
-
-            if (match.type === 'singles-forming') {
-              const matchKey = 'singles-forming-1';
-              const isCompact = compactViewMode.value;
-              return (
-                <div key={idx} class="match-group forming-group" style="margin-bottom: 16px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <h3 style="margin: 0;">Singles</h3>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <span style="display: flex; align-items: center; gap: 4px; color: #F57C00; font-size: 12px; font-weight: 600;">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                          <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
-                        </svg>
-                        Need 1
-                      </span>
-                      <NeedPlayersButton match={match} matchKey={matchKey} needed={1} />
-                    </div>
-                  </div>
-                  {isCompact ? (
-                    <CompactPlayerList players={match.players} checkins={checkins} />
-                  ) : (
-                    <div id="checkinList">
-                      {match.players.map((player: any) => {
-                        const globalIndex = findGlobalIndex(checkins, player);
-                        return (
-                          <CheckinTile
-                            key={globalIndex}
-                            checkin={player}
-                            globalIndex={globalIndex}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                  <MatchNoteInput matchKey={matchKey} />
-                </div>
-              );
-            }
-
-            if (match.type === 'waiting') {
-              const isCompact = compactViewMode.value;
-              return (
-                <div key={idx} class="match-group waiting-group" style="margin-bottom: 16px;">
-                  <h3 style="margin: 0 0 8px 0;">Waiting for Match</h3>
-                  {isCompact ? (
-                    <CompactPlayerList players={match.players} checkins={checkins} />
-                  ) : (
-                    <div id="checkinList">
-                      {match.players.map((player: any) => {
-                        const globalIndex = findGlobalIndex(checkins, player);
-                        return (
-                          <CheckinTile
-                            key={globalIndex}
-                            checkin={player}
-                            globalIndex={globalIndex}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            }
-
-            return null;
-          })}
       </div>
       {modals}
     </>
