@@ -1,47 +1,31 @@
 import { groupSettings } from '../../hooks/useFirebase';
+import { sport } from '../../config/sport';
 
 /**
- * Tennis-themed UI components for empty states and loading
- * All components respect the current theme (Grand Slam tournaments)
+ * Sport-themed UI components for empty states and loading
+ * All components respect the current theme and sport configuration
  */
 
 // Get theme-appropriate court color
 function getCourtColor(): string {
   const theme = groupSettings.value?.theme;
-  switch (theme) {
-    case 'roland-garros':
-      return '#D2691E'; // Clay/terracotta
-    case 'australian-open':
-      return '#1565C0'; // Hard court blue
-    case 'us-open':
-      return '#0D47A1'; // US Open blue
-    case 'wimbledon':
-    default:
-      return '#2E7D32'; // Grass green
-  }
+  const themes = sport.themes;
+  const currentTheme = themes.find((t) => t.id === theme) || themes.find((t) => t.id === sport.defaultTheme);
+  return currentTheme?.color || sport.primaryColor;
 }
 
 function getThemeName(): string {
   const theme = groupSettings.value?.theme;
-  switch (theme) {
-    case 'roland-garros':
-      return 'Roland-Garros';
-    case 'australian-open':
-      return 'Australian Open';
-    case 'us-open':
-      return 'US Open';
-    case 'wimbledon':
-      return 'Wimbledon';
-    default:
-      return 'Classic';
-  }
+  const themes = sport.themes;
+  const currentTheme = themes.find((t) => t.id === theme) || themes.find((t) => t.id === sport.defaultTheme);
+  return currentTheme?.name || 'Classic';
 }
 
 /**
  * Empty court illustration with ball resting against net
  * Shows when no check-ins exist for a date
  */
-export function TennisEmptyState({
+export function SportEmptyState({
   message = 'No check-ins yet',
   subtext = 'Be the first to check in!',
 }: {
@@ -59,7 +43,7 @@ export function TennisEmptyState({
         color: 'var(--color-text-secondary, #666)',
       }}
     >
-      {/* Mini tennis court illustration */}
+      {/* Mini court illustration */}
       <div
         style={{
           width: '120px',
@@ -143,34 +127,18 @@ export function TennisEmptyState({
           }}
         />
 
-        {/* Tennis ball resting at net */}
+        {/* Ball/emoji at center */}
         <div
           style={{
             position: 'absolute',
             left: '50%',
             top: '50%',
             transform: 'translate(-50%, -50%)',
-            width: '14px',
-            height: '14px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #c8e600 0%, #9acd32 100%)',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.3), inset -2px -2px 4px rgba(0,0,0,0.1)',
+            fontSize: '16px',
             animation: 'ballPulse 2s ease-in-out infinite',
           }}
         >
-          {/* Ball curve line */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '3px',
-              left: '2px',
-              right: '2px',
-              height: '8px',
-              border: '1px solid rgba(255,255,255,0.5)',
-              borderRadius: '50%',
-              borderBottom: 'none',
-            }}
-          />
+          {sport.sportEmoji}
         </div>
       </div>
 
@@ -199,7 +167,7 @@ export function TennisEmptyState({
 }
 
 /**
- * Bouncing tennis ball loading animation
+ * Bouncing ball/emoji loading animation
  */
 export function BouncingBallLoader({
   text = 'Loading...',
@@ -209,9 +177,9 @@ export function BouncingBallLoader({
   size?: 'small' | 'medium' | 'large';
 }) {
   const sizes = {
-    small: { ball: 20, container: 40 },
-    medium: { ball: 32, container: 60 },
-    large: { ball: 48, container: 90 },
+    small: { ball: 24, container: 44 },
+    medium: { ball: 36, container: 64 },
+    large: { ball: 52, container: 94 },
   };
 
   const { ball, container } = sizes[size];
@@ -237,28 +205,12 @@ export function BouncingBallLoader({
       >
         <div
           style={{
-            width: `${ball}px`,
-            height: `${ball}px`,
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #c8e600 0%, #9acd32 100%)',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.3), inset -3px -3px 6px rgba(0,0,0,0.1)',
-            animation: 'tennisBounce 0.6s ease-in-out infinite',
-            position: 'relative',
+            fontSize: `${ball}px`,
+            lineHeight: 1,
+            animation: 'sportBounce 0.6s ease-in-out infinite',
           }}
         >
-          {/* Ball curve lines */}
-          <div
-            style={{
-              position: 'absolute',
-              top: `${ball * 0.15}px`,
-              left: `${ball * 0.1}px`,
-              right: `${ball * 0.1}px`,
-              height: `${ball * 0.5}px`,
-              border: `${Math.max(1, ball * 0.06)}px solid rgba(255,255,255,0.6)`,
-              borderRadius: '50%',
-              borderBottom: 'none',
-            }}
-          />
+          {sport.sportEmoji}
         </div>
       </div>
 
@@ -291,9 +243,9 @@ export function BouncingBallLoader({
 }
 
 /**
- * Full-screen loading overlay with tennis ball
+ * Full-screen loading overlay with sport-specific animation
  */
-export function TennisLoadingScreen({ text = 'Loading...' }: { text?: string }) {
+export function SportLoadingScreen({ text = 'Loading...' }: { text?: string }) {
   const themeName = getThemeName();
 
   return (
@@ -322,3 +274,7 @@ export function TennisLoadingScreen({ text = 'Loading...' }: { text?: string }) 
     </div>
   );
 }
+
+// Legacy exports for backward compatibility (alias to new names)
+export const TennisEmptyState = SportEmptyState;
+export const TennisLoadingScreen = SportLoadingScreen;

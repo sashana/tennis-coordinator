@@ -5,7 +5,12 @@
   "main": "sw.js",
   "scripts": {
     "dev": "vite",
+    "dev:tennis": "VITE_SPORT=tennis vite",
+    "dev:pickleball": "VITE_SPORT=pickleball vite",
     "build": "vite build",
+    "build:tennis": "VITE_SPORT=tennis vite build",
+    "build:pickleball": "VITE_SPORT=pickleball vite build",
+    "build:all": "npm run build:tennis && npm run build:pickleball",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -13,7 +18,10 @@
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "deploy:tennis": "npm run build:tennis && firebase deploy --only hosting:tennis",
+    "deploy:pickleball": "npm run build:pickleball && firebase deploy --only hosting:pickleball",
+    "deploy:all": "npm run build:all && firebase deploy --only hosting"
   },
   "repository": {
     "type": "git",

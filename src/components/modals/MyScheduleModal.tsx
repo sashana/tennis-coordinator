@@ -4,6 +4,7 @@ import { allCheckins, sessionUser, selectedDate } from '../App';
 import { organizeMatches } from '../../utils/matching';
 import { formatDate, normalizeName } from '../../utils/helpers';
 import { memberDetails } from '../App';
+import { sport } from '../../config/sport';
 
 // Modal state
 export const showMyScheduleModal = signal(false);
@@ -108,7 +109,7 @@ function getMatchIcon(type: string): string {
     case 'rotation':
       return '🔄';
     default:
-      return '🎾';
+      return sport.sportEmoji;
   }
 }
 

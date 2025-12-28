@@ -16,6 +16,7 @@ import {
   type GroupArchetypeConfig,
 } from '../../types/groupTypes';
 import { generateDefaultPin } from '../../utils/groups';
+import { sport } from '../../config/sport';
 
 // ============================================
 // State Signals
@@ -122,7 +123,7 @@ function handleShare(method: 'copy' | 'whatsapp' | 'sms') {
   const result = creationResult.value;
   if (!result?.shareUrl) return;
 
-  const message = `Join my tennis group "${groupName.value}"!\n\nLink: ${result.shareUrl}\nPIN: ${result.groupPin}`;
+  const message = `Join my ${sport.nameLower} group "${groupName.value}"!\n\nLink: ${result.shareUrl}\nPIN: ${result.groupPin}`;
 
   switch (method) {
     case 'copy':
@@ -454,7 +455,7 @@ function Step2Details({ selectedArchetype, onBack, onSubmit, isCreating, error }
   return (
     <div class="step-content">
       <h2 class="step-title">Group Details</h2>
-      <p class="step-subtitle">Tell us about your tennis group</p>
+      <p class="step-subtitle">Tell us about your {sport.nameLower} group</p>
 
       {error && (
         <div class="error-message">

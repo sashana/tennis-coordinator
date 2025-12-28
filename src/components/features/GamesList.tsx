@@ -33,7 +33,9 @@ import { showSharePrompt, sharePromptData } from '../pages/MainApp';
 import { organizeMatches } from '../../utils/matching';
 import { weatherCache, getWeatherDescription } from './WeatherWidget';
 import { openCheckInDrawer } from './CheckInDrawer';
-import { TennisEmptyState } from '../ui/TennisEffects';
+import { SportEmptyState } from '../ui/SportEffects';
+import { getPlayerCount, sport } from '../../config/sport';
+const sportEmoji = sport.sportEmoji;
 import type { CheckinData } from '../../types';
 
 // Compact view mode - stored in localStorage (defaults to compact/true)
@@ -432,10 +434,10 @@ function generateNeedPlayersMessage(match: any, date: string): string {
   const appUrl = `${window.location.origin}${window.location.pathname}#${groupId}`;
 
   if (match.type === 'doubles-forming') {
-    const needed = match.needed || 4 - match.players.length;
+    const needed = match.needed || getPlayerCount('doubles') - match.players.length;
     const neededText = needed === 1 ? '1 more player needed' : `${needed} more players needed`;
 
-    let message = `🎾 ${neededText} for doubles!\n`;
+    let message = `${sportEmoji} ${neededText} for doubles!\n`;
     message += `📅 ${dateStr}\n`;
     message += `👥 ${playerNames} ${match.players.length === 1 ? 'is' : 'are'} in\n\n`;
     message += `Can you make it? ${appUrl}`;
@@ -444,7 +446,7 @@ function generateNeedPlayersMessage(match: any, date: string): string {
   } else if (match.type === 'singles-forming') {
     const player = match.players[0];
 
-    let message = `🎾 1 more player needed for singles!\n`;
+    let message = `${sportEmoji} 1 more player needed for singles!\n`;
     message += `📅 ${dateStr}\n`;
     message += `👤 ${player.name} is in`;
     if (player.timeRange) {
@@ -1283,7 +1285,7 @@ export function GamesList() {
   if (checkins.length === 0) {
     return (
       <>
-        <TennisEmptyState
+        <SportEmptyState
           message="No check-ins yet"
           subtext="Be the first to check in for this date!"
         />
@@ -1298,7 +1300,7 @@ export function GamesList() {
   if (!hasMatches && warnings.length === 0) {
     return (
       <>
-        <TennisEmptyState
+        <SportEmptyState
           message="No check-ins yet"
           subtext="Be the first to check in for this date!"
         />
@@ -1958,7 +1960,7 @@ export function GamesList() {
 
             if (match.type === 'doubles-forming') {
               const matchKey = 'doubles-forming-1';
-              const needed = match.needed || 4 - match.players.length;
+              const needed = match.needed || getPlayerCount('doubles') - match.players.length;
               const isCompact = compactViewMode.value;
 
               let fallbackText = '';

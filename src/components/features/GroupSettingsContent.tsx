@@ -3,6 +3,7 @@ import { useEffect } from 'preact/hooks';
 import { currentGroupId, currentGroupName, showToast } from '../App';
 import { groupSettings } from '../../hooks/useFirebase';
 import { getDatabase } from '../../config/firebase';
+import { sport } from '../../config/sport';
 
 // Local form state
 const groupNameInput = signal('');
@@ -104,7 +105,7 @@ export function GroupSettingsContent() {
           Group Name
         </h3>
         <p style="font-size: var(--font-size-sm, 12px); color: var(--color-text-secondary, #666); margin-bottom: var(--spacing-md, 8px);">
-          Display name for this tennis group
+          Display name for this {sport.nameLower} group
         </p>
         <input
           type="text"

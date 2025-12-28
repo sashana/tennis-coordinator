@@ -5,9 +5,11 @@
  * players into doubles, singles, and forming matches.
  *
  * Algorithm:
- * 1. Form complete doubles matches (4 players each) from Doubles Only + Either players
+ * 1. Form complete doubles matches from Doubles Only + Either players
  * 2. Form singles matches from Singles Only players
  * 3. Handle remaining players (doubles-forming, singles-forming)
+ *
+ * Player counts are configurable via sport config.
  */
 
 import type {
@@ -18,6 +20,7 @@ import type {
   TimeRange,
 } from '@/types';
 import { normalizeName } from './helpers';
+import { sport, getPlayerCount, isMatchFormatEnabled } from '@/config/sport';
 
 /**
  * Get user preferences for a player
@@ -128,42 +131,44 @@ export function organizeMatches(
   // === STEP 1: Form complete doubles matches ===
   // Doubles pool: Doubles Only + Either players (sorted by timestamp)
   const doublesPool = [...doublesOnly, ...either].sort((a, b) => a.timestamp - b.timestamp);
+  const doublesPlayerCount = getPlayerCount('doubles');
 
-  while (doublesPool.length >= 4) {
-    const group = doublesPool.slice(0, 4);
+  while (isMatchFormatEnabled('doubles') && doublesPool.length >= doublesPlayerCount) {
+    const group = doublesPool.slice(0, doublesPlayerCount);
     matches.push({
       type: 'doubles',
       number: matches.filter((m) => m.type === 'doubles').length + 1,
       players: group,
     });
-    doublesPool.splice(0, 4);
+    doublesPool.splice(0, doublesPlayerCount);
   }
 
   // === STEP 2: Form singles matches from Singles Only players ===
   const singlesPool = [...singlesOnly].sort((a, b) => a.timestamp - b.timestamp);
+  const singlesPlayerCount = getPlayerCount('singles');
 
-  while (singlesPool.length >= 2) {
-    let pair: CheckinData[] | null = null;
+  while (isMatchFormatEnabled('singles') && singlesPool.length >= singlesPlayerCount) {
+    let group: CheckinData[] | null = null;
 
-    // Find first valid pair respecting exclusions AND time overlap
+    // Find first valid group respecting exclusions AND time overlap
     for (let i = 0; i < singlesPool.length - 1; i++) {
       for (let j = i + 1; j < singlesPool.length; j++) {
         if (canPlayTogetherWithTime(singlesPool[i], singlesPool[j], userPreferences)) {
-          pair = [singlesPool[i], singlesPool[j]];
+          group = [singlesPool[i], singlesPool[j]];
           break;
         }
       }
-      if (pair) {
+      if (group) {
         break;
       }
     }
 
-    if (pair) {
+    if (group) {
       matches.push({
         type: 'singles',
-        players: pair,
+        players: group,
       });
-      pair.forEach((p) => {
+      group.forEach((p) => {
         const idx = singlesPool.findIndex((sp) => sp.originalIndex === p.originalIndex);
         if (idx > -1) {
           singlesPool.splice(idx, 1);
@@ -182,8 +187,8 @@ export function organizeMatches(
   const remainingSinglesPool = singlesPool; // Singles Only players without a partner
 
   // --- Handle doubles forming ---
-  if (remainingDoublesPool.length > 0) {
-    const needed = 4 - remainingDoublesPool.length;
+  if (remainingDoublesPool.length > 0 && isMatchFormatEnabled('doubles')) {
+    const needed = doublesPlayerCount - remainingDoublesPool.length;
 
     // Count "Either" players who can play singles as fallback
     const eitherPlayers = remainingDoublesPool.filter(
@@ -191,14 +196,18 @@ export function organizeMatches(
     );
     const eitherCount = eitherPlayers.length;
 
-    // Check if all are "Either" and allow rotation (for 3 players)
+    // Check if all are "Either" and allow rotation (for n-1 players, e.g., 3 for doubles)
+    // Rotation only applies when we have exactly one player short of a full match
+    const rotationPlayerCount = doublesPlayerCount - 1;
     const allEither = remainingDoublesPool.every((p) => p.playStyle === 'both' || !p.playStyle);
     const allAllowRotation = remainingDoublesPool.every((p) => p.allowRotation !== false);
+    const isRotationScenario = remainingDoublesPool.length === rotationPlayerCount;
     const canAllPlayTogether =
-      remainingDoublesPool.length === 3 &&
+      isRotationScenario &&
       canPlayTogetherWithTime(remainingDoublesPool[0], remainingDoublesPool[1], userPreferences) &&
-      canPlayTogetherWithTime(remainingDoublesPool[0], remainingDoublesPool[2], userPreferences) &&
-      canPlayTogetherWithTime(remainingDoublesPool[1], remainingDoublesPool[2], userPreferences);
+      (remainingDoublesPool.length < 3 ||
+        (canPlayTogetherWithTime(remainingDoublesPool[0], remainingDoublesPool[2], userPreferences) &&
+          canPlayTogetherWithTime(remainingDoublesPool[1], remainingDoublesPool[2], userPreferences)));
 
     // Check if 2+ Either players can play singles together (time overlap, no exclusions)
     let canPlaySingles = false;
@@ -212,19 +221,23 @@ export function organizeMatches(
       players: remainingDoublesPool,
       needed: needed,
       canRotate:
-        remainingDoublesPool.length === 3 && allEither && allAllowRotation && canAllPlayTogether,
+        isRotationScenario &&
+        allEither &&
+        allAllowRotation &&
+        canAllPlayTogether &&
+        sport.features.rotation,
       eitherCount: eitherCount,
       canPlaySingles: canPlaySingles,
     });
   }
 
   // --- Handle singles forming ---
-  if (remainingSinglesPool.length > 0) {
+  if (remainingSinglesPool.length > 0 && isMatchFormatEnabled('singles')) {
     remainingSinglesPool.forEach((p) => {
       matches.push({
         type: 'singles-forming',
         players: [p],
-        needed: 1,
+        needed: singlesPlayerCount - 1,
       });
     });
   }

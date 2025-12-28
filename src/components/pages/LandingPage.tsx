@@ -1,15 +1,33 @@
 import { CreateGroupDrawer, openCreateGroupDrawer } from '../features/CreateGroupDrawer';
+import { sport } from '../../config/sport';
 
 export function LandingPage() {
+  // Sport-specific content
+  const content = {
+    tagline: `Turn your love for ${sport.nameLower} into more games.`,
+    subtitle: `No more "Who can play?" texts. Just check in and play.`,
+    playersTitle: `Why ${sport.name} Players Love It`,
+    stepFourText: sport.tagline,
+    formatText: sport.matchFormats.singles.enabled
+      ? `${sport.terms.doubles}, ${sport.terms.singles.toLowerCase()}, any number.`
+      : `${sport.terms.doubles}, any number.`,
+  };
+
+  // Render sport icon (SVG) or fallback to emoji
+  const SportIcon = () => {
+    if (sport.sportIcon) {
+      return <img src={sport.sportIcon} alt={sport.name} class="hero-icon-img" />;
+    }
+    return <span>{sport.sportEmoji}</span>;
+  };
+
   return (
     <div class="landing-page">
       <div class="landing-container">
         <div class="landing-hero">
-          <div class="hero-logo">🎾</div>
-          <p class="landing-tagline">Turn your love for tennis into more games.</p>
-          <p class="landing-subtitle">
-            No more "Who can play?" texts. Just check in and play.
-          </p>
+          <div class="hero-logo"><SportIcon /></div>
+          <p class="landing-tagline">{content.tagline}</p>
+          <p class="landing-subtitle">{content.subtitle}</p>
           <div class="trust-bar">
             <span>No app to download</span>
             <span>No account needed</span>
@@ -38,14 +56,14 @@ export function LandingPage() {
               <span class="step-number">3</span>
               <div>
                 <strong>Games Form</strong>
-                <span>You'll know when you have a match.</span>
+                <span>You'll know when you have a {sport.terms.match}.</span>
               </div>
             </div>
             <div class="step-item">
               <span class="step-number">4</span>
               <div>
                 <strong>Play</strong>
-                <span>Less texting. More tennis.</span>
+                <span>{content.stepFourText}</span>
               </div>
             </div>
           </div>
@@ -61,7 +79,7 @@ export function LandingPage() {
         </div>
 
         <div class="landing-section">
-          <h2>Why Tennis Players Love It</h2>
+          <h2>{content.playersTitle}</h2>
           <div class="landing-features">
             <div class="feature-item">
               <span class="feature-icon">✓</span>
@@ -74,7 +92,7 @@ export function LandingPage() {
               <span class="feature-icon">✓</span>
               <div>
                 <strong>Always Know Who's In</strong>
-                <span>See instantly when you have a game.</span>
+                <span>See instantly when you have a {sport.terms.match}.</span>
               </div>
             </div>
             <div class="feature-item">
@@ -88,7 +106,7 @@ export function LandingPage() {
               <span class="feature-icon">✓</span>
               <div>
                 <strong>Any Format Works</strong>
-                <span>Doubles, singles, any number.</span>
+                <span>{content.formatText}</span>
               </div>
             </div>
           </div>

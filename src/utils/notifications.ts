@@ -11,6 +11,7 @@ import {
   getPreferenceLabel,
   formatTimeRange,
 } from './helpers';
+import { sport } from '../config/sport';
 
 /**
  * Check if a member is muted by the user
@@ -89,7 +90,7 @@ export function formatCheckinNotification(
   }
 
   const detailsStr = details.length > 0 ? ` [${details.join(', ')}]` : '';
-  return `🎾 ${playerName} checked in for ${formattedDate}${detailsStr}${addedByStr}`;
+  return `${sport.sportEmoji} ${playerName} checked in for ${formattedDate}${detailsStr}${addedByStr}`;
 }
 
 /**

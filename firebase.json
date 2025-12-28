@@ -2,22 +2,44 @@
   "database": {
     "rules": "firebase-rules-phase1-fixed.json"
   },
-  "hosting": {
-    "public": "dist",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "/ttmd",
-        "destination": "/ttmd.html"
-      },
-      {
-        "source": "/ttmd/**",
-        "destination": "/ttmd.html"
-      }
-    ]
-  }
+  "hosting": [
+    {
+      "target": "tennis",
+      "public": "dist/tennis",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "/ttmd",
+          "destination": "/ttmd.html"
+        },
+        {
+          "source": "/ttmd/**",
+          "destination": "/ttmd.html"
+        },
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    {
+      "target": "pickleball",
+      "public": "dist/pickleball",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    }
+  ]
 }

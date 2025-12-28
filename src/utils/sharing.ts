@@ -5,6 +5,7 @@
 import type { Match, CheckinData } from '@/types';
 import { formatTimeRange } from './helpers';
 import { getOrdinalSuffix } from './datetime';
+import { sport } from '@/config/sport';
 
 /**
  * Build WhatsApp URL with message
@@ -61,7 +62,7 @@ export function formatMatchesForWhatsApp(
   if (groupName) {
     lines.push(`*${groupName} - ${formattedDate}*`);
   } else {
-    lines.push(`*Tennis Matches - ${formattedDate}*`);
+    lines.push(`*${sport.name} Matches - ${formattedDate}*`);
   }
   lines.push('');
 
@@ -110,7 +111,7 @@ export function formatCheckinForWhatsApp(
   const formattedDate = formatDateForSharing(dateStr);
   const lines: string[] = [];
 
-  lines.push(`I'm checking in for tennis on ${formattedDate}!`);
+  lines.push(`I'm checking in for ${sport.nameLower} on ${formattedDate}!`);
   lines.push('');
 
   // Preference
@@ -138,7 +139,7 @@ export function formatCheckinForWhatsApp(
  */
 export function formatRemovalForWhatsApp(_name: string, dateStr: string): string {
   const formattedDate = formatDateForSharing(dateStr);
-  return `I'm no longer available for tennis on ${formattedDate}.`;
+  return `I'm no longer available for ${sport.nameLower} on ${formattedDate}.`;
 }
 
 /**
@@ -208,13 +209,13 @@ export function generateInviteMessage(
   const lines: string[] = [];
   lines.push(`Hi ${memberName}!`);
   lines.push('');
-  lines.push(`${inviterName} has added you to the ${groupName} tennis group.`);
+  lines.push(`${inviterName} has added you to the ${groupName} ${sport.nameLower} group.`);
   lines.push('');
   lines.push(
-    'You can now check in for matches, see who else is playing, and coordinate with the group.'
+    `You can now check in for ${sport.terms.match}es, see who else is playing, and coordinate with the group.`
   );
   lines.push('');
-  lines.push('See you on the courts!');
+  lines.push(`See you on the ${sport.terms.court}s!`);
   return lines.join('\n');
 }
 
@@ -227,9 +228,9 @@ export function generateInviteMessageWithLink(
   groupUrl: string,
   groupPin: string
 ): string {
-  return `Hi ${memberName}! You've been added to ${groupName} tennis coordination.
+  return `Hi ${memberName}! You've been added to ${groupName} ${sport.nameLower} coordination.
 
-Check in for upcoming matches here:
+Check in for upcoming ${sport.terms.match}es here:
 ${groupUrl}
 
 PIN: ${groupPin}

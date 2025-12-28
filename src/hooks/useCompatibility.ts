@@ -194,11 +194,26 @@ export async function detectDataFormat(
 
 /**
  * Get or create a device token for anonymous user identification
+ * Supports cross-subdomain token sharing via URL parameter
  */
 export function getDeviceToken(): string {
   const storageKey = 'deviceToken';
 
-  // Check existing token
+  // Check for token passed via URL (for cross-subdomain navigation)
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlToken = urlParams.get('dt');
+  if (urlToken) {
+    // Store the token from URL and remove it from the URL
+    localStorage.setItem(storageKey, urlToken);
+    // Clean up URL by removing the dt parameter
+    urlParams.delete('dt');
+    const newSearch = urlParams.toString();
+    const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '') + window.location.hash;
+    window.history.replaceState({}, '', newUrl);
+    return urlToken;
+  }
+
+  // Check existing token in localStorage
   let token = localStorage.getItem(storageKey);
 
   if (!token) {

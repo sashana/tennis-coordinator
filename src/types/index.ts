@@ -1,12 +1,20 @@
 /**
- * Core type definitions for Tennis Coordinator
+ * Core type definitions for Sports Coordinator
  */
+
+// Import types for use in this file, then re-export
+import type { PlayStyle, SportId } from './sportConfig';
+export type { PlayStyle, SportId };
+
+// Re-export all other sport configuration types
+export * from './sportConfig';
 
 // ============================================
 // Play Style Types
 // ============================================
 
-export type PlayStyle = 'singles' | 'doubles' | 'both';
+// PlayStyle is now defined in sportConfig.ts and re-exported above
+// This avoids circular import issues
 
 export type PlayStyleLabel = 'Singles Only' | 'Doubles Only' | 'Either';
 
@@ -217,6 +225,7 @@ export interface GroupSettings {
   groupPin: string;
   adminPin: string;
   location?: WeatherLocation;
+  sportType?: SportId; // Sport type for multi-sport support (defaults to 'tennis')
 }
 
 export interface GroupData {

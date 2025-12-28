@@ -407,12 +407,10 @@ h1 {
   margin: 2px 0;
 }
 
-/* Tennis Ball Check-in Badge - Classic Design */
+/* Check-in Badge Base Styles */
 .date-btn .checkin-badge {
   font-size: 10px;
   font-weight: 900;
-  /* Classic tennis ball optic yellow */
-  background: radial-gradient(circle at 40% 40%, #dfff00 0%, #ccff00 50%, #b8e600 100%);
   color: #2d4a1e;
   border-radius: 50%;
   min-width: 22px;
@@ -430,8 +428,14 @@ h1 {
     inset 0 -1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Classic tennis ball curved seam pattern - left curve (curves inward toward center) */
-.date-btn .checkin-badge::before {
+/* Tennis Ball Check-in Badge - Classic Design with seams */
+.sport-tennis .date-btn .checkin-badge {
+  /* Classic tennis ball optic yellow */
+  background: radial-gradient(circle at 40% 40%, #dfff00 0%, #ccff00 50%, #b8e600 100%);
+}
+
+/* Tennis ball curved seam pattern - left curve */
+.sport-tennis .date-btn .checkin-badge::before {
   content: '';
   position: absolute;
   top: 1px;
@@ -444,8 +448,8 @@ h1 {
   pointer-events: none;
 }
 
-/* Classic tennis ball curved seam pattern - right curve (curves inward toward center) */
-.date-btn .checkin-badge::after {
+/* Tennis ball curved seam pattern - right curve */
+.sport-tennis .date-btn .checkin-badge::after {
   content: '';
   position: absolute;
   top: 1px;
@@ -456,6 +460,30 @@ h1 {
   border-right: none;
   border-radius: 50% 0 0 50%;
   pointer-events: none;
+}
+
+/* Pickleball Check-in Badge - Solid yellow circle (wiffle ball style) */
+.sport-pickleball .date-btn .checkin-badge {
+  background: radial-gradient(circle at 40% 40%, #ffeb3b 0%, #fdd835 50%, #f9a825 100%);
+  color: #5d4037;
+}
+
+/* Squash Check-in Badge - Hollow rubber ball style */
+.sport-squash .date-btn .checkin-badge {
+  background: radial-gradient(circle at 40% 40%, #424242 0%, #212121 100%);
+  color: #fff;
+}
+
+/* Padel Check-in Badge - Orange/yellow ball */
+.sport-padel .date-btn .checkin-badge {
+  background: radial-gradient(circle at 40% 40%, #ff9800 0%, #f57c00 50%, #e65100 100%);
+  color: #fff;
+}
+
+/* Badminton Check-in Badge - Shuttlecock white */
+.sport-badminton .date-btn .checkin-badge {
+  background: radial-gradient(circle at 40% 40%, #fff 0%, #f5f5f5 50%, #e0e0e0 100%);
+  color: #333;
 }
 
 .date-btn.selected .checkin-badge {
@@ -1295,8 +1323,8 @@ select:focus {
   }
 }
 
-/* Tennis ball animations for empty states and loading */
-@keyframes tennisBounce {
+/* Sport ball animations for empty states and loading */
+@keyframes sportBounce {
   0%,
   100% {
     transform: translateY(0);
@@ -1567,6 +1595,12 @@ select:focus {
   text-align: center;
   margin-bottom: 8px;
   line-height: 1;
+}
+
+.hero-logo .hero-icon-img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
 }
 
 .landing-tagline {

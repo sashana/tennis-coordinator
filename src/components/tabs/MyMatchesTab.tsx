@@ -11,6 +11,8 @@ import {
 } from '../App';
 import { organizeMatches } from '../../utils/matching';
 import { formatDate, formatTimeRange, normalizeName } from '../../utils/helpers';
+import { getPlayerCount, sport } from '../../config/sport';
+const sportEmoji = sport.sportEmoji;
 import { activeTab } from '../navigation/BottomTabBar';
 import {
   groupSettings,
@@ -177,10 +179,10 @@ function generateNeedPlayersMessage(match: ScheduledMatch): string {
   const appUrl = `${window.location.origin}${window.location.pathname}#${groupId}`;
 
   if (match.type === 'doubles-forming') {
-    const needed = match.needed || 4 - match.players.length;
+    const needed = match.needed || getPlayerCount('doubles') - match.players.length;
     const neededText = needed === 1 ? '1 more player needed' : `${needed} more players needed`;
 
-    let message = `🎾 ${neededText} for doubles!\n`;
+    let message = `${sportEmoji} ${neededText} for doubles!\n`;
     message += `📅 ${dateStr}\n`;
     message += `👥 ${playerNames} ${match.players.length === 1 ? 'is' : 'are'} in\n\n`;
     message += `Can you make it? ${appUrl}`;
@@ -189,7 +191,7 @@ function generateNeedPlayersMessage(match: ScheduledMatch): string {
   } else if (match.type === 'singles-forming') {
     const player = match.players[0];
 
-    let message = `🎾 1 more player needed for singles!\n`;
+    let message = `${sportEmoji} 1 more player needed for singles!\n`;
     message += `📅 ${dateStr}\n`;
     message += `👤 ${player.name} is in`;
     if (player.timeRange) {
@@ -244,7 +246,7 @@ function handleAddToCalendar(match: ScheduledMatch) {
     date: match.date,
     matchType: match.type,
     players: match.players,
-    groupName: currentGroupName.value || 'Tennis',
+    groupName: currentGroupName.value || sport.name,
     location: groupSettings.value.location?.name,
     notes: notes,
   });
@@ -287,7 +289,7 @@ function generateMultiGameShareText(schedule: ScheduledMatch[], selectedKeys: Se
   const ready = selectedMatches.filter((m) => !m.isForming);
   const forming = selectedMatches.filter((m) => m.isForming);
 
-  let message = '🎾 Tennis Update\n\n';
+  let message = `${sport.sportEmoji} ${sport.name} Update\n\n`;
 
   if (ready.length > 0) {
     message += '✅ Ready to Play:\n';
@@ -341,7 +343,7 @@ function shareSelectedGames(
   if (method === 'native' && navigator.share) {
     navigator
       .share({
-        title: 'Tennis Update',
+        title: `${sport.name} Update`,
         text: message,
       })
       .catch(() => {

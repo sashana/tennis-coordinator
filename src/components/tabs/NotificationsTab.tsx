@@ -17,6 +17,7 @@ import {
 } from '../App';
 import { activeTab } from '../navigation/BottomTabBar';
 import { getDatabase } from '../../config/firebase';
+import { sport } from '../../config/sport';
 
 // Local signals for settings UI
 const showSettings = signal(false);
@@ -50,17 +51,17 @@ function generateInviteMessage(date: string, matchType: string): string {
 
   const groupId = currentGroupId.value;
   const appUrl = `${window.location.origin}${window.location.pathname}#${groupId}`;
-  const groupNameStr = currentGroupName.value || 'Tennis';
+  const groupNameStr = currentGroupName.value || sport.name;
 
   if (matchType === 'Doubles') {
-    let message = `🎾 Need players for doubles!\n`;
+    let message = `${sport.sportEmoji} Need players for doubles!\n`;
     message += `📅 ${dateStr}\n`;
     message += `🏟️ ${groupNameStr}\n\n`;
     message += `A match just opened up. Can you make it?\n\n`;
     message += `Check in: ${appUrl}`;
     return message;
   } else {
-    let message = `🎾 Need 1 more player for singles!\n`;
+    let message = `${sport.sportEmoji} Need 1 more player for singles!\n`;
     message += `📅 ${dateStr}\n`;
     message += `🏟️ ${groupNameStr}\n\n`;
     message += `A singles spot opened up. Can you make it?\n\n`;

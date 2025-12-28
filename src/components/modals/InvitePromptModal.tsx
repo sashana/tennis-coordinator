@@ -2,6 +2,7 @@ import { signal } from '@preact/signals';
 import { Modal } from '../ui/Modal';
 import { currentGroupId, currentGroupName, showToast } from '../App';
 import { groupSettings } from '../../hooks/useFirebase';
+import { sport } from '../../config/sport';
 
 // Invite modal state
 export const showInviteModal = signal(false);
@@ -10,14 +11,14 @@ export const inviteMemberPhone = signal('');
 export const inviteMemberEmail = signal('');
 
 function getInviteMessage(memberName: string): string {
-  const gName = currentGroupName.value || 'our tennis group';
+  const gName = currentGroupName.value || `our ${sport.nameLower} group`;
   const groupId = currentGroupId.value;
   const groupUrl = window.location.href.split('?')[0] + '?group=' + groupId;
   const pin = groupSettings.value.groupPin || '';
 
-  return `Hi ${memberName}! You've been added to ${gName} tennis coordination.
+  return `Hi ${memberName}! You've been added to ${gName} ${sport.nameLower} coordination.
 
-Check in for upcoming matches here:
+Check in for upcoming ${sport.terms.match}es here:
 ${groupUrl}
 
 PIN: ${pin}
@@ -44,7 +45,7 @@ function getEmailUrl(email: string, subject: string, body: string): string {
 
 async function handleShare(memberName: string) {
   const inviteMessage = getInviteMessage(memberName);
-  const gName = currentGroupName.value || 'Tennis Group';
+  const gName = currentGroupName.value || `${sport.name} Group`;
 
   try {
     await navigator.share({
@@ -104,7 +105,7 @@ export function InvitePromptModal() {
   const phone = inviteMemberPhone.value;
   const email = inviteMemberEmail.value;
   const inviteMessage = getInviteMessage(memberName);
-  const gName = currentGroupName.value || 'Tennis Group';
+  const gName = currentGroupName.value || `${sport.name} Group`;
 
   // Check if Web Share API is available (mobile devices)
   const canShare = typeof navigator !== 'undefined' && navigator.share !== undefined;

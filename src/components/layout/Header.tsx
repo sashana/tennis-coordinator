@@ -4,63 +4,14 @@ import { currentGroupName, sessionUser, currentGroupId, showToast } from '../App
 import { goToProfile } from '../navigation/BottomTabBar';
 import { groupSettings, applyTheme } from '../../hooks/useFirebase';
 import { getDatabase } from '../../config/firebase';
-
-// Import local logo assets
-import wimbledonLogo from '../../assets/logos/wimbledon.png';
-import usOpenLogo from '../../assets/logos/usopen.png';
+import { sport } from '../../config/sport';
 
 // UI state - exported for use in modals and ProfileTab
 export const showActivityModal = signal(false);
 export const showSettingsModal = signal(false);
 
-// Theme definitions with official tournament logos
-const THEMES = [
-  {
-    id: 'default',
-    name: 'Classic',
-    color: '#2C6E49',
-    lightBg: '#E8F5E9', // Light green
-    hoverBg: '#C8E6C9', // Slightly darker green for hover
-    logo: null, // Uses tennis ball emoji
-    emoji: '🎾',
-  },
-  {
-    id: 'wimbledon',
-    name: 'Wimbledon',
-    color: '#1B5E20',
-    lightBg: '#E8F5E9', // Wimbledon green light
-    hoverBg: '#C8E6C9',
-    logo: wimbledonLogo,
-    emoji: '🏆',
-  },
-  {
-    id: 'roland-garros',
-    name: 'Roland-Garros',
-    color: '#cc4e0e',
-    lightBg: '#FBE9E7', // Clay/terracotta light
-    hoverBg: '#FFCCBC',
-    logo: 'https://images.prismic.io/fft-rg-site%2F95765448-c7fa-428b-b565-8368dba90b17_logo.svg',
-    emoji: '🗼',
-  },
-  {
-    id: 'australian-open',
-    name: 'Australian Open',
-    color: '#0277BD',
-    lightBg: '#E1F5FE', // Light blue
-    hoverBg: '#B3E5FC',
-    logo: 'https://ausopen.com/sites/default/files/styles/medium/public/ao_blue_1.png?itok=dcy08jHH',
-    emoji: '🦘',
-  },
-  {
-    id: 'us-open',
-    name: 'US Open',
-    color: '#0D47A1',
-    lightBg: '#E3F2FD', // US Open blue light
-    hoverBg: '#BBDEFB',
-    logo: usOpenLogo,
-    emoji: '🗽',
-  },
-];
+// Get themes from sport config
+const THEMES = sport.themes;
 
 // Check if user is logged in as group admin
 function isGroupAdmin(): boolean {
@@ -185,7 +136,7 @@ export function Header() {
           id="groupNameDisplay"
           style="font-size: var(--font-size-xl, 18px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; padding-top: 2px;"
         >
-          {currentGroupName.value || 'Tennis Coordinator'}
+          {currentGroupName.value || sport.appName}
         </span>
 
         {/* Theme Dropdown (only shown for admins) */}

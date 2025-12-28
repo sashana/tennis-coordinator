@@ -2,6 +2,23 @@ import { signal } from '@preact/signals';
 import { useEffect } from 'preact/hooks';
 import { getDatabase } from '../../config/firebase';
 import { showToast } from '../App';
+import type { SportId } from '../../types/sportConfig';
+import { sport } from '../../config/sport';
+
+// Sport configuration for badges
+const sportBadges: Record<SportId, { emoji: string; color: string }> = {
+  tennis: { emoji: '🎾', color: '#2C6E49' },
+  pickleball: { emoji: '🟡', color: '#2E7D32' }, // Yellow circle (no pickleball emoji exists)
+  squash: { emoji: '🏸', color: '#1565C0' },
+  padel: { emoji: '🎾', color: '#F57C00' },
+  badminton: { emoji: '🏸', color: '#7B1FA2' },
+};
+
+function getSportBadge(sportType: SportId | undefined) {
+  const sport = sportType || 'tennis';
+  const badge = sportBadges[sport] || sportBadges.tennis;
+  return { sport, ...badge };
+}
 
 const isAuthenticated = signal(false);
 const groups = signal<Record<string, any>>({});
@@ -478,7 +495,7 @@ export function AdminPage() {
             <div class="site-admin-header">
               <span class="site-admin-icon">🔐</span>
               <h1>Site Administration</h1>
-              <p class="site-admin-subtitle">Tennis Coordinator Platform</p>
+              <p class="site-admin-subtitle">{sport.appName} Platform</p>
             </div>
 
             <form onSubmit={handleLogin} class="site-admin-form">
@@ -574,7 +591,7 @@ export function AdminPage() {
       <div class="site-admin-dashboard">
         <header class="site-admin-dashboard-header">
           <div class="header-left">
-            <h1>🎾 Site Administration</h1>
+            <h1>{sport.sportEmoji} Site Administration</h1>
           </div>
           <button onClick={handleLogout} class="logout-button">
             Sign Out
@@ -639,12 +656,30 @@ export function AdminPage() {
                 const creatorName = group.metadata?.creator?.name;
                 const createdAt = group.metadata?.createdAt;
 
+                const sportBadge = getSportBadge(group.settings?.sportType);
+
                 return (
                   <div key={groupId} class="group-row">
                     <div class="group-row-main">
                       <div class="group-row-info">
                         <h3 class="group-row-name">
                           {group.settings?.groupName || 'Unnamed Group'}
+                          <span
+                            class="sport-badge"
+                            style={{
+                              marginLeft: '8px',
+                              padding: '2px 8px',
+                              background: sportBadge.color + '20',
+                              color: sportBadge.color,
+                              borderRadius: '12px',
+                              fontSize: '12px',
+                              fontWeight: 500,
+                              textTransform: 'capitalize',
+                            }}
+                            title={sportBadge.sport}
+                          >
+                            {sportBadge.emoji} {sportBadge.sport}
+                          </span>
                         </h3>
                         <div class="group-row-meta">
                           <span class="group-row-members">👥 {members.length}</span>
@@ -816,6 +851,13 @@ export function AdminPage() {
                     <span class="detail-value">{detailsGroup.metadata.archetype}</span>
                   </div>
                 )}
+                <div class="detail-row">
+                  <span class="detail-label">Sport:</span>
+                  <span class="detail-value" style={{ textTransform: 'capitalize' }}>
+                    {getSportBadge(detailsGroup.settings?.sportType).emoji}{' '}
+                    {detailsGroup.settings?.sportType || 'tennis'}
+                  </span>
+                </div>
               </div>
 
               {/* Creator Section */}

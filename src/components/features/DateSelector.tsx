@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'preact/hooks';
 import { selectedDate, allCheckins, sessionUser } from '../App';
 import { formatLocalDate, normalizeName } from '../../utils/helpers';
 import { selectedName, isFormExpanded } from '../pages/MainApp';
+import { sport } from '../../config/sport';
 
 // Check if session user is checked in for a given date
 function isSessionUserCheckedIn(dateStr: string): boolean {
@@ -85,7 +86,7 @@ export function DateSelector() {
   }
 
   return (
-    <div class="date-selector">
+    <div class={`date-selector sport-${sport.id}`}>
       <div class="date-scroll" ref={scrollRef}>
         {dates.map((date) => (
           <button

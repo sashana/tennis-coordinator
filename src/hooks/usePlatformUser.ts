@@ -321,6 +321,39 @@ export async function updateGroupActivity(groupId: string): Promise<void> {
 }
 
 /**
+ * Unlink user from a group (remove from groupLinks)
+ * Used to clean up deleted groups from the user's list
+ */
+export async function unlinkUserFromGroup(groupId: string): Promise<void> {
+  try {
+    const token = deviceToken.value;
+    if (!token) {
+      throw new Error('No device token');
+    }
+
+    const db = getDatabase();
+    if (!db) {
+      throw new Error('Database not initialized');
+    }
+
+    // Remove the group link from Firebase
+    await db.ref(getGroupLinkPath(token, groupId)).remove();
+
+    // Update local state
+    if (currentPlatformUser.value?.groupLinks[groupId]) {
+      const { [groupId]: _, ...remainingLinks } = currentPlatformUser.value.groupLinks;
+      currentPlatformUser.value = {
+        ...currentPlatformUser.value,
+        groupLinks: remainingLinks,
+      };
+    }
+  } catch (error) {
+    console.error('[PlatformUser] Failed to unlink group:', error);
+    throw error;
+  }
+}
+
+/**
  * Update user profile
  */
 export async function updateProfile(

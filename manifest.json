@@ -1,7 +1,7 @@
 {
-  "name": "Midday Tennis",
-  "short_name": "Midday Tennis",
-  "description": "Tennis match coordination and check-in system",
+  "name": "Sports Coordinator",
+  "short_name": "Coordinator",
+  "description": "Match coordination and check-in system",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4CAF50",
@@ -11,13 +11,13 @@
       "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "apple-touch-icon.png",

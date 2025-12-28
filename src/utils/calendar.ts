@@ -1,4 +1,5 @@
 // Calendar event generation utility
+import { sport } from '../config/sport';
 
 interface CalendarEventParams {
   date: string; // YYYY-MM-DD format
@@ -30,7 +31,7 @@ function escapeICS(text: string): string {
 
 // Generate unique ID for calendar event
 function generateUID(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}@tenniscoordinator`;
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}@sportscoordinator`;
 }
 
 // Generate ICS file content
@@ -43,7 +44,7 @@ export function generateICSContent(params: CalendarEventParams): string {
   const icsContent = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Tennis Coordinator//EN',
+    `PRODID:-//${sport.appName}//EN`,
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',
@@ -148,7 +149,7 @@ export function downloadICSFile(params: CalendarEventParams, filename?: string):
 
     const link = document.createElement('a');
     link.href = url;
-    link.download = filename || `tennis-${params.date}.ics`;
+    link.download = filename || `${sport.id}-${params.date}.ics`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -174,7 +175,7 @@ export function createCalendarEventFromMatch(data: MatchCalendarData): CalendarE
     ? 'Doubles'
     : matchType.includes('singles')
       ? 'Singles'
-      : 'Tennis';
+      : sport.name;
   const title = `${typeLabel} - ${groupName}`;
 
   // Build description

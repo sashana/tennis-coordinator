@@ -9,7 +9,7 @@ import { LandingPage } from './pages/LandingPage';
 import { MainApp } from './pages/MainApp';
 import { AdminPage } from './pages/AdminPage';
 import { Toast } from './ui/Toast';
-import { TennisLoadingScreen } from './ui/TennisEffects';
+import { SportLoadingScreen } from './ui/SportEffects';
 
 // App State Signals
 export const currentGroupId = signal<string | null>(null);
@@ -202,7 +202,7 @@ export function App() {
   }, []);
 
   if (isLoading.value) {
-    return <TennisLoadingScreen text="Loading..." />;
+    return <SportLoadingScreen text="Loading..." />;
   }
 
   return (

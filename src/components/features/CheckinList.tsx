@@ -16,7 +16,7 @@ import {
 } from '../../utils/helpers';
 import { Modal } from '../ui/Modal';
 import { showSharePrompt, sharePromptData } from '../pages/MainApp';
-import { TennisEmptyState } from '../ui/TennisEffects';
+import { SportEmptyState } from '../ui/SportEffects';
 
 // Edit modal state
 const editModalOpen = signal(false);
@@ -455,7 +455,7 @@ export function CheckinList() {
   if (checkins.length === 0) {
     return (
       <>
-        <TennisEmptyState
+        <SportEmptyState
           message="No check-ins yet"
           subtext="Be the first to check in for this date!"
         />

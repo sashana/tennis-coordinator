@@ -2,6 +2,7 @@ import { signal } from '@preact/signals';
 import { sessionUser, showToast, memberDetails, currentGroupId } from '../App';
 import { updateMemberDetails, renameMember, removeMember } from '../../hooks/useFirebase';
 import { currentPlatformUser, updateProfile, refreshPlatformUser } from '../../hooks/usePlatformUser';
+import { sport } from '../../config/sport';
 
 // Drawer state signals
 export const showEditMemberDrawer = signal(false);
@@ -262,11 +263,11 @@ export function EditMemberDrawer() {
           />
         </div>
 
-        {/* Tennis Profile - only shown when editing self */}
+        {/* Player Profile - only shown when editing self */}
         {isEditingSelf && (
           <div class="drawer-section">
-            <label class="field-label">Tennis Profile</label>
-            <div class="tennis-profile-fields">
+            <label class="field-label">Player Profile</label>
+            <div class="player-profile-fields">
               <div class="field-row">
                 <label class="field-sublabel">Skill Level</label>
                 <select
@@ -283,21 +284,23 @@ export function EditMemberDrawer() {
                   ))}
                 </select>
               </div>
-              <div class="field-row">
-                <label class="field-sublabel">NTRP Rating</label>
-                <input
-                  type="number"
-                  placeholder="e.g., 3.5"
-                  value={ntrpRating.value}
-                  onInput={(e) => {
-                    ntrpRating.value = (e.target as HTMLInputElement).value;
-                  }}
-                  min="1.0"
-                  max="7.0"
-                  step="0.5"
-                  class="drawer-input ntrp-input"
-                />
-              </div>
+              {sport.features.skillRating && (
+                <div class="field-row">
+                  <label class="field-sublabel">{sport.features.skillRating} Rating</label>
+                  <input
+                    type="number"
+                    placeholder="e.g., 3.5"
+                    value={ntrpRating.value}
+                    onInput={(e) => {
+                      ntrpRating.value = (e.target as HTMLInputElement).value;
+                    }}
+                    min="1.0"
+                    max="7.0"
+                    step="0.5"
+                    class="drawer-input ntrp-input"
+                  />
+                </div>
+              )}
             </div>
             <p class="field-hint">Your skill info is saved across all your groups</p>
           </div>
@@ -642,7 +645,7 @@ export function EditMemberDrawer() {
           border-color: var(--color-primary, #2C6E49);
         }
 
-        .tennis-profile-fields {
+        .player-profile-fields {
           display: flex;
           flex-direction: column;
           gap: 12px;

@@ -3,6 +3,7 @@ import { signal, effect } from '@preact/signals';
 import { getDatabase } from '../config/firebase';
 import { createLogger } from '../utils/logger';
 import { linkUserToGroup, updateGroupActivity } from './usePlatformUser';
+import { sport } from '../config/sport';
 
 const themeLogger = createLogger('Theme');
 const notificationLogger = createLogger('Notifications');
@@ -132,7 +133,7 @@ export function useGroupData() {
           applyTheme(settings.theme as string | undefined);
 
           // Update document title
-          document.title = `${settings.groupName || 'Tennis'} - Tennis Coordinator`;
+          document.title = `${settings.groupName || sport.name} - ${sport.appName}`;
         })
         .catch((error: unknown) => {
           checkinLogger.error('Error loading group settings:', error);
@@ -577,8 +578,8 @@ async function notifyRemovalAlert(
   // Check if user removed themselves
   const isSelf = normalizeName(playerName) === normalizeName(removedBy);
   const message = isSelf
-    ? `🎾 ${playerName} removed themselves from ${date}`
-    : `🎾 ${playerName} was removed from ${date} by ${removedBy}`;
+    ? `${sport.sportEmoji} ${playerName} removed themselves from ${date}`
+    : `${sport.sportEmoji} ${playerName} was removed from ${date} by ${removedBy}`;
 
   try {
     const db = getDatabase();
@@ -670,8 +671,8 @@ async function notifyCheckinAlert(
   const detailsStr = details.length > 0 ? ` (${details.join(', ')})` : '';
 
   const message = isSelf
-    ? `🎾 ${playerName} checked in for ${date}${detailsStr}`
-    : `🎾 ${playerName} was added for ${date} by ${addedBy}${detailsStr}`;
+    ? `${sport.sportEmoji} ${playerName} checked in for ${date}${detailsStr}`
+    : `${sport.sportEmoji} ${playerName} was added for ${date} by ${addedBy}${detailsStr}`;
 
   notificationLogger.debug('Starting notification for:', { playerName, date, addedBy });
 
@@ -1107,7 +1108,7 @@ export async function addMember(member: {
       action: 'invite',
       name: member.name,
       date: date,
-      groupName: currentGroupName.value || 'Tennis Group',
+      groupName: currentGroupName.value || `${sport.name} Group`,
       groupUrl: groupUrl,
       groupPin: groupSettings.value.groupPin || '',
     };

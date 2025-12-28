@@ -1,6 +1,7 @@
 import { signal, computed } from '@preact/signals';
 import { useEffect, useState } from 'preact/hooks';
 import { notifications } from '../modals/NotificationsModal';
+import { sport } from '../../config/sport';
 
 // Navigation state
 export type TabId = 'checkin' | 'matches' | 'notifications' | 'directory' | 'profile';
@@ -34,8 +35,14 @@ const tabs: TabConfig[] = [
   {
     id: 'matches',
     label: 'My Games',
-    icon: `<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M5 5c2 3 2 6 2 7s0 4-2 7" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><path d="M19 5c-2 3-2 6-2 7s0 4 2 7" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>`,
-    activeIcon: `<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M5 5c2 3 2 6 2 7s0 4-2 7" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><path d="M19 5c-2 3-2 6-2 7s0 4 2 7" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+    // Use sport-specific icon if available, otherwise generic ball icon
+    icon: sport.sportIcon
+      ? sport.sportIcon
+      : `<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="currentColor"/></svg>`,
+    activeIcon: sport.sportIcon
+      ? sport.sportIcon
+      : `<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="currentColor"/></svg>`,
+    useImageIcon: !!sport.sportIcon,
   },
   {
     id: 'directory',

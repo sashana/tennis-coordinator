@@ -1,6 +1,7 @@
 import { signal } from '@preact/signals';
 import { Modal } from './Modal';
 import { showToast } from '../App';
+import { sport } from '../../config/sport';
 
 interface PinModalProps {
   isOpen: boolean;
@@ -35,9 +36,9 @@ export function PinModal({ isOpen, groupName, correctPin, onSuccess }: PinModalP
     <Modal isOpen={isOpen} title="" showCloseButton={false}>
       <div class="pin-modal-content">
         <div class="pin-header">
-          <p class="tennis-icon">🎾</p>
+          <p class="sport-icon">{sport.sportEmoji}</p>
           <h2>Welcome to</h2>
-          <p class="group-name">{groupName || 'Tennis Coordinator'}</p>
+          <p class="group-name">{groupName || sport.appName}</p>
         </div>
 
         <p class="pin-instruction">Enter the group PIN to access check-ins</p>
@@ -78,7 +79,7 @@ export function PinModal({ isOpen, groupName, correctPin, onSuccess }: PinModalP
           border-radius: 12px 12px 0 0;
         }
 
-        .pin-header .tennis-icon {
+        .pin-header .sport-icon {
           font-size: 40px;
           margin: 0 0 6px;
         }

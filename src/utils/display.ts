@@ -4,6 +4,7 @@
 
 import type { Match, MatchType, PlayStyle, CheckinData } from '@/types';
 import { formatTimeRange } from './helpers';
+import { sport } from '@/config/sport';
 
 /**
  * Get display label for match type
@@ -11,17 +12,17 @@ import { formatTimeRange } from './helpers';
 export function getMatchTypeLabel(matchType: MatchType): string {
   switch (matchType) {
     case 'doubles':
-      return 'Doubles';
+      return sport.terms.doubles;
     case 'singles':
-      return 'Singles';
+      return sport.terms.singles;
     case 'doubles-forming':
-      return 'Doubles Forming';
+      return sport.terms.doublesForming;
     case 'singles-forming':
-      return 'Singles Forming';
+      return sport.terms.singlesForming;
     case 'singles-or-practice':
-      return 'Singles or Practice';
+      return `${sport.terms.singles} or Practice`;
     default:
-      return 'Match';
+      return sport.terms.match;
   }
 }
 

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'preact/hooks';
 import { sessionUser, currentGroupId, showToast, memberDetails } from '../App';
 import { showWelcomeModal } from '../ui/WelcomeModal';
 import { showSettingsModal } from '../layout/Header';
-import { showActivityModal } from '../layout/Header';
 import { InsightsTab } from './InsightsTab';
 import { HelpTab } from './HelpTab';
 import { openEditMemberDrawer } from '../features/EditMemberDrawer';
@@ -11,6 +10,7 @@ import { GroupSettingsContent } from '../features/GroupSettingsContent';
 import { ActivityHistoryContent } from '../features/ActivityHistoryContent';
 import { MyGroupsContent } from '../features/MyGroupsContent';
 import { linkedGroupsCount, currentPlatformUser } from '../../hooks/usePlatformUser';
+import { sport } from '../../config/sport';
 
 // Check if user is logged in as group admin
 function isGroupAdmin(): boolean {
@@ -532,7 +532,7 @@ export function ProfileTab() {
 
       {/* Version Info */}
       <p style="font-size: var(--font-size-sm, 12px); color: var(--color-text-disabled, #aaa); text-align: center; margin-top: var(--spacing-4xl, 32px);">
-        Tennis Coordinator{' '}
+        {sport.appName}{' '}
         <a
           href="/release-notes.html"
           target="_blank"

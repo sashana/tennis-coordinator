@@ -1,15 +1,20 @@
 import { currentGroupName } from '../App';
 import { groupSettings } from '../../hooks/useFirebase';
+import { sport, getPlayerCount } from '../../config/sport';
 
 export function HelpTab() {
   const groupDescription = groupSettings.value.groupDescription;
   const groupRules = groupSettings.value.groupRules;
   const hasGroupInfo = groupDescription || groupRules;
 
+  const doublesCount = getPlayerCount('doubles');
+  const singlesCount = getPlayerCount('singles');
+  const rotationCount = doublesCount - 1;
+
   const sections = [
     {
       title: 'Getting Started',
-      icon: '🎾',
+      icon: sport.sportEmoji,
       content: [
         "When you first open the app, you'll be asked to select your name from the member list.",
         'Use the date selector to pick the day you want to play.',
@@ -20,10 +25,10 @@ export function HelpTab() {
       title: 'Check-in Options',
       icon: '✅',
       content: [
-        'Doubles - You want to play doubles games (4 players).',
-        'Singles - You want to play singles games (2 players).',
+        `${sport.terms.doubles} - You want to play ${sport.terms.doubles.toLowerCase()} games (${doublesCount} players).`,
+        `${sport.terms.singles} - You want to play ${sport.terms.singles.toLowerCase()} games (${singlesCount} players).`,
         "Both - You're flexible and happy to play either format.",
-        'Rotation - Enable this option to join 3-player rotation games where players take turns.',
+        `Rotation - Enable this option to join ${rotationCount}-player rotation games where players take turns.`,
         'Time Range - Set your earliest and latest available times to help coordinate.',
       ],
     },
@@ -31,9 +36,9 @@ export function HelpTab() {
       title: 'Game Types',
       icon: '👥',
       content: [
-        'Doubles (green) - A confirmed 4-player doubles game.',
-        'Singles (green) - A confirmed 2-player singles game.',
-        'Rotation (green) - A confirmed 3-player game with rotating play.',
+        `${sport.terms.doubles} (green) - A confirmed ${doublesCount}-player ${sport.terms.doubles.toLowerCase()} game.`,
+        `${sport.terms.singles} (green) - A confirmed ${singlesCount}-player ${sport.terms.singles.toLowerCase()} game.`,
+        `Rotation (green) - A confirmed ${rotationCount}-player game with rotating play.`,
         'Forming (yellow) - A game that needs more players to be complete.',
       ],
     },

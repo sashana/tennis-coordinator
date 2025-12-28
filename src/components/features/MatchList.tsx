@@ -4,6 +4,8 @@ import { matchNotes, saveMatchNote, resetDay, groupSettings } from '../../hooks/
 import { organizeMatches } from '../../utils/matching';
 import { formatTimeRange, formatDate, debounce, getPreferenceLabel } from '../../utils/helpers';
 import { weatherCache, getWeatherDescription } from './WeatherWidget';
+import { getPlayerCount, sport } from '../../config/sport';
+const sportEmoji = sport.sportEmoji;
 
 // State for inline share dropdown
 const activeShareDropdown = signal<string | null>(null);
@@ -35,10 +37,10 @@ function generateNeedPlayersMessage(match: any, date: string): string {
   const appUrl = `${window.location.origin}${window.location.pathname}#${groupId}`;
 
   if (match.type === 'doubles-forming') {
-    const needed = match.needed || 4 - match.players.length;
+    const needed = match.needed || getPlayerCount('doubles') - match.players.length;
     const neededText = needed === 1 ? '1 more player needed' : `${needed} more players needed`;
 
-    let message = `🎾 ${neededText} for doubles!\n`;
+    let message = `${sportEmoji} ${neededText} for doubles!\n`;
     message += `📅 ${dateStr}\n`;
     message += `👥 ${playerNames} ${match.players.length === 1 ? 'is' : 'are'} in\n\n`;
     message += `Can you make it? ${appUrl}`;
@@ -47,7 +49,7 @@ function generateNeedPlayersMessage(match: any, date: string): string {
   } else if (match.type === 'singles-forming') {
     const player = match.players[0];
 
-    let message = `🎾 1 more player needed for singles!\n`;
+    let message = `${sportEmoji} 1 more player needed for singles!\n`;
     message += `📅 ${dateStr}\n`;
     message += `👤 ${player.name} is in`;
     if (player.timeRange) {
@@ -585,7 +587,7 @@ export function MatchList() {
 
         if (match.type === 'doubles-forming') {
           const matchKey = 'doubles-forming-1';
-          const needed = match.needed || 4 - match.players.length;
+          const needed = match.needed || getPlayerCount('doubles') - match.players.length;
 
           let fallbackText = '';
           if (match.canRotate) {

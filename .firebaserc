@@ -1,5 +1,13 @@
 {
   "projects": {
     "default": "tennis-coordinator-43f53"
+  },
+  "targets": {
+    "tennis-coordinator-43f53": {
+      "hosting": {
+        "tennis": ["tennis-coordinator-43f53"],
+        "pickleball": ["pickleball-coordinator"]
+      }
+    }
   }
 }

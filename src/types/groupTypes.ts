@@ -1,9 +1,11 @@
 /**
  * Group Types and Archetypes
  *
- * Defines the different types of tennis groups that can be created.
+ * Defines the different types of groups that can be created.
  * Currently only 'tight-knit' is implemented; others are planned for future.
  */
+
+import { sport } from '../config/sport';
 
 // ============================================
 // Archetype Types
@@ -37,77 +39,83 @@ export interface GroupArchetypeConfig {
 }
 
 /**
- * All archetype configurations
+ * Get all archetype configurations (sport-specific)
  */
-export const GROUP_ARCHETYPES: GroupArchetypeConfig[] = [
-  {
-    id: 'tight-knit',
-    name: 'Tight-knit Group',
-    description:
-      'Your tennis crew, organized. Invite friends, coordinate matches, and share via WhatsApp, text, or in-app alerts. Any format: doubles, singles, or mixed.',
-    features: [
-      'Invite-only, PIN-protected',
-      'Weather-aware scheduling',
-      'Frictionless self-organization',
-      'Auto-balanced match making',
-      'One-click share to WhatsApp/SMS',
-    ],
-    namePlaceholder: 'e.g., Tuesday Tennis Gang',
-    available: true,
-  },
-  {
-    id: 'casual-dropin',
-    name: 'Casual Drop-in',
-    description: 'Open coordination for players who want to find games easily.',
-    features: [
-      'Open registration',
-      'Singles or doubles',
-      'Flexible commitment',
-      'Welcome newcomers',
-    ],
-    namePlaceholder: 'e.g., Central Park Morning Tennis',
-    available: false, // Coming soon
-  },
-  {
-    id: 'club-community',
-    name: 'Club Community',
-    description: 'For larger tennis clubs with varied skill levels and preferences.',
-    features: [
-      'Admin-managed membership',
-      'Skill level filtering',
-      'Partner preferences',
-      'Privacy controls',
-    ],
-    namePlaceholder: 'e.g., Bay Club 18+ Tennis',
-    available: false, // Coming soon
-  },
-  {
-    id: 'location-flexible',
-    name: 'Location Flexible',
-    description: 'For groups that play across different locations and need to coordinate.',
-    features: [
-      'Multiple venue options',
-      'Location voting',
-      'Travel distance awareness',
-      'Flexible scheduling',
-    ],
-    namePlaceholder: 'e.g., Bay Area Tennis Friends',
-    available: false, // Coming soon
-  },
-  {
-    id: 'competitive',
-    name: 'Competitive League',
-    description: 'Skill-focused play with NTRP ratings and level matching.',
-    features: [
-      'NTRP-based matching',
-      'Skill level requirements',
-      'Competitive play focus',
-      'Match history tracking',
-    ],
-    namePlaceholder: 'e.g., USTA Practice Partners',
-    available: false, // Coming soon
-  },
-];
+function getGroupArchetypes(): GroupArchetypeConfig[] {
+  const sportName = sport.name;
+  const sportLower = sport.nameLower;
+  const ratingSystem = sport.features.skillRating || 'skill';
+
+  return [
+    {
+      id: 'tight-knit',
+      name: 'Tight-knit Group',
+      description:
+        `Your ${sportLower} crew, organized. Invite friends, coordinate ${sport.terms.match}es, and share via WhatsApp, text, or in-app alerts. Any format: ${sport.terms.doubles.toLowerCase()}, ${sport.terms.singles.toLowerCase()}, or mixed.`,
+      features: [
+        'Invite-only, PIN-protected',
+        'Weather-aware scheduling',
+        'Frictionless self-organization',
+        'Auto-balanced match making',
+        'One-click share to WhatsApp/SMS',
+      ],
+      namePlaceholder: `e.g., Tuesday ${sportName} Gang`,
+      available: true,
+    },
+    {
+      id: 'casual-dropin',
+      name: 'Casual Drop-in',
+      description: `Open coordination for ${sport.terms.player}s who want to find ${sport.terms.match}es easily.`,
+      features: [
+        'Open registration',
+        `${sport.terms.singles} or ${sport.terms.doubles.toLowerCase()}`,
+        'Flexible commitment',
+        'Welcome newcomers',
+      ],
+      namePlaceholder: `e.g., Central Park Morning ${sportName}`,
+      available: false, // Coming soon
+    },
+    {
+      id: 'club-community',
+      name: 'Club Community',
+      description: `For larger ${sportLower} clubs with varied skill levels and preferences.`,
+      features: [
+        'Admin-managed membership',
+        'Skill level filtering',
+        'Partner preferences',
+        'Privacy controls',
+      ],
+      namePlaceholder: `e.g., Bay Club 18+ ${sportName}`,
+      available: false, // Coming soon
+    },
+    {
+      id: 'location-flexible',
+      name: 'Location Flexible',
+      description: 'For groups that play across different locations and need to coordinate.',
+      features: [
+        'Multiple venue options',
+        'Location voting',
+        'Travel distance awareness',
+        'Flexible scheduling',
+      ],
+      namePlaceholder: `e.g., Bay Area ${sportName} Friends`,
+      available: false, // Coming soon
+    },
+    {
+      id: 'competitive',
+      name: 'Competitive League',
+      description: `Skill-focused play with ${ratingSystem} ratings and level matching.`,
+      features: [
+        `${ratingSystem}-based matching`,
+        'Skill level requirements',
+        'Competitive play focus',
+        'Match history tracking',
+      ],
+      namePlaceholder: `e.g., ${ratingSystem} Practice Partners`,
+      available: false, // Coming soon
+    },
+  ];
+}
 
 // ============================================
 // Creator Types
@@ -147,19 +155,19 @@ export interface GroupMetadata {
  * Get archetype config by ID
  */
 export function getArchetypeConfig(id: GroupArchetype): GroupArchetypeConfig | undefined {
-  return GROUP_ARCHETYPES.find((a) => a.id === id);
+  return getGroupArchetypes().find((a) => a.id === id);
 }
 
 /**
  * Get all available archetypes (for group creation)
  */
 export function getAvailableArchetypes(): GroupArchetypeConfig[] {
-  return GROUP_ARCHETYPES.filter((a) => a.available);
+  return getGroupArchetypes().filter((a) => a.available);
 }
 
 /**
  * Get all archetypes (including "Coming Soon")
  */
 export function getAllArchetypes(): GroupArchetypeConfig[] {
-  return GROUP_ARCHETYPES;
+  return getGroupArchetypes();
 }

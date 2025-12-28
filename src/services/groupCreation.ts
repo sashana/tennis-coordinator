@@ -14,6 +14,7 @@ import {
 } from '../utils/groups';
 import { linkUserToGroup, deviceToken } from '../hooks/usePlatformUser';
 import type { GroupArchetype, GroupCreator, GroupMetadata } from '../types/groupTypes';
+import { sport } from '../config/sport';
 
 // ============================================
 // Types
@@ -137,6 +138,7 @@ export async function createGroup(params: CreateGroupParams): Promise<CreateGrou
     settings.groupPin = groupPin;
     settings.adminPin = adminPin;
     settings.members = [params.creatorName]; // Creator is first member
+    settings.sportType = sport.id; // Set sport type from current sport config
 
     // Set location if provided
     if (params.location) {
