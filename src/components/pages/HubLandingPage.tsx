@@ -273,6 +273,14 @@ interface GroupData {
   shortCode?: string;
   createdAt?: number;
   archived?: boolean;
+  creator?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
+  groupPin?: string;
+  adminPin?: string;
+  members?: string[];
 }
 
 function AdminPanel() {
@@ -286,6 +294,7 @@ function AdminPanel() {
   const [filter, setFilter] = useState<'all' | 'request' | 'contact'>('all');
   const [groupFilter, setGroupFilter] = useState<'active' | 'archived'>('active');
   const [searchQuery, setSearchQuery] = useState('');
+  const [detailsGroup, setDetailsGroup] = useState<GroupData | null>(null);
 
   // Check existing auth and load PIN on mount
   useEffect(() => {
@@ -349,6 +358,10 @@ function AdminPanel() {
         shortCode: val.metadata?.shortCode,
         createdAt: val.metadata?.createdAt,
         archived: val.settings?.archived || false,
+        creator: val.metadata?.creator,
+        groupPin: val.settings?.groupPin,
+        adminPin: val.settings?.adminPin,
+        members: val.settings?.members || [],
       }));
       // Sort by created date, newest first
       list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -460,7 +473,9 @@ function AdminPanel() {
         g.name.toLowerCase().includes(query) ||
         g.sport.toLowerCase().includes(query) ||
         g.location?.toLowerCase().includes(query) ||
-        g.shortCode?.toLowerCase().includes(query)
+        g.shortCode?.toLowerCase().includes(query) ||
+        g.creator?.name?.toLowerCase().includes(query) ||
+        g.creator?.email?.toLowerCase().includes(query)
       );
     });
 
@@ -553,18 +568,32 @@ function AdminPanel() {
                             <div class="group-item-meta">
                               <span>👥 {group.memberCount}</span>
                               {group.location && <span>📍 {group.location}</span>}
+                            </div>
+                            <div class="group-item-creator">
                               {group.createdAt && (
                                 <span>
-                                  {new Date(group.createdAt).toLocaleDateString('en-US', {
+                                  Created {new Date(group.createdAt).toLocaleDateString('en-US', {
                                     month: 'short',
                                     day: 'numeric',
                                     year: 'numeric',
                                   })}
                                 </span>
                               )}
+                              {group.creator?.name && <span> by {group.creator.name}</span>}
+                              {group.creator?.email && (
+                                <a href={`mailto:${group.creator.email}`} class="creator-email">
+                                  {group.creator.email}
+                                </a>
+                              )}
                             </div>
                           </div>
                           <div class="group-item-actions">
+                            <button
+                              class="action-btn details-btn"
+                              onClick={() => setDetailsGroup(group)}
+                            >
+                              Details
+                            </button>
                             <a
                               href="#"
                               class="view-group-link"
@@ -673,6 +702,123 @@ function AdminPanel() {
               </>
             )}
           </>
+        )}
+
+        {/* Details Drawer */}
+        {detailsGroup && (
+          <div class="details-drawer-overlay" onClick={() => setDetailsGroup(null)}>
+            <div class="details-drawer" onClick={(e) => e.stopPropagation()}>
+              <div class="drawer-header">
+                <h2>{detailsGroup.name}</h2>
+                <button class="drawer-close" onClick={() => setDetailsGroup(null)}>×</button>
+              </div>
+              <div class="drawer-content">
+                {/* Group Info */}
+                <div class="drawer-section">
+                  <h3>Group Info</h3>
+                  <div class="detail-row">
+                    <span class="detail-label">Members:</span>
+                    <span class="detail-value">{detailsGroup.memberCount}</span>
+                  </div>
+                  {detailsGroup.location && (
+                    <div class="detail-row">
+                      <span class="detail-label">Location:</span>
+                      <span class="detail-value">{detailsGroup.location}</span>
+                    </div>
+                  )}
+                  {detailsGroup.shortCode && (
+                    <div class="detail-row">
+                      <span class="detail-label">Short Code:</span>
+                      <span class="detail-value code">{detailsGroup.shortCode}</span>
+                    </div>
+                  )}
+                  <div class="detail-row">
+                    <span class="detail-label">Sport:</span>
+                    <span class="detail-value" style={{ textTransform: 'capitalize' }}>
+                      {detailsGroup.sport === 'tennis' ? '🎾' : '🟡'} {detailsGroup.sport}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Creator */}
+                {detailsGroup.creator && (
+                  <div class="drawer-section">
+                    <h3>Creator</h3>
+                    {detailsGroup.creator.name && (
+                      <div class="detail-row">
+                        <span class="detail-label">Name:</span>
+                        <span class="detail-value">{detailsGroup.creator.name}</span>
+                      </div>
+                    )}
+                    {detailsGroup.creator.email && (
+                      <div class="detail-row">
+                        <span class="detail-label">Email:</span>
+                        <a href={`mailto:${detailsGroup.creator.email}`} class="detail-link">
+                          {detailsGroup.creator.email}
+                        </a>
+                      </div>
+                    )}
+                    {detailsGroup.creator.phone && (
+                      <div class="detail-row">
+                        <span class="detail-label">Phone:</span>
+                        <a href={`tel:${detailsGroup.creator.phone}`} class="detail-link">
+                          {detailsGroup.creator.phone}
+                        </a>
+                      </div>
+                    )}
+                    {detailsGroup.createdAt && (
+                      <div class="detail-row">
+                        <span class="detail-label">Created:</span>
+                        <span class="detail-value">
+                          {new Date(detailsGroup.createdAt).toLocaleDateString('en-US', {
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Access PINs */}
+                <div class="drawer-section">
+                  <h3>Access PINs</h3>
+                  <div class="detail-row">
+                    <span class="detail-label">Group PIN:</span>
+                    <span class="detail-value code">{detailsGroup.groupPin || 'Not set'}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Admin PIN:</span>
+                    <span class="detail-value code">{detailsGroup.adminPin || 'Not set'}</span>
+                  </div>
+                </div>
+
+                {/* Members List */}
+                <div class="drawer-section">
+                  <h3>Members ({detailsGroup.members?.length || 0})</h3>
+                  <div class="members-list">
+                    {(detailsGroup.members || []).length === 0 ? (
+                      <p class="no-members">No members yet.</p>
+                    ) : (
+                      (detailsGroup.members || []).map((member: string) => (
+                        <div key={member} class="member-item">{member}</div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Technical */}
+                <div class="drawer-section technical">
+                  <h3>Technical</h3>
+                  <div class="detail-row">
+                    <span class="detail-label">Group ID:</span>
+                    <span class="detail-value code small">{detailsGroup.id}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -1495,6 +1641,22 @@ export function HubLandingPage() {
           flex-wrap: wrap;
         }
 
+        .group-item-creator {
+          font-size: 12px;
+          color: #a1a1aa;
+          margin-top: 4px;
+        }
+
+        .group-item-creator .creator-email {
+          color: #0f766e;
+          text-decoration: none;
+          margin-left: 8px;
+        }
+
+        .group-item-creator .creator-email:hover {
+          text-decoration: underline;
+        }
+
         .group-item-actions {
           display: flex;
           align-items: center;
@@ -1561,6 +1723,172 @@ export function HubLandingPage() {
         .action-btn.danger:hover {
           background: #fef2f2;
           border-color: #dc2626;
+        }
+
+        .action-btn.details-btn {
+          background: #f0fdfa;
+          border-color: #99f6e4;
+          color: #0f766e;
+        }
+
+        .action-btn.details-btn:hover {
+          background: #ccfbf1;
+          border-color: #0f766e;
+        }
+
+        /* Details Drawer */
+        .details-drawer-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 1100;
+          display: flex;
+          justify-content: flex-end;
+        }
+
+        .details-drawer {
+          width: 100%;
+          max-width: 420px;
+          height: 100%;
+          background: white;
+          overflow-y: auto;
+          animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+
+        .drawer-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 20px 24px;
+          border-bottom: 1px solid #e4e4e7;
+          position: sticky;
+          top: 0;
+          background: white;
+          z-index: 1;
+        }
+
+        .drawer-header h2 {
+          font-size: 18px;
+          font-weight: 600;
+          margin: 0;
+          color: #18181b;
+        }
+
+        .drawer-close {
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: none;
+          border: none;
+          font-size: 24px;
+          color: #71717a;
+          cursor: pointer;
+          border-radius: 6px;
+        }
+
+        .drawer-close:hover {
+          background: #f4f4f5;
+          color: #18181b;
+        }
+
+        .drawer-content {
+          padding: 0 24px 24px;
+        }
+
+        .drawer-section {
+          padding: 20px 0;
+          border-bottom: 1px solid #e4e4e7;
+        }
+
+        .drawer-section:last-child {
+          border-bottom: none;
+        }
+
+        .drawer-section h3 {
+          font-size: 13px;
+          font-weight: 600;
+          color: #71717a;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin: 0 0 12px;
+        }
+
+        .drawer-section.technical {
+          opacity: 0.7;
+        }
+
+        .detail-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          padding: 8px 0;
+          gap: 16px;
+        }
+
+        .detail-label {
+          font-size: 14px;
+          color: #71717a;
+          flex-shrink: 0;
+        }
+
+        .detail-value {
+          font-size: 14px;
+          color: #18181b;
+          text-align: right;
+          word-break: break-word;
+        }
+
+        .detail-value.code {
+          font-family: ui-monospace, monospace;
+          background: #f4f4f5;
+          padding: 2px 8px;
+          border-radius: 4px;
+          font-size: 13px;
+        }
+
+        .detail-value.small {
+          font-size: 11px;
+        }
+
+        .detail-link {
+          font-size: 14px;
+          color: #0f766e;
+          text-decoration: none;
+        }
+
+        .detail-link:hover {
+          text-decoration: underline;
+        }
+
+        .members-list {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .member-item {
+          padding: 8px 12px;
+          background: #f8fafc;
+          border-radius: 6px;
+          font-size: 14px;
+          color: #18181b;
+        }
+
+        .no-members {
+          font-size: 14px;
+          color: #a1a1aa;
+          font-style: italic;
+          margin: 0;
         }
 
         .admin-controls {

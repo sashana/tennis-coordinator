@@ -396,6 +396,7 @@ describe('Cross-Sport Group Navigation', () => {
       squash: 'squash',
       padel: 'padel',
       badminton: 'badminton',
+      hub: 'www',
     };
 
     const targetSubdomain = sportSubdomains[targetSport];

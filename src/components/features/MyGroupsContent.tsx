@@ -32,6 +32,7 @@ const sportEmojis: Record<SportId, string> = {
   squash: '🏸',
   padel: '🎾',
   badminton: '🏸',
+  hub: '🏅',
 };
 
 // Format relative time
@@ -107,6 +108,7 @@ const sportSubdomains: Record<SportId, string> = {
   squash: 'squash',
   padel: 'padel',
   badminton: 'badminton',
+  hub: 'www',
 };
 
 // Navigate to a group, switching subdomains if needed

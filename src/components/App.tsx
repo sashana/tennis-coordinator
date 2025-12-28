@@ -8,7 +8,6 @@ const logger = createLogger('App');
 import { LandingPage } from './pages/LandingPage';
 import { HubLandingPage } from './pages/HubLandingPage';
 import { MainApp } from './pages/MainApp';
-import { AdminPage } from './pages/AdminPage';
 import { Toast } from './ui/Toast';
 import { SportLoadingScreen } from './ui/SportEffects';
 import { sport } from '../config/sport';
@@ -102,11 +101,6 @@ async function getGroupIdFromUrl(): Promise<string | null> {
     sessionStorage.removeItem('redirect');
     const groupPath = redirect.replace(/^\/+|\/+$/g, '');
 
-    if (groupPath === 'admin') {
-      history.replaceState(null, '', redirect);
-      return 'admin';
-    }
-
     if (groupPath && groupPath !== 'index.html' && groupPath !== 'app.html') {
       history.replaceState(null, '', redirect);
       // Check if it's a short code - only use if it resolves to a real group
@@ -122,7 +116,7 @@ async function getGroupIdFromUrl(): Promise<string | null> {
 
   // Check hash for group ID (e.g., /app.html#ttmd)
   const hash = window.location.hash.replace(/^#\/?/, '');
-  if (hash && hash !== 'admin') {
+  if (hash) {
     // Check if it's a short code - only use if it resolves to a real group
     const resolvedGroupId = await resolveShortCodeOrGroupId(hash);
     if (resolvedGroupId) {
@@ -131,9 +125,6 @@ async function getGroupIdFromUrl(): Promise<string | null> {
     // Short code doesn't exist, redirect to landing
     history.replaceState(null, '', '/');
     return null;
-  }
-  if (hash === 'admin') {
-    return 'admin';
   }
 
   // Check query param (e.g., /app.html?group=ttmd)
@@ -154,9 +145,6 @@ async function getGroupIdFromUrl(): Promise<string | null> {
   const path = window.location.pathname;
   const groupPath = path.replace(/^\/+|\/+$/g, '');
 
-  if (groupPath === 'admin') {
-    return 'admin';
-  }
   if (!groupPath || groupPath === 'index.html' || groupPath === 'app.html') {
     return null;
   }
@@ -186,7 +174,7 @@ export function App() {
         currentGroupId.value = groupId;
 
         // Restore session user from localStorage
-        if (groupId && groupId !== 'admin') {
+        if (groupId) {
           const savedUser = localStorage.getItem(`sessionUser_${groupId}`);
           if (savedUser) {
             sessionUser.value = savedUser;
@@ -224,8 +212,7 @@ export function App() {
   return (
     <>
       {currentGroupId.value === null && <LandingPage />}
-      {currentGroupId.value === 'admin' && <AdminPage />}
-      {currentGroupId.value && currentGroupId.value !== 'admin' && <MainApp />}
+      {currentGroupId.value && <MainApp />}
 
       {/* Toast notifications */}
       <div class="toast-container">
