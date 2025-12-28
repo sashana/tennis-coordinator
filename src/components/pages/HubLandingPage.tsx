@@ -289,7 +289,7 @@ function AdminPanel() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [requests, setRequests] = useState<ContactRequest[]>([]);
   const [groups, setGroups] = useState<GroupData[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [adminTab, setAdminTab] = useState<'groups' | 'requests'>('groups');
   const [filter, setFilter] = useState<'all' | 'request' | 'contact'>('all');
   const [groupFilter, setGroupFilter] = useState<'active' | 'archived'>('active');
@@ -307,47 +307,28 @@ function AdminPanel() {
     }
   }, [showAdminPanel.value]);
 
+  // Real-time listeners for groups and requests
   useEffect(() => {
-    if (isAdminAuthenticated.value) {
-      loadRequests();
-      loadGroups();
-    }
-  }, [isAdminAuthenticated.value]);
+    if (!isAdminAuthenticated.value) return;
 
-  const loadSiteAdminPin = async () => {
-    try {
-      const db = getDatabase();
-      const snapshot = await db.ref('siteSettings/siteAdminPin').once('value');
-      setSiteAdminPin(snapshot.val() || null);
-    } catch (error) {
-      console.error('Failed to load site admin PIN:', error);
-    }
-  };
+    const db = getDatabase();
 
-  const loadRequests = async () => {
-    setLoading(true);
-    try {
-      const db = getDatabase();
-      const snapshot = await db.ref('contactRequests').orderByChild('createdAt').once('value');
+    // Real-time listener for contact requests
+    const requestsRef = db.ref('contactRequests');
+    const requestsHandler = requestsRef.on('value', (snapshot: any) => {
       const data = snapshot.val() || {};
       const list: ContactRequest[] = Object.entries(data).map(([id, val]: [string, any]) => ({
         id,
         ...val,
       }));
-      // Sort newest first
       list.sort((a, b) => b.createdAt - a.createdAt);
       setRequests(list);
-    } catch (error) {
-      console.error('Failed to load requests:', error);
-    } finally {
       setLoading(false);
-    }
-  };
+    });
 
-  const loadGroups = async () => {
-    try {
-      const db = getDatabase();
-      const snapshot = await db.ref('groups').once('value');
+    // Real-time listener for groups
+    const groupsRef = db.ref('groups');
+    const groupsHandler = groupsRef.on('value', (snapshot: any) => {
       const data = snapshot.val() || {};
       const list: GroupData[] = Object.entries(data).map(([id, val]: [string, any]) => ({
         id,
@@ -363,11 +344,25 @@ function AdminPanel() {
         adminPin: val.settings?.adminPin,
         members: val.settings?.members || [],
       }));
-      // Sort by created date, newest first
       list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       setGroups(list);
+    });
+
+    // Cleanup listeners on unmount
+    return () => {
+      requestsRef.off('value', requestsHandler);
+      groupsRef.off('value', groupsHandler);
+    };
+  }, [isAdminAuthenticated.value]);
+
+  const loadSiteAdminPin = async () => {
+    try {
+      const db = getDatabase();
+      const snapshot = await db.ref('siteSettings/siteAdminPin').once('value');
+      const pin = snapshot.val() as string | null;
+      setSiteAdminPin(pin);
     } catch (error) {
-      console.error('Failed to load groups:', error);
+      console.error('Failed to load site admin PIN:', error);
     }
   };
 
@@ -376,7 +371,7 @@ function AdminPanel() {
     try {
       const db = getDatabase();
       await db.ref(`groups/${groupId}/settings/archived`).set(true);
-      await loadGroups();
+      // Real-time listener will update automatically
     } catch (error) {
       console.error('Failed to archive group:', error);
       alert('Failed to archive group');
@@ -388,7 +383,7 @@ function AdminPanel() {
     try {
       const db = getDatabase();
       await db.ref(`groups/${groupId}/settings/archived`).set(false);
-      await loadGroups();
+      // Real-time listener will update automatically
     } catch (error) {
       console.error('Failed to unarchive group:', error);
       alert('Failed to unarchive group');
@@ -405,7 +400,7 @@ function AdminPanel() {
         await db.ref(`shortCodeIndex/${group.shortCode}`).remove();
       }
       await db.ref(`groups/${groupId}`).remove();
-      await loadGroups();
+      // Real-time listener will update automatically
     } catch (error) {
       console.error('Failed to delete group:', error);
       alert('Failed to delete group');
@@ -482,15 +477,17 @@ function AdminPanel() {
   if (!showAdminPanel.value) return null;
 
   return (
-    <div class="admin-overlay" onClick={handleClose}>
-      <div class="admin-panel" onClick={(e) => e.stopPropagation()}>
+    <div class="admin-overlay">
+      <div class="admin-panel">
         <div class="admin-header">
-          <h2>Site Admin</h2>
-          <button class="modal-close" onClick={handleClose}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <button class="admin-back-btn" onClick={handleClose}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
+            Back
           </button>
+          <h2>Site Admin</h2>
+          <div style={{ width: '70px' }} /> {/* Spacer for centering */}
         </div>
 
         {!isAdminAuthenticated.value ? (
@@ -552,7 +549,9 @@ function AdminPanel() {
                 </div>
 
                 <div class="groups-list">
-                  {filteredGroups.length === 0 ? (
+                  {loading ? (
+                    <div class="no-requests">Loading...</div>
+                  ) : filteredGroups.length === 0 ? (
                     <div class="no-requests">No groups found</div>
                   ) : (
                     filteredGroups.map((group) => (
@@ -661,9 +660,6 @@ function AdminPanel() {
                       Contact ({requests.filter(r => r.type === 'contact').length})
                     </button>
                   </div>
-                  <button class="refresh-btn" onClick={loadRequests} disabled={loading}>
-                    {loading ? 'Loading...' : 'Refresh'}
-                  </button>
                 </div>
 
                 <div class="requests-list">
@@ -1460,29 +1456,24 @@ export function HubLandingPage() {
           background: #e4e4e7;
         }
 
-        /* Admin Panel */
+        /* Admin Panel - Full Page */
         .admin-overlay {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(0, 0, 0, 0.7);
-          display: flex;
-          align-items: flex-start;
-          justify-content: center;
-          padding: 20px;
+          background: #f8fafc;
           z-index: 1000;
           overflow-y: auto;
         }
 
         .admin-panel {
+          min-height: 100vh;
+          max-width: 1000px;
+          margin: 0 auto;
           background: white;
-          border-radius: 16px;
-          width: 100%;
-          max-width: 700px;
-          margin: 40px 0;
-          animation: slideUp 0.3s ease;
+          box-shadow: 0 0 40px rgba(0, 0, 0, 0.08);
         }
 
         .admin-header {
@@ -1491,12 +1482,40 @@ export function HubLandingPage() {
           justify-content: space-between;
           padding: 20px 24px;
           border-bottom: 1px solid #e4e4e7;
+          background: white;
+          position: sticky;
+          top: 0;
+          z-index: 10;
         }
 
         .admin-header h2 {
           font-size: 20px;
           font-weight: 700;
           margin: 0;
+          color: #18181b;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .admin-back-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 14px;
+          background: #f4f4f5;
+          border: none;
+          border-radius: 8px;
+          font-family: inherit;
+          font-size: 14px;
+          font-weight: 500;
+          color: #52525b;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .admin-back-btn:hover {
+          background: #e4e4e7;
           color: #18181b;
         }
 
@@ -1578,8 +1597,7 @@ export function HubLandingPage() {
         }
 
         .groups-list {
-          max-height: 60vh;
-          overflow-y: auto;
+          min-height: 400px;
         }
 
         .group-item {
@@ -1953,8 +1971,7 @@ export function HubLandingPage() {
         }
 
         .requests-list {
-          max-height: 60vh;
-          overflow-y: auto;
+          min-height: 400px;
         }
 
         .no-requests {

@@ -126,6 +126,14 @@
           ".write": true
         }
       }
+    },
+
+    "contactRequests": {
+      ".read": true,
+      ".write": true,
+      "$requestId": {
+        ".validate": "newData.hasChildren(['type', 'name', 'email', 'createdAt'])"
+      }
     }
   }
 }
