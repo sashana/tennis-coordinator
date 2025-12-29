@@ -19,6 +19,8 @@ import type {
   MatchArrangement,
   Organization,
   AdminIndex,
+  OrgInvite,
+  OrgAdmin,
 } from '@/types';
 import { normalizeName } from '@/utils/helpers';
 
@@ -62,6 +64,8 @@ export const firebasePaths = {
   organization: (orgId: string) => `organizations/${orgId}`,
   organizationAdmins: (orgId: string) => `organizations/${orgId}/admins`,
   organizationLocations: (orgId: string) => `organizations/${orgId}/locations`,
+  organizationInvites: (orgId: string) => `organizations/${orgId}/invites`,
+  organizationInvite: (orgId: string, code: string) => `organizations/${orgId}/invites/${code}`,
 
   // Admin Index (for fast permission lookups)
   adminIndex: (deviceToken: string) => `adminIndex/${deviceToken}`,
@@ -404,6 +408,118 @@ export class FirebaseService {
           type: group.settings?.type,
         },
       }));
+  }
+
+  // ============================================
+  // Organization Invites
+  // ============================================
+
+  async loadOrgInvites(orgId: string): Promise<OrgInvite[]> {
+    const snapshot = await this.ref(firebasePaths.organizationInvites(orgId)).once('value');
+    const data = snapshot.val() as Record<string, Omit<OrgInvite, 'code'>> | null;
+
+    if (!data) {
+      return [];
+    }
+
+    return Object.entries(data).map(([code, invite]) => ({
+      code,
+      ...invite,
+    }));
+  }
+
+  async loadOrgInvite(orgId: string, code: string): Promise<OrgInvite | null> {
+    const snapshot = await this.ref(firebasePaths.organizationInvite(orgId, code)).once('value');
+    const data = snapshot.val() as Omit<OrgInvite, 'code'> | null;
+
+    if (!data) {
+      return null;
+    }
+
+    return {
+      code,
+      ...data,
+    };
+  }
+
+  async createOrgInvite(orgId: string, invite: OrgInvite): Promise<void> {
+    await this.ref(firebasePaths.organizationInvite(orgId, invite.code)).set({
+      scope: invite.scope,
+      locations: invite.locations,
+      createdAt: invite.createdAt,
+      createdBy: invite.createdBy,
+      createdByName: invite.createdByName,
+      expiresAt: invite.expiresAt,
+    });
+  }
+
+  async acceptOrgInvite(
+    orgId: string,
+    code: string,
+    acceptedBy: { deviceToken: string; name: string; email: string; phone?: string }
+  ): Promise<{ success: boolean; error?: string }> {
+    // Load the invite
+    const invite = await this.loadOrgInvite(orgId, code);
+
+    if (!invite) {
+      return { success: false, error: 'Invite not found' };
+    }
+
+    if (invite.usedAt) {
+      return { success: false, error: 'Invite already used' };
+    }
+
+    if (invite.expiresAt < Date.now()) {
+      return { success: false, error: 'Invite expired' };
+    }
+
+    // Mark invite as used
+    await this.ref(firebasePaths.organizationInvite(orgId, code)).update({
+      usedAt: Date.now(),
+      usedBy: acceptedBy.deviceToken,
+      usedByName: acceptedBy.name,
+    });
+
+    // Add new admin to organization
+    const org = await this.loadOrganization(orgId);
+    if (!org) {
+      return { success: false, error: 'Organization not found' };
+    }
+
+    const newAdmin: OrgAdmin = {
+      id: acceptedBy.deviceToken,
+      name: acceptedBy.name,
+      email: acceptedBy.email,
+      phone: acceptedBy.phone,
+      scope: invite.scope,
+      locations: invite.locations,
+      addedAt: Date.now(),
+      addedBy: invite.createdBy,
+    };
+
+    const updatedAdmins = [...(org.admins || []), newAdmin];
+    await this.ref(firebasePaths.organizationAdmins(orgId)).set(updatedAdmins);
+
+    // Update admin index for fast permission lookup
+    const existingIndex = await this.loadAdminIndex(acceptedBy.deviceToken);
+    const newIndex: AdminIndex = existingIndex || {};
+
+    if (invite.scope === 'org') {
+      newIndex.orgAdmin = [...(newIndex.orgAdmin || []), orgId];
+    } else if (invite.scope === 'locations' && invite.locations) {
+      newIndex.locationAdmin = {
+        ...(newIndex.locationAdmin || {}),
+        [orgId]: invite.locations,
+      };
+    }
+
+    await this.saveAdminIndex(acceptedBy.deviceToken, newIndex);
+
+    return { success: true };
+  }
+
+  async deleteOrgInvite(orgId: string, code: string): Promise<void> {
+    await this.ref(firebasePaths.organizationInvite(orgId, code)).remove();
   }
 }
 

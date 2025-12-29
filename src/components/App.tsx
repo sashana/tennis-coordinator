@@ -14,13 +14,13 @@ import { SportLoadingScreen } from './ui/SportEffects';
 import { sport } from '../config/sport';
 
 // Parse clubs route from hash
-function parseClubsRoute(): { orgId: string; isSetup: boolean } | null {
+function parseClubsRoute(): { orgId: string; isSetup: boolean; inviteCode?: string } | null {
   const hash = window.location.hash;
   if (!hash.startsWith('#clubs')) {
     return null;
   }
 
-  // Parse: #clubs, #clubs/bayclub, #clubs/bayclub/setup
+  // Parse: #clubs, #clubs/bayclub, #clubs/bayclub/setup, #clubs/bayclub/invite/CODE
   const parts = hash.replace('#clubs', '').split('/').filter(Boolean);
 
   if (parts.length === 0) {
@@ -30,8 +30,9 @@ function parseClubsRoute(): { orgId: string; isSetup: boolean } | null {
 
   const orgId = parts[0];
   const isSetup = parts[1] === 'setup';
+  const inviteCode = parts[1] === 'invite' ? parts[2] : undefined;
 
-  return { orgId, isSetup };
+  return { orgId, isSetup, inviteCode };
 }
 
 // App State Signals
@@ -230,7 +231,11 @@ export function App() {
     if (clubsRoute) {
       return (
         <>
-          <ClubDashboard orgId={clubsRoute.orgId} isSetup={clubsRoute.isSetup} />
+          <ClubDashboard
+            orgId={clubsRoute.orgId}
+            isSetup={clubsRoute.isSetup}
+            inviteCode={clubsRoute.inviteCode}
+          />
           <div class="toast-container">
             {toasts.value.map((toast) => (
               <Toast key={toast.id} message={toast.message} type={toast.type} />

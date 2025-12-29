@@ -140,7 +140,14 @@
       ".read": true,
       ".write": true,
       "$orgId": {
-        ".validate": "newData.hasChildren(['name', 'locations', 'settings'])"
+        ".validate": "newData.hasChildren(['name', 'locations', 'settings'])",
+        "invites": {
+          "$inviteCode": {
+            ".read": true,
+            ".write": true,
+            ".validate": "newData.hasChildren(['scope', 'createdAt', 'createdBy', 'createdByName', 'expiresAt'])"
+          }
+        }
       }
     },
 

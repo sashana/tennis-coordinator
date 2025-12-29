@@ -74,6 +74,23 @@ export interface AdminIndex {
 }
 
 /**
+ * Invite for staff to join an organization
+ * Stored at organizations/{orgId}/invites/{code}
+ */
+export interface OrgInvite {
+  code: string; // 8-char alphanumeric code
+  scope: 'org' | 'locations';
+  locations?: string[]; // Only if scope === 'locations'
+  createdAt: number;
+  createdBy: string; // deviceToken of creator
+  createdByName: string; // Name of creator for display
+  expiresAt: number; // Timestamp when invite expires
+  usedAt?: number; // When the invite was used
+  usedBy?: string; // deviceToken of user who accepted
+  usedByName?: string; // Name of user who accepted
+}
+
+/**
  * Resolved admin scope for a specific organization
  */
 export type AdminScope =
