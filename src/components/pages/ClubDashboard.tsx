@@ -270,7 +270,8 @@ function Header({ org, orgId }: { org: { name: string; branding?: { primaryColor
   const canInvite = scope.level === 'org';
   const primaryColor = org.branding?.primaryColor || '#12365a';
   const userName = currentAdminName.value;
-  const userInitial = userName ? userName.charAt(0).toUpperCase() : '?';
+  // Fallback to 'A' for Admin if name not found (different device token)
+  const userInitial = userName ? userName.charAt(0).toUpperCase() : 'A';
 
   const handleInviteClick = () => {
     showInviteModal.value = true;
@@ -333,7 +334,7 @@ function Header({ org, orgId }: { org: { name: string; branding?: { primaryColor
             <div class="dropdown-user">
               <div class="dropdown-avatar">{userInitial}</div>
               <div class="dropdown-info">
-                <span class="dropdown-name">{userName}</span>
+                <span class="dropdown-name">{userName || 'Admin'}</span>
                 <span class="dropdown-role">{scope.level === 'org' ? 'Organization Admin' : 'Location Admin'}</span>
               </div>
             </div>
