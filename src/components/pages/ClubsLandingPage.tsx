@@ -152,10 +152,6 @@ const steps = [
 ];
 
 export function ClubsLandingPage() {
-  const handleBackClick = () => {
-    window.location.hash = '';
-  };
-
   const handleGetStarted = () => {
     showContactForm.value = true;
     setTimeout(() => {
@@ -167,54 +163,24 @@ export function ClubsLandingPage() {
     <div class="clubs-landing">
       <style>{styles}</style>
 
-      {/* Navigation */}
-      <nav class="nav">
-        <button class="back-link" onClick={handleBackClick}>
-          <span class="back-arrow">←</span>
-          <span>Sports Connector</span>
-        </button>
-      </nav>
-
       {/* Hero */}
       <section class="hero">
-        <div class="hero-content">
-          <div class="hero-badge">For Clubs & Organizations</div>
-          <h1 class="hero-title">
-            <span class="title-line">Manage Your Club's</span>
-            <span class="title-line">Racket Sports Groups</span>
-          </h1>
-          <p class="hero-subtitle">
-            One dashboard to see activity across all your locations and groups.
-            Built for tennis directors, club managers, and regional coordinators.
-          </p>
-          <button class="hero-cta" onClick={handleGetStarted}>
-            Get Started
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
-        <div class="hero-visual">
-          <div class="dashboard-preview">
-            <div class="preview-header">
-              <div class="preview-dot" />
-              <div class="preview-dot" />
-              <div class="preview-dot" />
-            </div>
-            <div class="preview-content">
-              <div class="preview-stat">
-                <span class="stat-value">847</span>
-                <span class="stat-label">Members</span>
-              </div>
-              <div class="preview-stat">
-                <span class="stat-value">2,341</span>
-                <span class="stat-label">Games</span>
-              </div>
-              <div class="preview-stat">
-                <span class="stat-value">12</span>
-                <span class="stat-label">Groups</span>
-              </div>
-            </div>
+        <div class="hero-inner">
+          <div class="hero-content">
+            <div class="hero-badge">For Clubs & Organizations</div>
+            <h1 class="hero-title">
+              Manage Your Club's Racket Sports Groups
+            </h1>
+            <p class="hero-subtitle">
+              One dashboard to see activity across all your locations and groups.
+              Built for tennis directors, club managers, and regional coordinators.
+            </p>
+            <button class="hero-cta" onClick={handleGetStarted}>
+              Get Started
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
         </div>
       </section>
@@ -289,67 +255,46 @@ const styles = `
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Navigation */
-  .nav {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    padding: 20px 24px;
-    z-index: 10;
-  }
-
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 500;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .back-link:hover {
-    background: rgba(255, 255, 255, 0.25);
-  }
-
-  .back-arrow {
-    font-size: 16px;
-  }
-
   /* Hero */
   .hero {
-    background: linear-gradient(135deg, #0d5c63 0%, #0a4a50 50%, #083d42 100%);
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 50%, #134e4a 100%);
     color: white;
-    padding: 100px 24px 80px;
+    padding: 80px 24px 96px;
     position: relative;
     overflow: hidden;
+    text-align: center;
   }
 
   .hero::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: -50%;
+    left: -50%;
+    right: -50%;
+    bottom: -50%;
     background:
-      radial-gradient(circle at 10% 20%, rgba(20, 184, 166, 0.15) 0%, transparent 40%),
-      radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 40%);
+      radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 40%),
+      radial-gradient(circle at 40% 60%, rgba(20, 184, 166, 0.2) 0%, transparent 30%);
     pointer-events: none;
+    animation: shimmer 20s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    50% { transform: translate(2%, 2%) rotate(1deg); }
+  }
+
+  .hero-inner {
+    position: relative;
+    max-width: 680px;
+    margin: 0 auto;
   }
 
   .hero-content {
-    position: relative;
-    max-width: 600px;
-    margin: 0 auto;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .hero-badge {
@@ -367,24 +312,22 @@ const styles = `
 
   .hero-title {
     font-family: 'Fraunces', Georgia, serif;
-    font-size: clamp(32px, 7vw, 52px);
+    font-size: clamp(32px, 8vw, 56px);
     font-weight: 700;
     color: white;
-    margin: 0 0 20px;
+    margin: 0 0 24px;
     letter-spacing: -0.02em;
-    line-height: 1.15;
-  }
-
-  .title-line {
-    display: block;
+    line-height: 1.1;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
   }
 
   .hero-subtitle {
     font-size: clamp(16px, 2.5vw, 18px);
     font-weight: 400;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.85);
     margin: 0 0 32px;
     line-height: 1.6;
+    max-width: 520px;
   }
 
   .hero-cta {
@@ -392,7 +335,7 @@ const styles = `
     align-items: center;
     gap: 10px;
     background: white;
-    color: #0d5c63;
+    color: #0f766e;
     font-family: inherit;
     font-size: 16px;
     font-weight: 600;
@@ -407,80 +350,6 @@ const styles = `
   .hero-cta:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-  }
-
-  .hero-visual {
-    display: none;
-  }
-
-  @media (min-width: 900px) {
-    .hero {
-      padding: 120px 48px 100px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 80px;
-    }
-
-    .hero-content {
-      text-align: left;
-      margin: 0;
-    }
-
-    .hero-visual {
-      display: block;
-      flex-shrink: 0;
-    }
-
-    .dashboard-preview {
-      width: 340px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 16px;
-      overflow: hidden;
-      backdrop-filter: blur(10px);
-    }
-
-    .preview-header {
-      display: flex;
-      gap: 6px;
-      padding: 12px 16px;
-      background: rgba(0, 0, 0, 0.2);
-    }
-
-    .preview-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    .preview-content {
-      padding: 24px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .preview-stat {
-      text-align: center;
-    }
-
-    .stat-value {
-      display: block;
-      font-family: 'Fraunces', Georgia, serif;
-      font-size: 28px;
-      font-weight: 700;
-      color: white;
-    }
-
-    .stat-label {
-      display: block;
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.6);
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
   }
 
   /* Benefits */

@@ -2215,6 +2215,10 @@ export function HubLandingPage() {
             Contact Us
           </a>
           <span class="footer-separator">·</span>
+          <a href="#clubs">
+            For Clubs
+          </a>
+          <span class="footer-separator">·</span>
           <a
             href="#"
             onClick={(e) => {
