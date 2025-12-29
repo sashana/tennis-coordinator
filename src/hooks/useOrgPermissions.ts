@@ -188,10 +188,13 @@ export async function loadOrgGroups(
       return [];
     }
 
-    // Get today's date for filtering future dates
+    // Get today's date for filtering future dates (use local date, not UTC)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString().split('T')[0];
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
 
     // Calculate date thresholds for recent activity
     const sevenDaysAgo = new Date(today);
@@ -216,16 +219,20 @@ export async function loadOrgGroups(
         const dayOfWeekCounts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
         // Rich player stats tracking
         const playerStats: Record<string, { games: number; checkins: number; singles: number; doubles: number; lastActive: string | null }> = {};
+        // Track actual processed dates for accurate first/last activity
+        const processedDates: string[] = [];
 
         // Process each date's check-ins (same approach as InsightsTab)
         for (const date of checkinDates) {
           const dayCheckins = checkins[date];
           if (!Array.isArray(dayCheckins) || dayCheckins.length === 0) continue;
 
-          // Only count past dates
-          const dateObj = new Date(date + 'T00:00:00');
-          if (dateObj >= today) continue;
+          // Only count dates up to and including today (not future)
+          if (date > todayStr) continue;
 
+          processedDates.push(date);
+
+          const dateObj = new Date(date + 'T00:00:00');
           const isLast7Days = dateObj >= sevenDaysAgo;
           const isLast30Days = dateObj >= thirtyDaysAgo;
           const dayOfWeek = dateObj.getDay();
@@ -304,10 +311,10 @@ export async function loadOrgGroups(
           }))
           .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
 
-        // Get first and last activity dates (only past dates)
-        const pastCheckinDates = checkinDates.filter((d) => d <= todayStr).sort();
-        const firstActivity = pastCheckinDates[0] || null;
-        const lastActivity = pastCheckinDates[pastCheckinDates.length - 1] || null;
+        // Get first and last activity dates from actually processed dates
+        processedDates.sort();
+        const firstActivity = processedDates[0] || null;
+        const lastActivity = processedDates[processedDates.length - 1] || null;
 
         const totalGames = singlesGames + doublesGames + rotationGames;
 

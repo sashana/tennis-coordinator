@@ -555,7 +555,8 @@ function GroupCard({ group }: { group: { id: string; settings: GroupSettings; st
 // Format date for display
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return '—';
-  const date = new Date(dateStr);
+  // Parse as local time (not UTC) by adding time component
+  const date = new Date(dateStr + 'T12:00:00');
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
 }
