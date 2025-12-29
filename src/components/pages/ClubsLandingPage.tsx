@@ -4,6 +4,7 @@
  * Pitch page for club dashboard at sportsconnector.com/#clubs
  */
 
+import { JSX } from 'preact';
 import { useState } from 'preact/hooks';
 import { signal } from '@preact/signals';
 import { getDatabase } from '../../config/firebase';

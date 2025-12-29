@@ -240,6 +240,7 @@ export function App() {
   // Hub site routing
   if (sport.id === 'hub') {
     // Access currentHash.value to trigger re-render on hash change
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const _hash = currentHash.value;
     const clubsRoute = parseClubsRoute();
 

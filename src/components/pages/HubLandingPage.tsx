@@ -292,7 +292,7 @@ function AdminPanel() {
   const [groups, setGroups] = useState<GroupData[]>([]);
   const [loading, setLoading] = useState(true);
   const [adminTab, setAdminTab] = useState<'groups' | 'requests'>('groups');
-  const [filter, setFilter] = useState<'all' | 'request' | 'contact'>('all');
+  const [filter, setFilter] = useState<'all' | 'request' | 'contact' | 'club-inquiry'>('all');
   const [groupFilter, setGroupFilter] = useState<'active' | 'archived'>('active');
   const [searchQuery, setSearchQuery] = useState('');
   const [detailsGroup, setDetailsGroup] = useState<GroupData | null>(null);
