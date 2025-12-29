@@ -18,10 +18,11 @@ const isAdminAuthenticated = signal(false);
 
 interface ContactRequest {
   id: string;
-  type: 'request' | 'contact';
+  type: 'request' | 'contact' | 'club-inquiry';
   name: string;
   email: string;
-  phone: string;
+  phone?: string;
+  clubName?: string;
   message: string;
   createdAt: number;
   status?: 'new' | 'read' | 'handled';
@@ -659,6 +660,12 @@ function AdminPanel() {
                     >
                       Contact ({requests.filter(r => r.type === 'contact').length})
                     </button>
+                    <button
+                      class={`filter-tab ${filter === 'club-inquiry' ? 'active' : ''}`}
+                      onClick={() => setFilter('club-inquiry')}
+                    >
+                      Club Demos ({requests.filter(r => r.type === 'club-inquiry').length})
+                    </button>
                   </div>
                 </div>
 
@@ -670,12 +677,13 @@ function AdminPanel() {
                       <div key={req.id} class={`request-item ${req.status || 'new'}`}>
                         <div class="request-header">
                           <span class={`request-type ${req.type}`}>
-                            {req.type === 'request' ? '🏸 Sport Request' : '💬 Contact'}
+                            {req.type === 'request' ? '🏸 Sport Request' : req.type === 'club-inquiry' ? '🏢 Club Demo' : '💬 Contact'}
                           </span>
                           <span class="request-date">{formatDate(req.createdAt)}</span>
                         </div>
                         <div class="request-info">
                           <strong>{req.name}</strong>
+                          {req.clubName && <span class="request-club">@ {req.clubName}</span>}
                           <a href={`mailto:${req.email}`}>{req.email}</a>
                           {req.phone && <span class="request-phone">{req.phone}</span>}
                         </div>
@@ -2020,6 +2028,16 @@ export function HubLandingPage() {
         .request-type.contact {
           background: #f3e8ff;
           color: #7c3aed;
+        }
+
+        .request-type.club-inquiry {
+          background: #d1fae5;
+          color: #047857;
+        }
+
+        .request-club {
+          color: #6b7280;
+          font-weight: 500;
         }
 
         .request-date {

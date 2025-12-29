@@ -112,42 +112,76 @@ function ContactForm() {
 
 const benefits = [
   {
-    icon: '🏢',
-    title: 'Multi-Location View',
-    description: 'See all groups across every club location in one unified dashboard. No more juggling spreadsheets.',
+    icon: 'chart',
+    title: 'Increase Court Usage',
+    description: 'Members find partners in minutes, not days. Less empty courts, more games played.',
   },
   {
-    icon: '📊',
-    title: 'Engagement Insights',
-    description: 'Track check-ins, games played, and player activity. Know who your most engaged members are.',
+    icon: 'users',
+    title: 'Boost Member Retention',
+    description: 'Active members stay longer. Give them frictionless ways to play and connect.',
   },
   {
-    icon: '📅',
-    title: 'Activity Patterns',
-    description: 'Understand which days are busiest, what game types are popular, and optimize court scheduling.',
+    icon: 'user-plus',
+    title: 'Integrate New Members',
+    description: 'Help newcomers find their group fast. Social connection drives long-term loyalty.',
   },
   {
-    icon: '📱',
-    title: 'No App Required',
-    description: 'Members use a simple web link. Works on any phone, no downloads, no accounts to create.',
+    icon: 'trending',
+    title: 'Grow Ancillary Revenue',
+    description: 'More court visits mean more F&B, pro shop, and lesson bookings.',
   },
 ];
+
+function BenefitIcon({ type }: { type: string }) {
+  const icons: Record<string, JSX.Element> = {
+    chart: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 3v18h18" />
+        <path d="M18 9l-5 5-4-4-6 6" />
+      </svg>
+    ),
+    users: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+    'user-plus': (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="8.5" cy="7" r="4" />
+        <line x1="20" y1="8" x2="20" y2="14" />
+        <line x1="23" y1="11" x2="17" y2="11" />
+      </svg>
+    ),
+    trending: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+        <polyline points="17 6 23 6 23 12" />
+      </svg>
+    ),
+  };
+  return icons[type] || null;
+}
 
 const steps = [
   {
     number: '1',
-    title: 'We set up your organization',
-    description: 'Share your locations and structure. We configure everything.',
+    title: 'Members share a simple link',
+    description: 'No app downloads. No accounts. Works on any phone in seconds.',
   },
   {
     number: '2',
-    title: 'Invite staff with scoped access',
-    description: 'Tennis directors see their locations. Regional managers see everything.',
+    title: 'They check in when available',
+    description: 'Members indicate when they can play. Matches form automatically.',
   },
   {
     number: '3',
-    title: 'See insights from day one',
-    description: 'Groups using Sports Connector automatically appear in your dashboard.',
+    title: 'You see engagement across locations',
+    description: 'Track activity, identify your most engaged members, spot trends.',
   },
 ];
 
@@ -169,18 +203,19 @@ export function ClubsLandingPage() {
           <div class="hero-content">
             <div class="hero-badge">For Clubs & Organizations</div>
             <h1 class="hero-title">
-              Manage Your Club's Racket Sports Groups
+              More Games. Happier Members. Higher Revenue.
             </h1>
             <p class="hero-subtitle">
-              One dashboard to see activity across all your locations and groups.
-              Built for tennis directors, club managers, and regional coordinators.
+              Sports Connector helps members find partners and organize matches in minutes.
+              Remove coordination friction to drive usage, retention, and revenue.
             </p>
             <button class="hero-cta" onClick={handleGetStarted}>
-              Get Started
+              Schedule a Demo
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
+            <p class="hero-note">Live in 24 hours · No app downloads for members</p>
           </div>
         </div>
       </section>
@@ -188,14 +223,18 @@ export function ClubsLandingPage() {
       {/* Benefits */}
       <section class="benefits">
         <div class="section-header">
-          <h2>Why clubs choose Sports Connector</h2>
-          <p>Everything you need to understand and grow racket sports engagement</p>
+          <h2>Usage drives retention. Retention drives revenue.</h2>
+          <p>When members play more, they stay longer and spend more</p>
         </div>
         <div class="benefits-grid">
           {benefits.map((benefit) => (
             <div key={benefit.title} class="benefit-card">
-              <div class="benefit-icon">{benefit.icon}</div>
-              <h3>{benefit.title}</h3>
+              <div class="benefit-header">
+                <div class="benefit-icon">
+                  <BenefitIcon type={benefit.icon} />
+                </div>
+                <h3>{benefit.title}</h3>
+              </div>
               <p>{benefit.description}</p>
             </div>
           ))}
@@ -205,8 +244,8 @@ export function ClubsLandingPage() {
       {/* How it works */}
       <section class="how-it-works">
         <div class="section-header">
-          <h2>Get started in days, not months</h2>
-          <p>We handle the setup so you can focus on your members</p>
+          <h2>How it works</h2>
+          <p>Zero friction for members, full visibility for you</p>
         </div>
         <div class="steps">
           {steps.map((step) => (
@@ -224,11 +263,11 @@ export function ClubsLandingPage() {
       {/* CTA / Contact */}
       <section class="cta-section" id="contact-section">
         <div class="cta-content">
-          <h2>Ready to see your club's activity?</h2>
-          <p>Tell us about your organization and we'll show you what's possible.</p>
+          <h2>Ready to drive more court usage?</h2>
+          <p>Let's talk about how Sports Connector can help your members play more.</p>
           {!showContactForm.value ? (
             <button class="cta-btn" onClick={() => { showContactForm.value = true; }}>
-              Contact Us
+              Schedule a Demo
             </button>
           ) : (
             <ContactForm />
@@ -238,7 +277,7 @@ export function ClubsLandingPage() {
 
       {/* Footer */}
       <footer class="footer">
-        <p>© {new Date().getFullYear()} Sports Connector. Less texting, more playing.</p>
+        <p>© {new Date().getFullYear()} Sports Connector</p>
       </footer>
     </div>
   );
@@ -352,16 +391,23 @@ const styles = `
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
   }
 
+  .hero-note {
+    margin: 16px 0 0;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+  }
+
   /* Benefits */
   .benefits {
-    padding: 72px 24px;
+    padding: 56px 24px;
     max-width: 1000px;
     margin: 0 auto;
   }
 
   .section-header {
     text-align: center;
-    margin-bottom: 48px;
+    margin-bottom: 36px;
   }
 
   .section-header h2 {
@@ -380,14 +426,14 @@ const styles = `
 
   .benefits-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
   }
 
   .benefit-card {
     background: white;
-    border-radius: 16px;
-    padding: 28px 24px;
+    border-radius: 14px;
+    padding: 20px;
     border: 1px solid #e2e8f0;
     transition: all 0.2s;
   }
@@ -397,23 +443,42 @@ const styles = `
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   }
 
+  .benefit-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
   .benefit-icon {
-    font-size: 32px;
-    margin-bottom: 16px;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .benefit-icon svg {
+    width: 18px;
+    height: 18px;
   }
 
   .benefit-card h3 {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 600;
     color: #1a1a2e;
-    margin: 0 0 8px;
+    margin: 0;
   }
 
   .benefit-card p {
     font-size: 14px;
     color: #64748b;
     margin: 0;
-    line-height: 1.6;
+    line-height: 1.5;
   }
 
   /* How it works */
