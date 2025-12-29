@@ -7,6 +7,7 @@ import { initializePlatformUser } from '../hooks/usePlatformUser';
 const logger = createLogger('App');
 import { LandingPage } from './pages/LandingPage';
 import { HubLandingPage } from './pages/HubLandingPage';
+import { ClubsLandingPage } from './pages/ClubsLandingPage';
 import { ClubDashboard } from './pages/ClubDashboard';
 import { MainApp } from './pages/MainApp';
 import { Toast } from './ui/Toast';
@@ -14,7 +15,11 @@ import { SportLoadingScreen } from './ui/SportEffects';
 import { sport } from '../config/sport';
 
 // Parse clubs route from hash
-function parseClubsRoute(): { orgId: string; isSetup: boolean; inviteCode?: string } | null {
+type ClubsRoute =
+  | { type: 'landing' }
+  | { type: 'dashboard'; orgId: string; isSetup: boolean; inviteCode?: string };
+
+function parseClubsRoute(): ClubsRoute | null {
   const hash = window.location.hash;
   if (!hash.startsWith('#clubs')) {
     return null;
@@ -24,15 +29,15 @@ function parseClubsRoute(): { orgId: string; isSetup: boolean; inviteCode?: stri
   const parts = hash.replace('#clubs', '').split('/').filter(Boolean);
 
   if (parts.length === 0) {
-    // #clubs - show org selector (for now, redirect to hub)
-    return null;
+    // #clubs - show clubs landing page
+    return { type: 'landing' };
   }
 
   const orgId = parts[0];
   const isSetup = parts[1] === 'setup';
   const inviteCode = parts[1] === 'invite' ? parts[2] : undefined;
 
-  return { orgId, isSetup, inviteCode };
+  return { type: 'dashboard', orgId, isSetup, inviteCode };
 }
 
 // App State Signals
@@ -227,8 +232,22 @@ export function App() {
   if (sport.id === 'hub') {
     const clubsRoute = parseClubsRoute();
 
-    // If #clubs/orgId route, show club dashboard
-    if (clubsRoute) {
+    // #clubs - show clubs landing page (for clubs wanting to sign up)
+    if (clubsRoute?.type === 'landing') {
+      return (
+        <>
+          <ClubsLandingPage />
+          <div class="toast-container">
+            {toasts.value.map((toast) => (
+              <Toast key={toast.id} message={toast.message} type={toast.type} />
+            ))}
+          </div>
+        </>
+      );
+    }
+
+    // #clubs/{orgId} - show club dashboard
+    if (clubsRoute?.type === 'dashboard') {
       return (
         <>
           <ClubDashboard
