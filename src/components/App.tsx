@@ -46,6 +46,7 @@ export const currentGroupName = signal<string>('');
 export const selectedDate = signal<string | null>(null);
 export const sessionUser = signal<string>('');
 export const isLoading = signal<boolean>(true);
+export const currentHash = signal<string>(window.location.hash);
 export const toasts = signal<
   Array<{ id: number; message: string; type: 'success' | 'error' | 'info' }>
 >([]);
@@ -222,6 +223,14 @@ export function App() {
     }
 
     init();
+
+    // Listen for hash changes to update routing
+    const handleHashChange = () => {
+      currentHash.value = window.location.hash;
+      window.scrollTo(0, 0);
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   if (isLoading.value) {
@@ -230,6 +239,8 @@ export function App() {
 
   // Hub site routing
   if (sport.id === 'hub') {
+    // Access currentHash.value to trigger re-render on hash change
+    const _hash = currentHash.value;
     const clubsRoute = parseClubsRoute();
 
     // #clubs - show clubs landing page (for clubs wanting to sign up)
