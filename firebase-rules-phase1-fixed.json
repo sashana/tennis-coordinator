@@ -134,6 +134,22 @@
       "$requestId": {
         ".validate": "newData.hasChildren(['type', 'name', 'email', 'createdAt'])"
       }
+    },
+
+    "organizations": {
+      ".read": true,
+      ".write": true,
+      "$orgId": {
+        ".validate": "newData.hasChildren(['name', 'locations', 'settings'])"
+      }
+    },
+
+    "adminIndex": {
+      ".read": true,
+      ".write": true,
+      "$deviceToken": {
+        ".validate": "newData.hasChild('orgAdmin') || newData.hasChild('locationAdmin') || newData.hasChild('groupAdmin')"
+      }
     }
   }
 }

@@ -9,6 +9,9 @@ export type { PlayStyle, SportId };
 // Re-export all other sport configuration types
 export * from './sportConfig';
 
+// Re-export organization types
+export * from './organization';
+
 // ============================================
 // Play Style Types
 // ============================================
@@ -226,6 +229,13 @@ export interface GroupSettings {
   adminPin: string;
   location?: WeatherLocation;
   sportType?: SportId; // Sport type for multi-sport support (defaults to 'tennis')
+
+  // Organization fields (optional - null/undefined = independent group)
+  organizationId?: string; // Links group to an organization
+  locations?: string[]; // Array of location IDs within the org
+  level?: string; // Skill level (e.g., "4.0", "beginner")
+  format?: 'singles' | 'doubles' | 'mixed'; // Play format
+  type?: 'social' | 'competitive' | 'league' | 'open'; // Group type
 }
 
 export interface GroupData {

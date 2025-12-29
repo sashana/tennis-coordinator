@@ -17,6 +17,8 @@ import type {
   NotificationItem,
   MemberDetailsMap,
   MatchArrangement,
+  Organization,
+  AdminIndex,
 } from '@/types';
 import { normalizeName } from '@/utils/helpers';
 
@@ -36,6 +38,7 @@ interface DatabaseRef {
  * Firebase path generators
  */
 export const firebasePaths = {
+  // Groups
   groups: () => 'groups',
   group: (groupId: string) => `groups/${groupId}`,
   checkins: (groupId: string) => `groups/${groupId}/checkins`,
@@ -53,6 +56,15 @@ export const firebasePaths = {
   groupNotifications: (groupId: string) => `groups/${groupId}/userNotifications`,
   matchArrangements: (groupId: string, date: string) =>
     `groups/${groupId}/matchArrangements/${date}`,
+
+  // Organizations
+  organizations: () => 'organizations',
+  organization: (orgId: string) => `organizations/${orgId}`,
+  organizationAdmins: (orgId: string) => `organizations/${orgId}/admins`,
+  organizationLocations: (orgId: string) => `organizations/${orgId}/locations`,
+
+  // Admin Index (for fast permission lookups)
+  adminIndex: (deviceToken: string) => `adminIndex/${deviceToken}`,
 };
 
 /**
@@ -291,6 +303,107 @@ export class FirebaseService {
 
   async clearMatchArrangement(groupId: string, date: string): Promise<void> {
     await this.ref(firebasePaths.matchArrangements(groupId, date)).remove();
+  }
+
+  // ============================================
+  // Organizations
+  // ============================================
+
+  async loadOrganization(orgId: string): Promise<Organization | null> {
+    const snapshot = await this.ref(firebasePaths.organization(orgId)).once('value');
+    const data = snapshot.val() as Omit<Organization, 'id'> | null;
+
+    if (!data) {
+      return null;
+    }
+
+    return {
+      id: orgId,
+      ...data,
+    };
+  }
+
+  async loadAllOrganizations(): Promise<Organization[]> {
+    const snapshot = await this.ref(firebasePaths.organizations()).once('value');
+    const data = snapshot.val() as Record<string, Omit<Organization, 'id'>> | null;
+
+    if (!data) {
+      return [];
+    }
+
+    return Object.entries(data).map(([id, org]) => ({
+      id,
+      ...org,
+    }));
+  }
+
+  async saveOrganization(orgId: string, org: Omit<Organization, 'id'>): Promise<void> {
+    await this.ref(firebasePaths.organization(orgId)).set(org);
+  }
+
+  async updateOrganization(
+    orgId: string,
+    updates: Partial<Omit<Organization, 'id'>>
+  ): Promise<void> {
+    await this.ref(firebasePaths.organization(orgId)).update(updates as Record<string, unknown>);
+  }
+
+  // ============================================
+  // Admin Index
+  // ============================================
+
+  async loadAdminIndex(deviceToken: string): Promise<AdminIndex | null> {
+    const snapshot = await this.ref(firebasePaths.adminIndex(deviceToken)).once('value');
+    return (snapshot.val() as AdminIndex) || null;
+  }
+
+  async saveAdminIndex(deviceToken: string, index: AdminIndex): Promise<void> {
+    await this.ref(firebasePaths.adminIndex(deviceToken)).set(index);
+  }
+
+  async updateAdminIndex(
+    deviceToken: string,
+    updates: Partial<AdminIndex>
+  ): Promise<void> {
+    await this.ref(firebasePaths.adminIndex(deviceToken)).update(updates as Record<string, unknown>);
+  }
+
+  // ============================================
+  // Groups by Organization
+  // ============================================
+
+  async loadGroupsByOrg(orgId: string): Promise<Array<{ id: string; settings: GroupSettings }>> {
+    // Load all groups and filter by organizationId
+    // Note: In production, consider using Firebase indexing for better performance
+    const snapshot = await this.ref(firebasePaths.groups()).once('value');
+    const allGroups = snapshot.val() as Record<
+      string,
+      { settings?: Partial<GroupSettings> }
+    > | null;
+
+    if (!allGroups) {
+      return [];
+    }
+
+    return Object.entries(allGroups)
+      .filter(([, group]) => group.settings?.organizationId === orgId)
+      .map(([id, group]) => ({
+        id,
+        settings: {
+          groupName: group.settings?.groupName || 'Unknown Group',
+          members: group.settings?.members || [],
+          memberDetails: group.settings?.memberDetails || {},
+          groupPin: group.settings?.groupPin || '',
+          adminPin: group.settings?.adminPin || '',
+          location: group.settings?.location,
+          sportType: group.settings?.sportType,
+          organizationId: group.settings?.organizationId,
+          locations: group.settings?.locations,
+          level: group.settings?.level,
+          format: group.settings?.format,
+          type: group.settings?.type,
+        },
+      }));
   }
 }
 

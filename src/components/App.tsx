@@ -7,10 +7,32 @@ import { initializePlatformUser } from '../hooks/usePlatformUser';
 const logger = createLogger('App');
 import { LandingPage } from './pages/LandingPage';
 import { HubLandingPage } from './pages/HubLandingPage';
+import { ClubDashboard } from './pages/ClubDashboard';
 import { MainApp } from './pages/MainApp';
 import { Toast } from './ui/Toast';
 import { SportLoadingScreen } from './ui/SportEffects';
 import { sport } from '../config/sport';
+
+// Parse clubs route from hash
+function parseClubsRoute(): { orgId: string; isSetup: boolean } | null {
+  const hash = window.location.hash;
+  if (!hash.startsWith('#clubs')) {
+    return null;
+  }
+
+  // Parse: #clubs, #clubs/bayclub, #clubs/bayclub/setup
+  const parts = hash.replace('#clubs', '').split('/').filter(Boolean);
+
+  if (parts.length === 0) {
+    // #clubs - show org selector (for now, redirect to hub)
+    return null;
+  }
+
+  const orgId = parts[0];
+  const isSetup = parts[1] === 'setup';
+
+  return { orgId, isSetup };
+}
 
 // App State Signals
 export const currentGroupId = signal<string | null>(null);
@@ -117,6 +139,11 @@ async function getGroupIdFromUrl(): Promise<string | null> {
   // Check hash for group ID (e.g., /app.html#ttmd)
   const hash = window.location.hash.replace(/^#\/?/, '');
   if (hash) {
+    // Skip resolution for special routes (handled by App component)
+    if (hash.startsWith('clubs') || hash.startsWith('admin')) {
+      return null;
+    }
+
     // Check if it's a short code - only use if it resolves to a real group
     const resolvedGroupId = await resolveShortCodeOrGroupId(hash);
     if (resolvedGroupId) {
@@ -195,8 +222,25 @@ export function App() {
     return <SportLoadingScreen text="Loading..." />;
   }
 
-  // Hub site shows only the hub landing page
+  // Hub site routing
   if (sport.id === 'hub') {
+    const clubsRoute = parseClubsRoute();
+
+    // If #clubs/orgId route, show club dashboard
+    if (clubsRoute) {
+      return (
+        <>
+          <ClubDashboard orgId={clubsRoute.orgId} isSetup={clubsRoute.isSetup} />
+          <div class="toast-container">
+            {toasts.value.map((toast) => (
+              <Toast key={toast.id} message={toast.message} type={toast.type} />
+            ))}
+          </div>
+        </>
+      );
+    }
+
+    // Otherwise show hub landing page
     return (
       <>
         <HubLandingPage />
