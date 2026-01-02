@@ -434,6 +434,10 @@ export function CheckInDrawer() {
           border-color: var(--color-gray-disabled, #ccc);
         }
 
+        .pref-btn:active {
+          transform: scale(0.97);
+        }
+
         .pref-btn.selected {
           background: var(--color-primary, #2C6E49);
           border-color: var(--color-primary, #2C6E49);
@@ -508,6 +512,10 @@ export function CheckInDrawer() {
         .time-btn:hover {
           border-color: var(--color-primary, #2C6E49);
           background: var(--color-primary-lightest, #f8fff8);
+        }
+
+        .time-btn:active {
+          transform: scale(0.95);
         }
 
         .time-btn.selected {
@@ -593,6 +601,10 @@ export function CheckInDrawer() {
           background: var(--color-bg-page, #e8e8e8);
         }
 
+        .cancel-btn:active {
+          transform: scale(0.98);
+        }
+
         .confirm-btn {
           flex: 2;
           padding: 16px;
@@ -608,6 +620,10 @@ export function CheckInDrawer() {
 
         .confirm-btn:hover {
           background: var(--color-primary-dark, #1a402b);
+        }
+
+        .confirm-btn:active {
+          transform: scale(0.98);
         }
 
         .drawer-remove {

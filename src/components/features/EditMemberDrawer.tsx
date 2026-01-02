@@ -563,6 +563,10 @@ export function EditMemberDrawer() {
           background: #ffebee;
         }
 
+        .remove-btn:active {
+          transform: scale(0.98);
+        }
+
         .remove-btn.confirming {
           background: #e53935;
           color: white;
@@ -595,6 +599,11 @@ export function EditMemberDrawer() {
           background: #e8e8e8;
         }
 
+        .cancel-btn:active {
+          transform: scale(0.98);
+          background: #e0e0e0;
+        }
+
         .cancel-btn:disabled {
           opacity: 0.5;
           cursor: not-allowed;
@@ -615,6 +624,10 @@ export function EditMemberDrawer() {
 
         .confirm-btn:hover {
           background: var(--color-primary-dark, #1a402b);
+        }
+
+        .confirm-btn:active {
+          transform: scale(0.98);
         }
 
         .confirm-btn:disabled {

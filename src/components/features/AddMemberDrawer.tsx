@@ -352,6 +352,11 @@ export function AddMemberDrawer() {
           background: #e8e8e8;
         }
 
+        .cancel-btn:active {
+          transform: scale(0.98);
+          background: #e0e0e0;
+        }
+
         .confirm-btn {
           flex: 2;
           padding: 16px;
@@ -367,6 +372,10 @@ export function AddMemberDrawer() {
 
         .confirm-btn:hover {
           background: var(--color-primary-dark, #1a402b);
+        }
+
+        .confirm-btn:active {
+          transform: scale(0.98);
         }
       `}</style>
     </div>

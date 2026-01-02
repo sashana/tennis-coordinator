@@ -440,6 +440,10 @@ export function PlayerSelectDrawer() {
           background: #e8e8e8;
         }
 
+        .mode-tab:active {
+          transform: scale(0.95);
+        }
+
         .mode-tab.active {
           background: var(--color-primary, #2C6E49);
           color: white !important;
@@ -601,6 +605,10 @@ export function PlayerSelectDrawer() {
           border-color: #ccc;
         }
 
+        .pref-btn:active {
+          transform: scale(0.97);
+        }
+
         .pref-btn.selected {
           background: var(--color-primary-light, #e8f5e9);
           border-color: var(--color-primary, #2C6E49);
@@ -651,6 +659,11 @@ export function PlayerSelectDrawer() {
           background: #e8e8e8;
         }
 
+        .cancel-btn:active {
+          transform: scale(0.98);
+          background: #e0e0e0;
+        }
+
         .confirm-btn {
           flex: 2;
           padding: 14px;
@@ -666,6 +679,10 @@ export function PlayerSelectDrawer() {
 
         .confirm-btn:hover {
           background: var(--color-primary-dark, #1a402b);
+        }
+
+        .confirm-btn:active {
+          transform: scale(0.98);
         }
       `}</style>
     </div>

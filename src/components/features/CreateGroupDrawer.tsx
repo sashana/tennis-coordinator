@@ -467,6 +467,10 @@ function Step1TypeSelection({ archetypes, selectedArchetype, onSelect, onContinu
           background: #e8e8e8;
         }
 
+        .cancel-btn:active {
+          transform: scale(0.98);
+        }
+
         .continue-btn {
           flex: 2;
           padding: 16px;
@@ -481,6 +485,10 @@ function Step1TypeSelection({ archetypes, selectedArchetype, onSelect, onContinu
 
         .continue-btn:hover:not(:disabled) {
           background: var(--color-primary-dark, #1a402b);
+        }
+
+        .continue-btn:active:not(:disabled) {
+          transform: scale(0.98);
         }
 
         .continue-btn:disabled {
@@ -782,6 +790,10 @@ function Step2Details({ selectedArchetype, onBack, onSubmit, isCreating, error }
           background: #e8e8e8;
         }
 
+        .back-btn:active:not(:disabled) {
+          transform: scale(0.98);
+        }
+
         .back-btn:disabled {
           opacity: 0.5;
           cursor: not-allowed;
@@ -801,6 +813,10 @@ function Step2Details({ selectedArchetype, onBack, onSubmit, isCreating, error }
 
         .create-btn:hover:not(:disabled) {
           background: var(--color-primary-dark, #1a402b);
+        }
+
+        .create-btn:active:not(:disabled) {
+          transform: scale(0.98);
         }
 
         .create-btn:disabled {
@@ -1048,6 +1064,10 @@ function Step3Confirmation({ result, groupName, onShareInvite, onSaveForSelf, on
           background: var(--color-primary-dark, #1a402b);
         }
 
+        .save-btn:active {
+          transform: scale(0.98);
+        }
+
         .admin-hint {
           font-size: 12px;
           color: #888;
@@ -1086,6 +1106,10 @@ function Step3Confirmation({ result, groupName, onShareInvite, onSaveForSelf, on
           opacity: 0.9;
         }
 
+        .share-btn:active {
+          transform: scale(0.95);
+        }
+
         .share-btn.copy {
           background: #e0e0e0;
           color: #333;
@@ -1115,6 +1139,10 @@ function Step3Confirmation({ result, groupName, onShareInvite, onSaveForSelf, on
 
         .go-to-group-btn:hover {
           background: var(--color-primary-dark, #1a402b);
+        }
+
+        .go-to-group-btn:active {
+          transform: scale(0.98);
         }
       `}</style>
     </div>
