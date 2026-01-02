@@ -501,7 +501,7 @@ export function CheckInDrawer() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 10px 6px;
+          padding: 12px 8px;
           border: 2px solid var(--color-border, #e0e0e0);
           border-radius: 10px;
           background: white;

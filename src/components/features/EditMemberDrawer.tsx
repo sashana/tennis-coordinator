@@ -518,15 +518,15 @@ export function EditMemberDrawer() {
         .privacy-option {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 4px 0;
+          gap: 12px;
+          padding: 12px 0;
           cursor: pointer;
         }
 
         .privacy-option input[type="checkbox"] {
-          width: 16px;
-          height: 16px;
-          min-width: 16px;
+          width: 20px;
+          height: 20px;
+          min-width: 20px;
           flex-shrink: 0;
           cursor: pointer;
           accent-color: var(--color-primary, #2C6E49);

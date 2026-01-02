@@ -425,7 +425,7 @@ export function PlayerSelectDrawer() {
         }
 
         .mode-tab {
-          padding: 8px 16px;
+          padding: 12px 16px;
           background: #f5f5f5;
           border: none;
           border-radius: 20px;
