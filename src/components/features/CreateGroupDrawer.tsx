@@ -16,6 +16,7 @@ import {
   type GroupArchetypeConfig,
 } from '../../types/groupTypes';
 import { generateDefaultPin } from '../../utils/groups';
+import { addMyGroup } from '../../utils/myGroups';
 import { sport } from '../../config/sport';
 
 // ============================================
@@ -103,7 +104,17 @@ async function handleCreateGroup() {
   creationResult.value = result;
   isCreating.value = false;
 
-  if (result.success) {
+  if (result.success && result.groupId && result.shortCode) {
+    // Store group in "My Groups" for easy access later
+    addMyGroup({
+      groupId: result.groupId,
+      shortCode: result.shortCode,
+      groupName: groupName.value.trim(),
+      groupPin: groupPin.value,
+      adminPin: adminPin.value,
+      role: 'creator',
+      creatorName: creatorName.value.trim(),
+    });
     goToStep(3);
   }
 }

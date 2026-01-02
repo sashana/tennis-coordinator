@@ -60,7 +60,7 @@ async function generateUniqueShortCode(
     const code = generateShortCode(6);
     const existing = await db.ref(`shortCodeIndex/${code}`).once('value');
 
-    if (!existing.exists()) {
+    if (!existing.val()) {
       return code;
     }
 
@@ -223,7 +223,7 @@ export async function isShortCodeAvailable(code: string): Promise<boolean> {
 
   try {
     const snapshot = await db.ref(`shortCodeIndex/${code.toUpperCase()}`).once('value');
-    return !snapshot.exists();
+    return !snapshot.val();
   } catch {
     return false;
   }
@@ -238,7 +238,7 @@ export async function resolveShortCode(code: string): Promise<string | null> {
 
   try {
     const snapshot = await db.ref(`shortCodeIndex/${code.toUpperCase()}`).once('value');
-    return snapshot.val() || null;
+    return (snapshot.val() as string) || null;
   } catch {
     return null;
   }
