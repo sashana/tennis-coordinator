@@ -1,4 +1,5 @@
 import { signal } from '@preact/signals';
+import { useEffect } from 'preact/hooks';
 import {
   sessionUser,
   currentGroupId,
@@ -16,6 +17,7 @@ import {
   sharePromptData,
 } from '../pages/MainApp';
 import { addCheckin, removeCheckin, updateCheckin } from '../../hooks/useFirebase';
+import { lockBodyScroll, unlockBodyScroll } from '../../utils/dom';
 
 // Drawer state signals
 export const showCheckInDrawer = signal(false);
@@ -40,6 +42,14 @@ function getUserCheckinData(userName: string) {
 }
 
 export function CheckInDrawer() {
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (showCheckInDrawer.value) {
+      lockBodyScroll();
+      return () => unlockBodyScroll();
+    }
+  }, [showCheckInDrawer.value]);
+
   const targetUser = checkInTargetUser.value || sessionUser.value;
   const isForSelf = !checkInTargetUser.value || checkInTargetUser.value === sessionUser.value;
 

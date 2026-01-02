@@ -1,8 +1,10 @@
 import { signal } from '@preact/signals';
+import { useEffect } from 'preact/hooks';
 import { sessionUser, showToast, memberDetails, currentGroupId } from '../App';
 import { updateMemberDetails, renameMember, removeMember } from '../../hooks/useFirebase';
 import { currentPlatformUser, updateProfile, refreshPlatformUser } from '../../hooks/usePlatformUser';
 import { sport } from '../../config/sport';
+import { lockBodyScroll, unlockBodyScroll } from '../../utils/dom';
 
 // Drawer state signals
 export const showEditMemberDrawer = signal(false);
@@ -53,6 +55,14 @@ function resetForm() {
 }
 
 export function EditMemberDrawer() {
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (showEditMemberDrawer.value) {
+      lockBodyScroll();
+      return () => unlockBodyScroll();
+    }
+  }, [showEditMemberDrawer.value]);
+
   const currentMember = editingMemberName.value;
   const isAdmin = isGroupAdmin();
   const isEditingSelf = currentMember === sessionUser.value;

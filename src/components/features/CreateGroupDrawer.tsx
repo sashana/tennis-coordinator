@@ -8,6 +8,7 @@
  */
 
 import { signal } from '@preact/signals';
+import { useEffect } from 'preact/hooks';
 import { GroupTypeCard } from './GroupTypeCard';
 import { createGroup, type CreateGroupResult } from '../../services/groupCreation';
 import {
@@ -18,6 +19,7 @@ import {
 import { generateDefaultPin } from '../../utils/groups';
 import { addMyGroup } from '../../utils/myGroups';
 import { sport } from '../../config/sport';
+import { lockBodyScroll, unlockBodyScroll } from '../../utils/dom';
 
 // ============================================
 // State Signals
@@ -194,6 +196,14 @@ async function handleSaveForSelf() {
 // ============================================
 
 export function CreateGroupDrawer() {
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (showCreateGroupDrawer.value) {
+      lockBodyScroll();
+      return () => unlockBodyScroll();
+    }
+  }, [showCreateGroupDrawer.value]);
+
   if (!showCreateGroupDrawer.value) return null;
 
   const archetypes = getAllArchetypes();

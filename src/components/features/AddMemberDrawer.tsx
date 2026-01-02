@@ -1,6 +1,8 @@
 import { signal } from '@preact/signals';
+import { useEffect } from 'preact/hooks';
 import { sessionUser, showToast } from '../App';
 import { addMember } from '../../hooks/useFirebase';
+import { lockBodyScroll, unlockBodyScroll } from '../../utils/dom';
 
 // Drawer state signals
 export const showAddMemberDrawer = signal(false);
@@ -19,6 +21,14 @@ function resetForm() {
 }
 
 export function AddMemberDrawer() {
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (showAddMemberDrawer.value) {
+      lockBodyScroll();
+      return () => unlockBodyScroll();
+    }
+  }, [showAddMemberDrawer.value]);
+
   const handleAddMember = async () => {
     const name = memberName.value.trim();
     const phone = memberPhone.value.trim();

@@ -1,4 +1,5 @@
 import { signal } from '@preact/signals';
+import { useEffect } from 'preact/hooks';
 import { coreMembers, allCheckins, selectedDate, sessionUser, showToast } from '../App';
 import {
   guestName,
@@ -16,6 +17,7 @@ import {
 } from '../pages/MainApp';
 import { openCheckInDrawer } from './CheckInDrawer';
 import { addCheckin, addMember } from '../../hooks/useFirebase';
+import { lockBodyScroll, unlockBodyScroll } from '../../utils/dom';
 
 // Drawer state
 export const showPlayerSelectDrawer = signal(false);
@@ -36,6 +38,14 @@ export function openPlayerSelectDrawer() {
 }
 
 export function PlayerSelectDrawer() {
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (showPlayerSelectDrawer.value) {
+      lockBodyScroll();
+      return () => unlockBodyScroll();
+    }
+  }, [showPlayerSelectDrawer.value]);
+
   // Get members who haven't checked in yet
   const getAvailableMembers = () => {
     const date = selectedDate.value;

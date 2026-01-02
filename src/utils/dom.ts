@@ -451,3 +451,38 @@ export function setLocalStorageJSON<T>(key: string, value: T): boolean {
 }
 
 // Note: debounce and throttle are exported from helpers.ts
+
+/**
+ * Body scroll lock for modals/drawers
+ * Uses a counter to handle multiple overlays
+ */
+let scrollLockCount = 0;
+let savedScrollY = 0;
+
+/**
+ * Lock body scroll (prevents background scrolling when drawer/modal is open)
+ */
+export function lockBodyScroll(): void {
+  if (scrollLockCount === 0) {
+    savedScrollY = window.scrollY;
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${savedScrollY}px`;
+    document.body.style.width = '100%';
+  }
+  scrollLockCount++;
+}
+
+/**
+ * Unlock body scroll (restores scrolling when drawer/modal closes)
+ */
+export function unlockBodyScroll(): void {
+  scrollLockCount = Math.max(0, scrollLockCount - 1);
+  if (scrollLockCount === 0) {
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    window.scrollTo(0, savedScrollY);
+  }
+}
