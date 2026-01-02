@@ -377,7 +377,7 @@ export function PlayerSelectDrawer() {
           max-width: 500px;
           max-height: 60vh;
           overflow-y: auto;
-          padding: 0 20px 20px;
+          padding: 0 20px calc(20px + env(safe-area-inset-bottom, 0px));
           animation: slideUp 0.3s ease-out;
         }
 

@@ -384,7 +384,7 @@ export function EditMemberDrawer() {
           max-width: 500px;
           max-height: 90vh;
           overflow-y: auto;
-          padding: 0 20px 30px;
+          padding: 0 20px calc(30px + env(safe-area-inset-bottom, 0px));
           animation: slideUp 0.3s ease-out;
         }
 
