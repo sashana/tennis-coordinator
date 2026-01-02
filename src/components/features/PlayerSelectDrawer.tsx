@@ -459,7 +459,7 @@ export function PlayerSelectDrawer() {
           border: none;
           border-radius: 10px;
           padding: 12px 16px;
-          font-size: 14px;
+          font-size: 16px;
           outline: none;
           transition: all 0.2s;
         }
@@ -558,7 +558,7 @@ export function PlayerSelectDrawer() {
           padding: 12px;
           border: 2px solid #e0e0e0;
           border-radius: 10px;
-          font-size: 14px;
+          font-size: 16px;
           font-family: inherit;
           transition: border-color 0.2s;
         }

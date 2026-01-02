@@ -552,7 +552,7 @@ export function CheckInDrawer() {
           padding: 12px;
           border: 2px solid var(--color-border, #e0e0e0);
           border-radius: 10px;
-          font-size: 14px;
+          font-size: 16px;
         }
 
         .custom-time input[type="time"]:focus {
