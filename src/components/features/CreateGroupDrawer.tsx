@@ -130,15 +130,27 @@ function handleGoToGroup() {
   }
 }
 
-function handleShare(method: 'copy' | 'whatsapp' | 'sms') {
+// Signal to track copy feedback
+const copyFeedback = signal<string | null>(null);
+
+function showCopyFeedback(text: string) {
+  copyFeedback.value = text;
+  setTimeout(() => {
+    copyFeedback.value = null;
+  }, 2000);
+}
+
+function handleShareInvite(method: 'copy' | 'whatsapp' | 'sms') {
   const result = creationResult.value;
   if (!result?.shareUrl) return;
 
+  // Invite message - only includes Group PIN (not Admin PIN)
   const message = `Join my ${sport.nameLower} group "${groupName.value}"!\n\nLink: ${result.shareUrl}\nPIN: ${result.groupPin}`;
 
   switch (method) {
     case 'copy':
       navigator.clipboard.writeText(message);
+      showCopyFeedback('Invite copied!');
       break;
     case 'whatsapp':
       window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
@@ -147,6 +159,34 @@ function handleShare(method: 'copy' | 'whatsapp' | 'sms') {
       window.open(`sms:?body=${encodeURIComponent(message)}`, '_blank');
       break;
   }
+}
+
+async function handleSaveForSelf() {
+  const result = creationResult.value;
+  if (!result?.shareUrl) return;
+
+  // Full details for yourself - includes Admin PIN
+  const details = `${groupName.value}\n\nLink: ${result.shareUrl}\nGroup PIN: ${result.groupPin}\nAdmin PIN: ${result.adminPin}\n\nSave this somewhere safe!`;
+
+  // Try native share sheet first (iOS/Android)
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `${groupName.value} - Group Details`,
+        text: details,
+      });
+      return; // Success - no need for feedback toast
+    } catch (err) {
+      // User cancelled or share failed - fall back to clipboard
+      if ((err as Error).name === 'AbortError') {
+        return; // User cancelled, do nothing
+      }
+    }
+  }
+
+  // Fallback: copy to clipboard
+  navigator.clipboard.writeText(details);
+  showCopyFeedback('Details copied!');
 }
 
 // ============================================
@@ -208,8 +248,10 @@ export function CreateGroupDrawer() {
           <Step3Confirmation
             result={creationResult.value}
             groupName={groupName.value}
-            onShare={handleShare}
+            onShareInvite={handleShareInvite}
+            onSaveForSelf={handleSaveForSelf}
             onGoToGroup={handleGoToGroup}
+            copyFeedback={copyFeedback.value}
           />
         )}
       </div>
@@ -777,11 +819,13 @@ function Step2Details({ selectedArchetype, onBack, onSubmit, isCreating, error }
 interface Step3Props {
   result: CreateGroupResult;
   groupName: string;
-  onShare: (method: 'copy' | 'whatsapp' | 'sms') => void;
+  onShareInvite: (method: 'copy' | 'whatsapp' | 'sms') => void;
+  onSaveForSelf: () => void;
   onGoToGroup: () => void;
+  copyFeedback: string | null;
 }
 
-function Step3Confirmation({ result, groupName, onShare, onGoToGroup }: Step3Props) {
+function Step3Confirmation({ result, groupName, onShareInvite, onSaveForSelf, onGoToGroup, copyFeedback }: Step3Props) {
   return (
     <div class="step-content confirmation">
       {/* Success Icon */}
@@ -794,46 +838,67 @@ function Step3Confirmation({ result, groupName, onShare, onGoToGroup }: Step3Pro
       <h2 class="step-title">Group Created!</h2>
       <p class="step-subtitle">"{groupName}" is ready to go</p>
 
-      {/* Group Info Card */}
-      <div class="info-card">
-        <div class="info-row">
-          <span class="info-label">Share Link</span>
-          <span class="info-value link">{result.shareUrl}</span>
+      {/* Copy Feedback Toast */}
+      {copyFeedback && (
+        <div class="copy-feedback">{copyFeedback}</div>
+      )}
+
+      {/* Section 1: Save for Yourself */}
+      <div class="save-section">
+        <div class="section-header">
+          <span class="section-icon">🔐</span>
+          <span class="section-title">Save for yourself</span>
         </div>
-        <div class="info-row">
-          <span class="info-label">Group PIN</span>
-          <span class="info-value pin">{result.groupPin}</span>
+        <div class="info-card">
+          <div class="info-row">
+            <span class="info-label">Link</span>
+            <span class="info-value link">{result.shareUrl}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Group PIN</span>
+            <span class="info-value pin">{result.groupPin}</span>
+          </div>
+          <div class="info-row admin-pin-row">
+            <span class="info-label">Admin PIN</span>
+            <span class="info-value pin admin">{result.adminPin}</span>
+          </div>
         </div>
-        <div class="info-row">
-          <span class="info-label">Admin PIN</span>
-          <span class="info-value pin">{result.adminPin}</span>
-        </div>
+        <button class="save-btn" onClick={onSaveForSelf}>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" />
+          </svg>
+          Save Details
+        </button>
+        <p class="admin-hint">Keep your Admin PIN private — it lets you manage settings</p>
       </div>
 
-      <p class="save-reminder">
-        Save these PINs! You'll need the Admin PIN to manage your group.
-      </p>
-
-      {/* Share Buttons */}
-      <div class="share-buttons">
-        <button class="share-btn copy" onClick={() => onShare('copy')}>
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-          </svg>
-          Copy
-        </button>
-        <button class="share-btn whatsapp" onClick={() => onShare('whatsapp')}>
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-          </svg>
-          WhatsApp
-        </button>
-        <button class="share-btn sms" onClick={() => onShare('sms')}>
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z" />
-          </svg>
-          SMS
-        </button>
+      {/* Section 2: Invite Friends */}
+      <div class="invite-section">
+        <div class="section-header">
+          <span class="section-icon">👥</span>
+          <span class="section-title">Invite friends</span>
+        </div>
+        <p class="invite-hint">Share the link + Group PIN (Admin PIN stays private)</p>
+        <div class="share-buttons">
+          <button class="share-btn whatsapp" onClick={() => onShareInvite('whatsapp')}>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+            </svg>
+            WhatsApp
+          </button>
+          <button class="share-btn sms" onClick={() => onShareInvite('sms')}>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z" />
+            </svg>
+            SMS
+          </button>
+          <button class="share-btn copy" onClick={() => onShareInvite('copy')}>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+            </svg>
+            Copy
+          </button>
+        </div>
       </div>
 
       {/* Go to Group Button */}
@@ -854,7 +919,7 @@ function Step3Confirmation({ result, groupName, onShare, onGoToGroup }: Step3Pro
           display: flex;
           align-items: center;
           justify-content: center;
-          margin: 0 auto 20px;
+          margin: 0 auto 16px;
           animation: scaleIn 0.3s ease-out;
         }
 
@@ -863,20 +928,62 @@ function Step3Confirmation({ result, groupName, onShare, onGoToGroup }: Step3Pro
           to { transform: scale(1); }
         }
 
-        .info-card {
-          background: #f5f5f5;
+        .copy-feedback {
+          background: var(--color-primary, #2C6E49);
+          color: white;
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-size: 14px;
+          font-weight: 500;
+          display: inline-block;
+          margin-bottom: 16px;
+          animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .save-section,
+        .invite-section {
+          background: #f9f9f9;
           border-radius: 12px;
           padding: 16px;
-          margin: 20px 0;
+          margin-bottom: 16px;
           text-align: left;
+        }
+
+        .section-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 12px;
+        }
+
+        .section-icon {
+          font-size: 18px;
+        }
+
+        .section-title {
+          font-size: 15px;
+          font-weight: 600;
+          color: #333;
+        }
+
+        .info-card {
+          background: white;
+          border-radius: 10px;
+          padding: 12px;
+          margin-bottom: 12px;
         }
 
         .info-row {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 10px 0;
-          border-bottom: 1px solid #e0e0e0;
+          padding: 8px 0;
+          border-bottom: 1px solid #f0f0f0;
         }
 
         .info-row:last-child {
@@ -907,10 +1014,51 @@ function Step3Confirmation({ result, groupName, onShare, onGoToGroup }: Step3Pro
           letter-spacing: 2px;
         }
 
-        .save-reminder {
+        .info-value.pin.admin {
+          color: var(--color-primary, #2C6E49);
+          font-weight: 600;
+        }
+
+        .admin-pin-row {
+          background: rgba(44, 110, 73, 0.08);
+          margin: 0 -12px;
+          padding: 8px 12px !important;
+          border-radius: 0 0 8px 8px;
+          border-bottom: none !important;
+        }
+
+        .save-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 12px;
+          background: var(--color-primary, #2C6E49);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        .save-btn:hover {
+          background: var(--color-primary-dark, #1a402b);
+        }
+
+        .admin-hint {
+          font-size: 12px;
+          color: #888;
+          margin: 10px 0 0 0;
+          text-align: center;
+        }
+
+        .invite-hint {
           font-size: 13px;
-          color: #e65100;
-          margin: 0 0 20px 0;
+          color: #666;
+          margin: 0 0 12px 0;
         }
 
         .share-buttons {
