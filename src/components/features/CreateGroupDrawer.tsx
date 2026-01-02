@@ -1083,12 +1083,14 @@ function Step3Confirmation({ result, groupName, onShareInvite, onSaveForSelf, on
 
         .share-buttons {
           display: flex;
+          flex-wrap: wrap;
           gap: 8px;
           margin-bottom: 16px;
         }
 
         .share-btn {
-          flex: 1;
+          flex: 1 1 90px;
+          min-width: 90px;
           display: flex;
           align-items: center;
           justify-content: center;
