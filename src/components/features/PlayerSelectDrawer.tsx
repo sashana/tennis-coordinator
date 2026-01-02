@@ -105,6 +105,11 @@ export function PlayerSelectDrawer() {
       return;
     }
 
+    if (!newMemberPhone.value.trim()) {
+      showToast('Please enter phone number for notifications', 'error');
+      return;
+    }
+
     const memberName = newMemberName.value.trim();
 
     // First add the member
@@ -293,33 +298,32 @@ export function PlayerSelectDrawer() {
               />
             </div>
 
-            <div class="form-row">
-              <div class="form-field">
-                <label>
-                  Phone <span class="optional">(optional)</span>
-                </label>
-                <input
-                  type="tel"
-                  placeholder="Phone number"
-                  value={newMemberPhone.value}
-                  onInput={(e) => {
-                    newMemberPhone.value = (e.target as HTMLInputElement).value;
-                  }}
-                />
-              </div>
-              <div class="form-field">
-                <label>
-                  Email <span class="optional">(optional)</span>
-                </label>
-                <input
-                  type="email"
-                  placeholder="Email address"
-                  value={newMemberEmail.value}
-                  onInput={(e) => {
-                    newMemberEmail.value = (e.target as HTMLInputElement).value;
-                  }}
-                />
-              </div>
+            <div class="form-field">
+              <label>
+                Phone <span class="required">*</span>
+              </label>
+              <input
+                type="tel"
+                placeholder="Phone number (for notifications)"
+                value={newMemberPhone.value}
+                onInput={(e) => {
+                  newMemberPhone.value = (e.target as HTMLInputElement).value;
+                }}
+              />
+            </div>
+
+            <div class="form-field">
+              <label>
+                Email <span class="optional">(optional)</span>
+              </label>
+              <input
+                type="email"
+                placeholder="Email address"
+                value={newMemberEmail.value}
+                onInput={(e) => {
+                  newMemberEmail.value = (e.target as HTMLInputElement).value;
+                }}
+              />
             </div>
 
             <div class="form-field">
@@ -538,6 +542,10 @@ export function PlayerSelectDrawer() {
         .form-field .optional {
           font-weight: normal;
           color: #999;
+        }
+
+        .form-field .required {
+          color: #e53935;
         }
 
         .form-field input,
