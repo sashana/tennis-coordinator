@@ -3,7 +3,7 @@
  */
 import { showToast, selectedDate, currentGroupName } from '../../App';
 import { normalizeName } from '../../../utils/helpers';
-import { sport } from '../../../config/sport';
+import { sport } from '../../../config/sport'; // Keep for calendar event
 import { groupSettings, matchNotes, allMatchNotes } from '../../../hooks/useFirebase';
 import { createCalendarEventFromMatch, downloadICSFile } from '../../../utils/calendar';
 import { activeTab } from '../../navigation/BottomTabBar';
@@ -135,14 +135,14 @@ export function MatchCard({ match, idx, currentViewUser }: MatchCardProps) {
         position: 'relative',
       }}
     >
-      <div style={{ padding: '10px 12px' }}>
+      <div style={{ padding: '12px 14px' }}>
         {/* Selection checkbox */}
         {inSelectionMode && (
           <div
             style={{
               position: 'absolute',
-              top: '10px',
-              right: '10px',
+              top: '12px',
+              right: '12px',
               width: '22px',
               height: '22px',
               borderRadius: '6px',
@@ -160,16 +160,16 @@ export function MatchCard({ match, idx, currentViewUser }: MatchCardProps) {
           </div>
         )}
 
-        {/* Tags row */}
+        {/* Row 1: Status tags */}
         {isPastView ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
             <span
               style={{
                 background: '#e0e0e0',
                 color: '#666',
-                fontSize: '9px',
+                fontSize: '10px',
                 fontWeight: '600',
-                padding: '3px 8px',
+                padding: '4px 10px',
                 borderRadius: '4px',
                 letterSpacing: '0.5px',
               }}
@@ -178,7 +178,7 @@ export function MatchCard({ match, idx, currentViewUser }: MatchCardProps) {
             </span>
           </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', flexWrap: 'wrap' }}>
             {/* Status tag */}
             <span
               style={{
@@ -188,9 +188,9 @@ export function MatchCard({ match, idx, currentViewUser }: MatchCardProps) {
                     ? '#2C6E49'
                     : '#1976D2',
                 color: 'white',
-                fontSize: '9px',
+                fontSize: '10px',
                 fontWeight: '700',
-                padding: '3px 8px',
+                padding: '4px 10px',
                 borderRadius: '4px',
                 letterSpacing: '0.5px',
               }}
@@ -208,9 +208,9 @@ export function MatchCard({ match, idx, currentViewUser }: MatchCardProps) {
                 style={{
                   background: '#E0F2F1',
                   color: '#00897B',
-                  fontSize: '9px',
+                  fontSize: '10px',
                   fontWeight: '700',
-                  padding: '3px 8px',
+                  padding: '4px 10px',
                   borderRadius: '4px',
                   letterSpacing: '0.5px',
                 }}
@@ -224,9 +224,9 @@ export function MatchCard({ match, idx, currentViewUser }: MatchCardProps) {
               style={{
                 border: '1.5px solid #2C6E49',
                 color: '#2C6E49',
-                fontSize: '9px',
+                fontSize: '10px',
                 fontWeight: '700',
-                padding: '2px 8px',
+                padding: '3px 10px',
                 borderRadius: '4px',
                 letterSpacing: '0.5px',
               }}
@@ -236,60 +236,78 @@ export function MatchCard({ match, idx, currentViewUser }: MatchCardProps) {
           </div>
         )}
 
-        {/* Main row: Date/Type | Players */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: noteForMatch ? '8px' : '0' }}>
-          {/* Date and type */}
-          <div style={{ minWidth: '80px', flexShrink: 0 }}>
+        {/* Row 2: Date · PlayStyle */}
+        <div
+          style={{
+            fontWeight: '600',
+            fontSize: '15px',
+            color: isPastView ? '#555' : 'var(--color-text-primary, #333)',
+            marginBottom: '4px',
+          }}
+        >
+          {formatShortDate(match.date)} · {getPlayStyleLabel(match.type)}
+        </div>
+
+        {/* Row 3: Player names */}
+        <div
+          style={{
+            fontSize: '14px',
+            color: isPastView ? '#666' : 'var(--color-text-secondary, #666)',
+            marginBottom: '12px',
+            lineHeight: '1.4',
+          }}
+        >
+          {otherPlayers.length > 0 ? (
+            <>You, {otherPlayers.map((p) => p.name).join(', ')}</>
+          ) : (
+            <span style={{ fontStyle: 'italic', color: isPastView ? '#888' : '#999' }}>
+              Waiting for players...
+            </span>
+          )}
+        </div>
+
+        {/* Row 4: Progress bar + Actions */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {/* Progress bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
             <div
               style={{
-                fontWeight: '600',
-                fontSize: '13px',
-                color: isPastView ? '#555' : 'var(--color-text-primary, #333)',
+                width: '50px',
+                height: '5px',
+                background: isPastView ? '#e0e0e0' : 'var(--color-bg-muted, #e8e8e8)',
+                borderRadius: '3px',
+                overflow: 'hidden',
               }}
             >
-              {formatShortDate(match.date)}
+              <div
+                style={{
+                  height: '100%',
+                  width: `${(match.players.length / (isDoubles ? 4 : 2)) * 100}%`,
+                  background: isPastView
+                    ? '#bbb'
+                    : isConfirmed
+                      ? 'var(--color-primary, #2C6E49)'
+                      : 'linear-gradient(90deg, #2C6E49 0%, #4CAF50 100%)',
+                  borderRadius: '3px',
+                }}
+              />
             </div>
-            <div
+            <span
               style={{
                 fontSize: '11px',
-                color: isPastView ? '#777' : 'var(--color-text-secondary, #666)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '3px',
+                fontWeight: '600',
+                color: isPastView ? '#999' : isConfirmed ? 'var(--color-primary, #2C6E49)' : 'var(--color-text-secondary, #666)',
               }}
             >
-              <span>{sport.sportEmoji}</span>
-              <span>{getPlayStyleLabel(match.type)}</span>
-            </div>
+              {match.players.length}/{isDoubles ? 4 : 2}
+            </span>
           </div>
 
-          {/* Player names */}
-          <div
-            style={{
-              flex: 1,
-              minWidth: 0,
-              fontSize: '12px',
-              color: isPastView ? '#666' : 'var(--color-text-secondary, #666)',
-              lineHeight: '1.4',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {otherPlayers.length > 0 ? (
-              <>
-                <span style={{ color: isPastView ? '#888' : '#888' }}>with </span>
-                {otherPlayers.map((p) => p.name).join(' · ')}
-              </>
-            ) : (
-              <span style={{ fontStyle: 'italic', color: isPastView ? '#888' : '#999' }}>
-                Waiting for players...
-              </span>
-            )}
-          </div>
+          <div style={{ flex: 1 }} />
 
           {/* Action buttons - only when not in selection mode */}
           {!inSelectionMode && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <>
               {/* Invite button for forming games */}
               {match.isForming && !isPastView && (
                 <div style={{ position: 'relative' }}>
@@ -306,8 +324,8 @@ export function MatchCard({ match, idx, currentViewUser }: MatchCardProps) {
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
-                      padding: '5px 10px',
-                      fontSize: '11px',
+                      padding: '6px 14px',
+                      fontSize: '12px',
                       fontWeight: '600',
                       cursor: 'pointer',
                       display: 'flex',
@@ -316,7 +334,7 @@ export function MatchCard({ match, idx, currentViewUser }: MatchCardProps) {
                     }}
                   >
                     Invite
-                    <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
                       <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" />
                     </svg>
                   </button>
@@ -395,7 +413,7 @@ export function MatchCard({ match, idx, currentViewUser }: MatchCardProps) {
                   <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z" />
                 </svg>
               </button>
-            </div>
+            </>
           )}
         </div>
 
