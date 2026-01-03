@@ -4,6 +4,7 @@ import { getDatabase } from '../config/firebase';
 import { createLogger } from '../utils/logger';
 import { linkUserToGroup, updateGroupActivity } from './usePlatformUser';
 import { sport } from '../config/sport';
+import { notifyGameConfirmed } from '../services/pushNotifications';
 
 const themeLogger = createLogger('Theme');
 const notificationLogger = createLogger('Notifications');
@@ -826,6 +827,21 @@ async function checkAndNotifyMatchFormations(groupId: string, date: string) {
         } catch (error) {
           matchLogger.error(`Error sending match notification to ${playerName}:`, error);
         }
+      }
+
+      // Send push notifications to opted-in players
+      try {
+        matchLogger.info('Sending push notifications for confirmed game...');
+        const result = await notifyGameConfirmed({
+          groupId,
+          gameDate: date,
+          gameType: matchData.type,
+          players: matchData.players,
+          excludePlayer: sessionUser.value || undefined, // Don't notify the person who triggered confirmation
+        });
+        matchLogger.info('Push notification result:', result);
+      } catch (pushError) {
+        matchLogger.error('Error sending push notifications:', pushError);
       }
     } else {
       matchLogger.debug(`Match ${key} already exists (not new)`);
