@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tennis Coordinator - What's New</title>
+    <title>Sports Coordinator - What's New</title>
     <style>
         * {
             margin: 0;
@@ -163,6 +163,10 @@
             border-bottom-color: #1a402b;
         }
 
+        .tennis-only {
+            display: block;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 25px 20px;
@@ -185,7 +189,7 @@
 </head>
 <body>
     <div class="container">
-        <h1><a href="index.html" style="color: inherit; text-decoration: none;">Tennis Coordinator Update</a></h1>
+        <h1><a href="index.html" style="color: inherit; text-decoration: none;" id="page-title">Sports Coordinator Update</a></h1>
         <div class="subtitle">December 2025</div>
 
         <div class="intro">
@@ -235,7 +239,7 @@
         </div>
 
         <div class="feature">
-            <h2><span class="feature-emoji">🎾</span> See All Your Games</h2>
+            <h2><span class="feature-emoji" id="games-emoji">🎾</span> See All Your Games</h2>
             <div class="feature-desc">
                 View formed or still-forming games under "My Games". Add confirmed matches to your calendar or invite more members to help form incomplete games.
             </div>
@@ -244,7 +248,7 @@
             </div>
         </div>
 
-        <div class="feature">
+        <div class="feature tennis-only" id="theme-feature">
             <h2><span class="feature-emoji">🇦🇺</span> Australian Open Theme</h2>
             <div class="feature-desc">
                 App now features Australian Open colors and styling with the tournament coming up! Themes automatically update as we approach major Grand Slams (Wimbledon, Roland-Garros, US Open).
@@ -283,9 +287,36 @@
             Questions? Check the Help tab in the app or ask in the group.
         </p>
 
-        <p style="text-align: center; margin-top: 30px; color: #666; font-style: italic;">
-            Built with ❤️ for tennis players who want to spend more time on the court and less time coordinating.
+        <p style="text-align: center; margin-top: 30px; color: #666; font-style: italic;" id="footer-text">
+            Built with ❤️ for players who want to spend more time on the court and less time coordinating.
         </p>
     </div>
+
+    <script>
+        // Detect sport from hostname
+        const hostname = window.location.hostname;
+        const isPickleball = hostname.includes('pickleball');
+        const isTennis = hostname.includes('tennis') || (!isPickleball && !hostname.includes('sportsconnector'));
+
+        const sport = isPickleball ? 'pickleball' : 'tennis';
+        const sportName = isPickleball ? 'Pickleball' : 'Tennis';
+        const sportEmoji = isPickleball ? '🥒' : '🎾';
+
+        // Update page title
+        document.title = `${sportName} Coordinator - What's New`;
+        document.getElementById('page-title').textContent = `${sportName} Coordinator Update`;
+
+        // Update sport emoji
+        document.getElementById('games-emoji').textContent = sportEmoji;
+
+        // Hide tennis-only features for pickleball
+        if (isPickleball) {
+            document.getElementById('theme-feature').style.display = 'none';
+        }
+
+        // Update footer text
+        document.getElementById('footer-text').innerHTML =
+            `Built with ❤️ for ${sport} players who want to spend more time on the court and less time coordinating.`;
+    </script>
 </body>
 </html>
