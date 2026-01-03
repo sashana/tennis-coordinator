@@ -160,23 +160,23 @@ export function GameProgressCard({
         opacity: isPast ? 0.7 : 1,
       }}
     >
-      <div style={{ padding: '10px 12px' }}>
-        {/* Tags row */}
+      <div style={{ padding: '12px 14px' }}>
+        {/* Row 1: Status tags */}
         {!isPast && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', flexWrap: 'wrap' }}>
             {/* Status tag */}
             {(game.playersNeed > 0 || isConfirmed) && (
               <span
                 style={{
                   background: isUrgent
-                    ? '#FF9800' // Orange - 1 spot
+                    ? '#FF9800'
                     : isConfirmed
-                      ? '#2C6E49' // Green - confirmed
-                      : '#1976D2', // Blue - 2+ spots
+                      ? '#2C6E49'
+                      : '#1976D2',
                   color: 'white',
-                  fontSize: '9px',
+                  fontSize: '10px',
                   fontWeight: '700',
-                  padding: '3px 8px',
+                  padding: '4px 10px',
                   borderRadius: '4px',
                   letterSpacing: '0.5px',
                 }}
@@ -195,9 +195,9 @@ export function GameProgressCard({
                 style={{
                   background: '#E0F2F1',
                   color: '#00897B',
-                  fontSize: '9px',
+                  fontSize: '10px',
                   fontWeight: '700',
-                  padding: '3px 8px',
+                  padding: '4px 10px',
                   borderRadius: '4px',
                   letterSpacing: '0.5px',
                 }}
@@ -212,9 +212,9 @@ export function GameProgressCard({
                 style={{
                   border: '1.5px solid #2C6E49',
                   color: '#2C6E49',
-                  fontSize: '9px',
+                  fontSize: '10px',
                   fontWeight: '700',
-                  padding: '2px 8px',
+                  padding: '3px 10px',
                   borderRadius: '4px',
                   letterSpacing: '0.5px',
                 }}
@@ -225,54 +225,35 @@ export function GameProgressCard({
           </div>
         )}
 
-        {/* Main row: Date/Type | Players | Progress */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-          {/* Date and type */}
-          <div style={{ minWidth: '80px', flexShrink: 0 }}>
-            <div
-              style={{
-                fontWeight: '600',
-                fontSize: '13px',
-                color: isPast ? '#999' : 'var(--color-text-primary, #333)',
-              }}
-            >
-              {dateStr}
-            </div>
-            <div
-              style={{
-                fontSize: '11px',
-                color: isPast ? '#aaa' : 'var(--color-text-secondary, #666)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '3px',
-              }}
-            >
-              <span>{sport.sportEmoji}</span>
-              <span>{playStyleStr}</span>
-            </div>
-          </div>
-
-          {/* Player names - all of them */}
-          <div
-            style={{
-              flex: 1,
-              minWidth: 0,
-              fontSize: '12px',
-              color: isPast ? '#999' : 'var(--color-text-secondary, #666)',
-              lineHeight: '1.4',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {playerNames.join(' · ')}
-          </div>
-
-          {/* Progress bar */}
-          <ProgressBar have={game.playersHave} total={totalNeeded} muted={isPast} />
+        {/* Row 2: Date · PlayStyle */}
+        <div
+          style={{
+            fontWeight: '600',
+            fontSize: '15px',
+            color: isPast ? '#999' : 'var(--color-text-primary, #333)',
+            marginBottom: '4px',
+          }}
+        >
+          {dateStr} · {playStyleStr}
         </div>
 
-        {/* Action row */}
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        {/* Row 3: Player names */}
+        <div
+          style={{
+            fontSize: '14px',
+            color: isPast ? '#aaa' : 'var(--color-text-secondary, #666)',
+            marginBottom: '12px',
+            lineHeight: '1.4',
+          }}
+        >
+          {playerNames.join(', ')}
+        </div>
+
+        {/* Row 4: Progress bar + Actions */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {/* Progress bar */}
+          <ProgressBar have={game.playersHave} total={totalNeeded} muted={isPast} />
+
           <div style={{ flex: 1 }} />
 
           {/* Share button - icon only */}
