@@ -4,6 +4,7 @@
 import { showToast, currentGroupId } from '../../App';
 import { formatTimeRange } from '../../../utils/helpers';
 import { getPlayerCount, sport } from '../../../config/sport';
+import { allMatchNotes } from '../../../hooks/useFirebase';
 import { activeShareDropdown, ScheduledMatch, selectedGames, isSelectionMode, showShareOptions } from './myMatchesState';
 
 const sportEmoji = sport.sportEmoji;
@@ -24,6 +25,14 @@ export function getMatchTypeLabel(type: string): string {
   }
 }
 
+/**
+ * Get match note for a given match
+ */
+function getMatchNote(match: ScheduledMatch): string {
+  const noteMatchKey = `${match.type.replace('-forming', '')}-${match.matchNumber}`;
+  return allMatchNotes.value[match.date]?.[noteMatchKey] || '';
+}
+
 export function generateNeedPlayersMessage(match: ScheduledMatch): string {
   const dateObj = new Date(match.date + 'T00:00:00');
   const dateStr = dateObj.toLocaleDateString('en-US', {
@@ -35,6 +44,7 @@ export function generateNeedPlayersMessage(match: ScheduledMatch): string {
   const playerNames = match.players.map((p) => p.name).join(' & ');
   const groupId = currentGroupId.value;
   const appUrl = `${window.location.origin}${window.location.pathname}#${groupId}`;
+  const note = getMatchNote(match);
 
   if (match.type === 'doubles-forming') {
     const needed = match.needed || getPlayerCount('doubles') - match.players.length;
@@ -42,8 +52,11 @@ export function generateNeedPlayersMessage(match: ScheduledMatch): string {
 
     let message = `${sportEmoji} ${neededText} for doubles!\n`;
     message += `📅 ${dateStr}\n`;
-    message += `👥 ${playerNames} ${match.players.length === 1 ? 'is' : 'are'} in\n\n`;
-    message += `Can you make it? ${appUrl}`;
+    message += `👥 ${playerNames} ${match.players.length === 1 ? 'is' : 'are'} in\n`;
+    if (note) {
+      message += `📝 ${note}\n`;
+    }
+    message += `\nCan you make it? ${appUrl}`;
 
     return message;
   } else if (match.type === 'singles-forming') {
@@ -55,7 +68,11 @@ export function generateNeedPlayersMessage(match: ScheduledMatch): string {
     if (player.timeRange) {
       message += ` (${formatTimeRange(player.timeRange.start, player.timeRange.end)})`;
     }
-    message += `\n\nCan you make it? ${appUrl}`;
+    message += '\n';
+    if (note) {
+      message += `📝 ${note}\n`;
+    }
+    message += `\nCan you make it? ${appUrl}`;
 
     return message;
   }
@@ -117,7 +134,11 @@ export function generateMultiGameShareText(schedule: ScheduledMatch[], selectedK
       });
       const typeLabel = getMatchTypeLabel(match.type);
       const playerNames = match.players.map((p) => p.name).join(', ');
+      const note = getMatchNote(match);
       message += `• ${dateStr} - ${typeLabel}\n  ${playerNames}\n`;
+      if (note) {
+        message += `  📝 ${note}\n`;
+      }
     }
     message += '\n';
   }
@@ -134,7 +155,11 @@ export function generateMultiGameShareText(schedule: ScheduledMatch[], selectedK
       const typeLabel = getMatchTypeLabel(match.type);
       const needed = match.needed || 1;
       const playerNames = match.players.map((p) => p.name).join(', ');
+      const note = getMatchNote(match);
       message += `• ${dateStr} - ${typeLabel} needs ${needed}\n  ${playerNames}\n`;
+      if (note) {
+        message += `  📝 ${note}\n`;
+      }
     }
     message += '\n';
   }

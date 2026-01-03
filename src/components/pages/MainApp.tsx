@@ -19,7 +19,7 @@ import { getTodayDate } from '../../utils/helpers';
 import { BottomTabBar, activeTab } from '../navigation/BottomTabBar';
 import { CheckInTab } from '../tabs/CheckInTab';
 import { MyMatchesTab } from '../tabs/MyMatchesTab';
-import { NotificationsTab } from '../tabs/NotificationsTab';
+import { ActivityTab } from '../tabs/ActivityTab';
 import { DirectoryTab } from '../tabs/DirectoryTab';
 import { ProfileTab } from '../tabs/ProfileTab';
 
@@ -147,7 +147,7 @@ export function MainApp() {
         <div style="padding-bottom: 80px;">
           {activeTab.value === 'checkin' && <CheckInTab />}
           {activeTab.value === 'matches' && <MyMatchesTab />}
-          {activeTab.value === 'notifications' && <NotificationsTab />}
+          {activeTab.value === 'notifications' && <ActivityTab />}
           {activeTab.value === 'directory' && <DirectoryTab />}
           {activeTab.value === 'profile' && <ProfileTab />}
         </div>

@@ -77,6 +77,9 @@ body {
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* PWA standalone mode - use safe areas for iOS notch/Dynamic Island */

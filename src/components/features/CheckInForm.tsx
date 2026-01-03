@@ -84,9 +84,13 @@ function formatTimeDisplay(timeRange?: { start: string; end: string }) {
 }
 
 export function CheckInForm() {
-  // Explicitly access sessionUser to trigger re-render when it changes
+  // Explicitly access signals to trigger re-render when they change
   const user = sessionUser.value;
-  const currentCheckin = getUserCheckinStatus();
+  const date = selectedDate.value;
+  const checkins = allCheckins.value[date || ''] || [];
+
+  // Find current user's checkin inline (not in helper) for reactivity
+  const currentCheckin = user ? checkins.find((c) => c.name === user) || null : null;
   const isCheckedIn = !!currentCheckin;
 
   const handleCheckInClick = () => {
