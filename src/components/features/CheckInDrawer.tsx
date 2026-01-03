@@ -18,6 +18,7 @@ import {
 } from '../pages/MainApp';
 import { addCheckin, removeCheckin, updateCheckin } from '../../hooks/useFirebase';
 import { lockBodyScroll, unlockBodyScroll } from '../../utils/dom';
+import { useSwipeToDismiss } from '../../hooks/useSwipeToDismiss';
 
 // Drawer state signals
 export const showCheckInDrawer = signal(false);
@@ -135,6 +136,10 @@ export function CheckInDrawer() {
     endTime.value = '';
   };
 
+  const { drawerRef, swipeHandlers, getDrawerStyle } = useSwipeToDismiss({
+    onDismiss: closeDrawer,
+  });
+
   const handleBackdropClick = (e: Event) => {
     if ((e.target as HTMLElement).classList.contains('drawer-backdrop')) {
       closeDrawer();
@@ -147,7 +152,14 @@ export function CheckInDrawer() {
 
   return (
     <div class="drawer-backdrop" onClick={handleBackdropClick}>
-      <div class="check-in-drawer">
+      <div
+        class="check-in-drawer"
+        ref={drawerRef}
+        style={getDrawerStyle()}
+        onTouchStart={swipeHandlers.onTouchStart}
+        onTouchMove={swipeHandlers.onTouchMove}
+        onTouchEnd={swipeHandlers.onTouchEnd}
+      >
         {/* Drawer Handle */}
         <div class="drawer-handle">
           <div class="handle-bar"></div>

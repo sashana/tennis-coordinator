@@ -5,6 +5,7 @@ import { updateMemberDetails, renameMember, removeMember } from '../../hooks/use
 import { currentPlatformUser, updateProfile, refreshPlatformUser } from '../../hooks/usePlatformUser';
 import { sport } from '../../config/sport';
 import { lockBodyScroll, unlockBodyScroll } from '../../utils/dom';
+import { useSwipeToDismiss } from '../../hooks/useSwipeToDismiss';
 
 // Drawer state signals
 export const showEditMemberDrawer = signal(false);
@@ -174,6 +175,10 @@ export function EditMemberDrawer() {
     resetForm();
   };
 
+  const { drawerRef, swipeHandlers, getDrawerStyle } = useSwipeToDismiss({
+    onDismiss: closeDrawer,
+  });
+
   const handleBackdropClick = (e: Event) => {
     if ((e.target as HTMLElement).classList.contains('drawer-backdrop')) {
       closeDrawer();
@@ -186,7 +191,14 @@ export function EditMemberDrawer() {
 
   return (
     <div class="drawer-backdrop" onClick={handleBackdropClick}>
-      <div class="edit-member-drawer">
+      <div
+        class="edit-member-drawer"
+        ref={drawerRef}
+        style={getDrawerStyle()}
+        onTouchStart={swipeHandlers.onTouchStart}
+        onTouchMove={swipeHandlers.onTouchMove}
+        onTouchEnd={swipeHandlers.onTouchEnd}
+      >
         {/* Drawer Handle */}
         <div class="drawer-handle">
           <div class="handle-bar"></div>

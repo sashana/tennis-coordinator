@@ -20,6 +20,7 @@ import { generateDefaultPin } from '../../utils/groups';
 import { addMyGroup } from '../../utils/myGroups';
 import { sport } from '../../config/sport';
 import { lockBodyScroll, unlockBodyScroll } from '../../utils/dom';
+import { useSwipeToDismiss } from '../../hooks/useSwipeToDismiss';
 
 // ============================================
 // State Signals
@@ -204,6 +205,10 @@ export function CreateGroupDrawer() {
     }
   }, [showCreateGroupDrawer.value]);
 
+  const { drawerRef, swipeHandlers, getDrawerStyle } = useSwipeToDismiss({
+    onDismiss: closeCreateGroupDrawer,
+  });
+
   if (!showCreateGroupDrawer.value) return null;
 
   const archetypes = getAllArchetypes();
@@ -216,7 +221,14 @@ export function CreateGroupDrawer() {
 
   return (
     <div class="drawer-backdrop" onClick={handleBackdropClick}>
-      <div class="create-group-drawer">
+      <div
+        class="create-group-drawer"
+        ref={drawerRef}
+        style={getDrawerStyle()}
+        onTouchStart={swipeHandlers.onTouchStart}
+        onTouchMove={swipeHandlers.onTouchMove}
+        onTouchEnd={swipeHandlers.onTouchEnd}
+      >
         {/* Drawer Handle */}
         <div class="drawer-handle">
           <div class="handle-bar"></div>

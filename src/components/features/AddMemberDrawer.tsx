@@ -3,6 +3,7 @@ import { useEffect } from 'preact/hooks';
 import { sessionUser, showToast } from '../App';
 import { addMember } from '../../hooks/useFirebase';
 import { lockBodyScroll, unlockBodyScroll } from '../../utils/dom';
+import { useSwipeToDismiss } from '../../hooks/useSwipeToDismiss';
 
 // Drawer state signals
 export const showAddMemberDrawer = signal(false);
@@ -59,6 +60,10 @@ export function AddMemberDrawer() {
     resetForm();
   };
 
+  const { drawerRef, swipeHandlers, getDrawerStyle } = useSwipeToDismiss({
+    onDismiss: closeDrawer,
+  });
+
   const handleBackdropClick = (e: Event) => {
     if ((e.target as HTMLElement).classList.contains('drawer-backdrop')) {
       closeDrawer();
@@ -71,7 +76,14 @@ export function AddMemberDrawer() {
 
   return (
     <div class="drawer-backdrop" onClick={handleBackdropClick}>
-      <div class="add-member-drawer">
+      <div
+        class="add-member-drawer"
+        ref={drawerRef}
+        style={getDrawerStyle()}
+        onTouchStart={swipeHandlers.onTouchStart}
+        onTouchMove={swipeHandlers.onTouchMove}
+        onTouchEnd={swipeHandlers.onTouchEnd}
+      >
         {/* Drawer Handle */}
         <div class="drawer-handle">
           <div class="handle-bar"></div>
