@@ -29,7 +29,7 @@ const rawCheckins = signal<Record<string, CheckinData[]>>({});
 const notificationPrefs = signal<ActivityNotificationPrefs>({
   followedMembers: 'badge',
   gameNeedsPlayers: 'badge',
-  gameConfirmed: 'in-app',
+  gameConfirmed: 'badge',
   followedMemberIds: [],
 });
 
