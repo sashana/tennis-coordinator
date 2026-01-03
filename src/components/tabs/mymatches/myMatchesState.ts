@@ -36,6 +36,10 @@ export const showShareOptions = signal(false);
 // State for Upcoming/Past toggle
 export const gamesView = signal<'upcoming' | 'past'>('upcoming');
 
+// State for sub-filter within Upcoming view (All, Forming, Confirmed)
+export type GamesSubFilter = 'all' | 'forming' | 'confirmed';
+export const gamesSubFilter = signal<GamesSubFilter>('all');
+
 // Check if current user is admin
 export function isGroupAdmin(): boolean {
   const groupId = currentGroupId.value;

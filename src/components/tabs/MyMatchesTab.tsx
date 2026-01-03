@@ -9,6 +9,7 @@ import { activeTab } from '../navigation/BottomTabBar';
 import {
   allUserMatches,
   gamesView,
+  gamesSubFilter,
   viewingUser,
   isSelectionMode,
   exitSelectionMode,
@@ -27,12 +28,13 @@ function GamesViewToggle({ upcomingCount, pastCount }: { upcomingCount: number; 
         background: 'var(--color-gray-lightest, #f0f0f0)',
         borderRadius: '10px',
         padding: '4px',
-        marginBottom: '16px',
+        marginBottom: '12px',
       }}
     >
       <button
         onClick={() => {
           gamesView.value = 'upcoming';
+          gamesSubFilter.value = 'all';
           exitSelectionMode();
         }}
         style={{
@@ -78,6 +80,55 @@ function GamesViewToggle({ upcomingCount, pastCount }: { upcomingCount: number; 
       >
         Past ({pastCount})
       </button>
+    </div>
+  );
+}
+
+// Sub-filter pills for Upcoming view (All, Forming, Confirmed)
+function SubFilterPills({ formingCount, confirmedCount }: { formingCount: number; confirmedCount: number }) {
+  // Only show when viewing Upcoming
+  if (gamesView.value !== 'upcoming') {
+    return null;
+  }
+
+  const filters = [
+    { key: 'all' as const, label: 'All' },
+    { key: 'forming' as const, label: `Forming${formingCount > 0 ? ` (${formingCount})` : ''}` },
+    { key: 'confirmed' as const, label: `Confirmed${confirmedCount > 0 ? ` (${confirmedCount})` : ''}` },
+  ];
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: '8px',
+        marginBottom: '16px',
+        overflowX: 'auto',
+        paddingBottom: '4px',
+      }}
+    >
+      {filters.map(({ key, label }) => (
+        <button
+          key={key}
+          onClick={() => { gamesSubFilter.value = key; }}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '20px',
+            border: 'none',
+            background: gamesSubFilter.value === key
+              ? 'var(--color-primary, #2C6E49)'
+              : '#f0f0f0',
+            color: gamesSubFilter.value === key ? 'white' : '#666',
+            fontSize: '13px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            transition: 'all 0.2s',
+          }}
+        >
+          {label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -203,12 +254,22 @@ export function MyMatchesTab() {
 
   // Get schedule based on current view (upcoming or past)
   const allMatches = allUserMatches.value;
-  const schedule = gamesView.value === 'upcoming' ? allMatches.upcoming : allMatches.past;
+  const isPastView = gamesView.value === 'past';
+
+  // Calculate forming/confirmed counts for upcoming games
+  const formingGames = allMatches.upcoming.filter(m => m.isForming);
+  const confirmedGames = allMatches.upcoming.filter(m => !m.isForming);
+
+  // Apply sub-filter for upcoming games
+  let schedule = isPastView ? allMatches.past : allMatches.upcoming;
+  if (!isPastView && gamesSubFilter.value !== 'all') {
+    schedule = gamesSubFilter.value === 'forming' ? formingGames : confirmedGames;
+  }
+
   const isAdmin = isGroupAdmin();
   const currentViewUser = viewingUser.value || sessionUser.value;
   const isViewingOther = viewingUser.value && viewingUser.value !== sessionUser.value;
   const inSelectionMode = isSelectionMode.value;
-  const isPastView = gamesView.value === 'past';
 
   return (
     <div style="padding: 16px 0;">
@@ -217,6 +278,9 @@ export function MyMatchesTab() {
 
       {/* Segmented control for Upcoming/Past */}
       <GamesViewToggle upcomingCount={allMatches.upcoming.length} pastCount={allMatches.past.length} />
+
+      {/* Sub-filter pills for Upcoming view */}
+      <SubFilterPills formingCount={formingGames.length} confirmedCount={confirmedGames.length} />
 
       {/* Header */}
       <TabHeader

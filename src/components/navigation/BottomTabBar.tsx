@@ -1,6 +1,6 @@
-import { signal, computed } from '@preact/signals';
+import { signal } from '@preact/signals';
 import { useEffect, useState } from 'preact/hooks';
-import { notifications } from '../modals/NotificationsModal';
+import { activityUnreadCount } from '../../hooks/useActivityFeed';
 import { sport } from '../../config/sport';
 
 // Navigation state
@@ -11,11 +11,6 @@ export const activeTab = signal<TabId>('checkin');
 export function goToProfile() {
   activeTab.value = 'profile';
 }
-
-// Computed notification count for badge
-const unreadCount = computed(() => {
-  return notifications.value.filter((n) => !n.read).length;
-});
 
 interface TabConfig {
   id: TabId;
@@ -45,16 +40,17 @@ const tabs: TabConfig[] = [
     useImageIcon: !!sport.sportIcon,
   },
   {
-    id: 'directory',
-    label: 'Team',
-    icon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`,
-    activeIcon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`,
+    id: 'notifications',
+    label: 'Feed',
+    // Feed/stream icon - stacked cards representing updates
+    icon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>`,
+    activeIcon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M3 5h18c.55 0 1 .45 1 1s-.45 1-1 1H3c-.55 0-1-.45-1-1s.45-1 1-1zm0 6h18c.55 0 1 .45 1 1s-.45 1-1 1H3c-.55 0-1-.45-1-1s.45-1 1-1zm0 6h18c.55 0 1 .45 1 1s-.45 1-1 1H3c-.55 0-1-.45-1-1s.45-1 1-1z"/></svg>`,
   },
   {
-    id: 'notifications',
-    label: 'Alerts',
-    icon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>`,
-    activeIcon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>`,
+    id: 'directory',
+    label: 'Group',
+    icon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`,
+    activeIcon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`,
   },
   // Help and Profile tabs removed from bottom nav - access via Profile tab
 ];
@@ -100,7 +96,7 @@ export function BottomTabBar() {
     >
       {tabs.map((tab) => {
         const isActive = activeTab.value === tab.id;
-        const showBadge = tab.id === 'notifications' && unreadCount.value > 0;
+        const showBadge = tab.id === 'notifications' && activityUnreadCount.value > 0;
 
         return (
           <button
@@ -154,7 +150,7 @@ export function BottomTabBar() {
                   textAlign: 'center',
                 }}
               >
-                {unreadCount.value > 9 ? '9+' : unreadCount.value}
+                {activityUnreadCount.value > 9 ? '9+' : activityUnreadCount.value}
               </span>
             )}
             <span

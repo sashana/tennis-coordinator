@@ -91,8 +91,8 @@ export function AddMemberDrawer() {
 
         {/* Header */}
         <div class="add-member-header">
-          <h2>Add New Member</h2>
-          <p class="drawer-subtitle">Add a teammate to your group</p>
+          <h2>Invite Member</h2>
+          <p class="drawer-subtitle">Add someone to your group</p>
         </div>
 
         {/* Name */}
