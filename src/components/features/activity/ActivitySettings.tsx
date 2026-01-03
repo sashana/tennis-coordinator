@@ -10,6 +10,7 @@ import { signal } from '@preact/signals';
 import { useState, useEffect } from 'preact/hooks';
 import type { ActivityNotificationPrefs, NotificationLevel } from '@/types/activity';
 import { normalizeName } from '@/utils/helpers';
+import { createLogger } from '@/utils/logger';
 import {
   isPushSupported,
   getPermissionStatus,
@@ -17,6 +18,8 @@ import {
   deleteToken,
   showLocalNotification,
 } from '@/services/pushNotifications';
+
+const logger = createLogger('ActivitySettings');
 
 interface ActivitySettingsProps {
   prefs: ActivityNotificationPrefs;
@@ -136,24 +139,24 @@ export function ActivitySettings({
 
   // Handle enabling push notifications
   const handleEnablePush = async () => {
-    console.log('[ActivitySettings] Enable push clicked');
+    logger.debug('Enable push clicked');
     setIsEnablingPush(true);
     try {
-      console.log('[ActivitySettings] Requesting permission and token...');
+      logger.debug('Requesting permission and token...');
       const token = await requestPermissionAndGetToken();
-      console.log('[ActivitySettings] Token result:', token ? 'obtained' : 'null');
+      logger.debug('Token result:', token ? 'obtained' : 'null');
       if (token) {
         onUpdatePrefs({ pushEnabled: true, pushToken: token });
         onSave();
         setPermissionStatus('granted');
-        console.log('[ActivitySettings] Push enabled successfully');
+        logger.info('Push enabled successfully');
       } else {
         setPermissionStatus(getPermissionStatus());
-        console.log('[ActivitySettings] No token, permission status:', getPermissionStatus());
+        logger.warn('No token, permission status:', getPermissionStatus());
         alert('Could not enable notifications. Check browser console for details.');
       }
     } catch (error) {
-      console.error('[ActivitySettings] Error enabling push:', error);
+      logger.error('Error enabling push:', error);
       alert('Error enabling notifications: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setIsEnablingPush(false);
