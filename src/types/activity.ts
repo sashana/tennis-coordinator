@@ -75,8 +75,10 @@ export interface ActivityNotificationPrefs {
   followedMembers: NotificationLevel;
   gameNeedsPlayers: NotificationLevel;
   gameConfirmed: NotificationLevel;
-  phone?: string; // Phone number for SMS
+  phone?: string; // Phone number for SMS (future)
   smsOptIn?: boolean; // User opted in to receive SMS (default: false)
+  pushEnabled?: boolean; // Push notifications enabled
+  pushToken?: string; // FCM token for push notifications
   followedMemberIds: string[]; // Normalized names of followed members
 }
 

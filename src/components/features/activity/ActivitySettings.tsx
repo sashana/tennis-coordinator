@@ -7,14 +7,23 @@
 
 import { JSX } from 'preact';
 import { signal } from '@preact/signals';
+import { useState, useEffect } from 'preact/hooks';
 import type { ActivityNotificationPrefs, NotificationLevel } from '@/types/activity';
 import { normalizeName } from '@/utils/helpers';
+import {
+  isPushSupported,
+  getPermissionStatus,
+  requestPermissionAndGetToken,
+  deleteToken,
+  showLocalNotification,
+} from '@/services/pushNotifications';
 
 interface ActivitySettingsProps {
   prefs: ActivityNotificationPrefs;
   members: string[]; // All group members
   currentUser: string; // Current user name
   memberPhone?: string; // Phone from member profile (pre-fill)
+  groupId: string; // For storing FCM token
   onUpdatePrefs: (prefs: Partial<ActivityNotificationPrefs>) => void;
   onSave: () => void;
 }
@@ -103,11 +112,64 @@ export function ActivitySettings({
   members,
   currentUser,
   memberPhone,
+  groupId,
   onUpdatePrefs,
   onSave,
 }: ActivitySettingsProps): JSX.Element {
   // Use member's phone from profile if prefs.phone is not set
   const displayPhone = prefs.phone || memberPhone || '';
+
+  // Push notification state
+  const [pushSupported] = useState(() => isPushSupported());
+  const [permissionStatus, setPermissionStatus] = useState(() => getPermissionStatus());
+  const [isEnablingPush, setIsEnablingPush] = useState(false);
+
+  // Update permission status when it changes
+  useEffect(() => {
+    const checkPermission = () => {
+      setPermissionStatus(getPermissionStatus());
+    };
+    // Check on mount and when visibility changes
+    document.addEventListener('visibilitychange', checkPermission);
+    return () => document.removeEventListener('visibilitychange', checkPermission);
+  }, []);
+
+  // Handle enabling push notifications
+  const handleEnablePush = async () => {
+    console.log('[ActivitySettings] Enable push clicked');
+    setIsEnablingPush(true);
+    try {
+      console.log('[ActivitySettings] Requesting permission and token...');
+      const token = await requestPermissionAndGetToken();
+      console.log('[ActivitySettings] Token result:', token ? 'obtained' : 'null');
+      if (token) {
+        onUpdatePrefs({ pushEnabled: true, pushToken: token });
+        onSave();
+        setPermissionStatus('granted');
+        console.log('[ActivitySettings] Push enabled successfully');
+      } else {
+        setPermissionStatus(getPermissionStatus());
+        console.log('[ActivitySettings] No token, permission status:', getPermissionStatus());
+        alert('Could not enable notifications. Check browser console for details.');
+      }
+    } catch (error) {
+      console.error('[ActivitySettings] Error enabling push:', error);
+      alert('Error enabling notifications: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setIsEnablingPush(false);
+    }
+  };
+
+  // Handle disabling push notifications
+  const handleDisablePush = async () => {
+    try {
+      await deleteToken();
+      onUpdatePrefs({ pushEnabled: false, pushToken: undefined });
+      onSave();
+    } catch (error) {
+      console.error('Error disabling push:', error);
+    }
+  };
   const followedCount = prefs.followedMemberIds.length;
   const otherMembers = members.filter(
     (m) => normalizeName(m) !== normalizeName(currentUser)
@@ -432,7 +494,7 @@ export function ActivitySettings({
         {/* Divider */}
         <div style={{ borderTop: '1px solid #eee', margin: '16px 0' }} />
 
-        {/* Section: SMS Notifications */}
+        {/* Section: Push Notifications */}
         <div
           style={{
             fontSize: '11px',
@@ -440,64 +502,142 @@ export function ActivitySettings({
             color: 'var(--color-text-secondary, #888)',
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
-            marginBottom: '8px',
+            marginBottom: '12px',
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
           }}
         >
-          <span>📱</span> SMS Notifications
-          <span
-            style={{
-              background: '#f0f0f0',
-              color: '#888',
-              fontSize: '9px',
-              padding: '2px 6px',
-              borderRadius: '4px',
-              fontWeight: '500',
-            }}
-          >
-            COMING SOON
-          </span>
+          <span>🔔</span> Push Notifications
         </div>
 
-        {/* Phone number input */}
-        <input
-          type="tel"
-          placeholder="Enter phone number"
-          value={displayPhone}
-          onInput={(e) => {
-            onUpdatePrefs({ phone: (e.target as HTMLInputElement).value });
-          }}
-          onBlur={onSave}
-          style={{
-            width: '100%',
-            padding: '12px',
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            fontSize: '16px',
-            boxSizing: 'border-box',
-            background: displayPhone ? 'white' : '#fafafa',
-          }}
-        />
-
-        {/* Opt-in toggle - only show when phone is available */}
-        {displayPhone && (
-          <Toggle
-            checked={prefs.smsOptIn === true}
-            onChange={(checked) => {
-              onUpdatePrefs({ smsOptIn: checked });
-              onSave();
+        {/* Push notification controls */}
+        {!pushSupported ? (
+          <div
+            style={{
+              padding: '12px',
+              background: '#f5f5f5',
+              borderRadius: '8px',
+              fontSize: '13px',
+              color: '#666',
             }}
-            label="Receive SMS updates"
-            description="Get text messages for game notifications"
-          />
-        )}
-
-        {!displayPhone && (
-          <div style={{ fontSize: '11px', color: '#999', marginTop: '6px' }}>
-            Add your phone number to enable SMS notifications
+          >
+            Push notifications are not supported in this browser.
+            {/iPhone|iPad/.test(navigator.userAgent) && (
+              <span> Add this app to your home screen to enable notifications.</span>
+            )}
           </div>
+        ) : permissionStatus === 'denied' ? (
+          <div
+            style={{
+              padding: '12px',
+              background: '#fff3e0',
+              borderRadius: '8px',
+              fontSize: '13px',
+              color: '#e65100',
+            }}
+          >
+            Notifications are blocked. Please enable them in your browser settings.
+          </div>
+        ) : prefs.pushEnabled ? (
+          <div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px',
+                background: 'var(--color-primary-light, #E8F5E9)',
+                borderRadius: '8px',
+                marginBottom: '8px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '18px' }}>✓</span>
+                <span style={{ fontSize: '14px', fontWeight: '500', color: 'var(--color-primary, #2C6E49)' }}>
+                  Notifications enabled
+                </span>
+              </div>
+              <button
+                onClick={handleDisablePush}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#666',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                }}
+              >
+                Turn off
+              </button>
+            </div>
+            <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
+              You'll receive notifications when your games are confirmed.
+            </div>
+            <button
+              onClick={async () => {
+                // Show in-app toast immediately
+                const toast = document.createElement('div');
+                toast.innerHTML = `
+                  <div style="position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:16px 24px;border-radius:12px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-width:320px;text-align:center;">
+                    <div style="font-weight:600;margin-bottom:4px;">🎾 Game Confirmed!</div>
+                    <div style="font-size:13px;opacity:0.9;">Your doubles match tomorrow is ready to play.</div>
+                  </div>
+                `;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 4000);
+
+                // Also try system notification
+                await showLocalNotification(
+                  'Game Confirmed! 🎾',
+                  'Your doubles match tomorrow is ready to play. See you on the court!',
+                  { type: 'test' }
+                );
+              }}
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: '#f5f5f5',
+                border: '1px solid #ddd',
+                borderRadius: '6px',
+                fontSize: '13px',
+                color: '#666',
+                cursor: 'pointer',
+              }}
+            >
+              🔔 Send Test Notification
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={handleEnablePush}
+            disabled={isEnablingPush}
+            style={{
+              width: '100%',
+              padding: '14px',
+              background: isEnablingPush ? '#ccc' : 'var(--color-primary, #2C6E49)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: isEnablingPush ? 'default' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
+            {isEnablingPush ? (
+              'Enabling...'
+            ) : (
+              <>
+                <span>🔔</span>
+                Enable Push Notifications
+              </>
+            )}
+          </button>
         )}
       </div>
     </div>

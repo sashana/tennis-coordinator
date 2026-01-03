@@ -619,6 +619,7 @@ export function ActivityTab() {
               members={coreMembers.value}
               currentUser={sessionUser.value || ''}
               memberPhone={memberDetails.value[sessionUser.value || '']?.phone}
+              groupId={currentGroupId.value || ''}
               onUpdatePrefs={updateNotificationPrefs}
               onSave={saveNotificationPrefs}
             />
