@@ -14,6 +14,7 @@ interface ActivitySettingsProps {
   prefs: ActivityNotificationPrefs;
   members: string[]; // All group members
   currentUser: string; // Current user name
+  memberPhone?: string; // Phone from member profile (pre-fill)
   onUpdatePrefs: (prefs: Partial<ActivityNotificationPrefs>) => void;
   onSave: () => void;
 }
@@ -101,9 +102,12 @@ export function ActivitySettings({
   prefs,
   members,
   currentUser,
+  memberPhone,
   onUpdatePrefs,
   onSave,
 }: ActivitySettingsProps): JSX.Element {
+  // Use member's phone from profile if prefs.phone is not set
+  const displayPhone = prefs.phone || memberPhone || '';
   const followedCount = prefs.followedMemberIds.length;
   const otherMembers = members.filter(
     (m) => normalizeName(m) !== normalizeName(currentUser)
@@ -428,7 +432,7 @@ export function ActivitySettings({
         {/* Divider */}
         <div style={{ borderTop: '1px solid #eee', margin: '16px 0' }} />
 
-        {/* Section: SMS Coming Soon */}
+        {/* Section: SMS Notifications */}
         <div
           style={{
             fontSize: '11px',
@@ -457,10 +461,11 @@ export function ActivitySettings({
           </span>
         </div>
 
+        {/* Phone number input */}
         <input
           type="tel"
           placeholder="Enter phone number"
-          value={prefs.phone || ''}
+          value={displayPhone}
           onInput={(e) => {
             onUpdatePrefs({ phone: (e.target as HTMLInputElement).value });
           }}
@@ -472,11 +477,28 @@ export function ActivitySettings({
             borderRadius: '8px',
             fontSize: '16px',
             boxSizing: 'border-box',
+            background: displayPhone ? 'white' : '#fafafa',
           }}
         />
-        <div style={{ fontSize: '11px', color: '#999', marginTop: '6px' }}>
-          We'll notify you when SMS is available
-        </div>
+
+        {/* Opt-in toggle - only show when phone is available */}
+        {displayPhone && (
+          <Toggle
+            checked={prefs.smsOptIn === true}
+            onChange={(checked) => {
+              onUpdatePrefs({ smsOptIn: checked });
+              onSave();
+            }}
+            label="Receive SMS updates"
+            description="Get text messages for game notifications"
+          />
+        )}
+
+        {!displayPhone && (
+          <div style={{ fontSize: '11px', color: '#999', marginTop: '6px' }}>
+            Add your phone number to enable SMS notifications
+          </div>
+        )}
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ import {
   currentGroupId,
   sessionUser,
   coreMembers,
+  memberDetails,
   selectedDate,
   allCheckins,
   showToast,
@@ -617,6 +618,7 @@ export function ActivityTab() {
               prefs={notificationPrefs.value}
               members={coreMembers.value}
               currentUser={sessionUser.value || ''}
+              memberPhone={memberDetails.value[sessionUser.value || '']?.phone}
               onUpdatePrefs={updateNotificationPrefs}
               onSave={saveNotificationPrefs}
             />
