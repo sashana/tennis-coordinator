@@ -101,14 +101,15 @@ async function resolveShortCodeOrGroupId(code: string): Promise<string | null> {
       { settings?: { shortCode?: string }; metadata?: { shortCode?: string } }
     >;
 
+    const codeUpper = code.toUpperCase();
     for (const [groupId, groupData] of Object.entries(groups)) {
-      // Check settings.shortCode (legacy)
-      if (groupData.settings?.shortCode === code) {
+      // Check settings.shortCode (legacy) - case insensitive
+      if (groupData.settings?.shortCode?.toUpperCase() === codeUpper) {
         logger.debug(`Resolved short code "${code}" via settings to group ID: ${groupId}`);
         return groupId;
       }
-      // Check metadata.shortCode (new groups)
-      if (groupData.metadata?.shortCode === code.toUpperCase()) {
+      // Check metadata.shortCode (new groups) - case insensitive
+      if (groupData.metadata?.shortCode?.toUpperCase() === codeUpper) {
         logger.debug(`Resolved short code "${code}" via metadata to group ID: ${groupId}`);
         return groupId;
       }
