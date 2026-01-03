@@ -8,6 +8,18 @@
   box-sizing: border-box;
 }
 
+/* Prevent double-tap zoom on all interactive elements */
+button,
+a,
+input,
+select,
+textarea,
+label,
+[role="button"],
+[onclick] {
+  touch-action: manipulation;
+}
+
 /* Mobile browser optimizations */
 html {
   /* Use dvh for dynamic viewport height that accounts for browser UI */
